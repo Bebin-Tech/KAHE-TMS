@@ -1,0 +1,32 @@
+services:
+  # Backend service
+  - type: web
+    name: kahe-tms-backend
+    env: python
+    buildCommand: |
+      cd backend
+      pip install -r requirements.txt
+      python manage.py migrate
+    startCommand: |
+      cd backend
+      gunicorn tms_project.wsgi:application
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: tms_project.settings
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: SECRET_KEY
+        generateValue: true
+
+  # Frontend service
+  - type: web
+    name: kahe-tms-frontend
+    env: static
+    buildCommand: |
+      cd frontend
+      npm install
+      npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://kahe-tms-backend.onrender.com/api/
