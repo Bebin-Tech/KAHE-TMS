@@ -56,11 +56,11 @@ const DashboardLayout = ({ children, title }) => {
           src="/logo.png"
           alt="KAHE Logo"
           sx={{
-            height: 120,
-            width: 'auto',
+            width: '100%',
+            maxWidth: '220px',
+            height: 'auto',
             mb: 1,
-            objectFit: 'contain',
-            filter: 'brightness(0) invert(1)'
+            objectFit: 'contain'
           }}
         />
         <Typography variant="h6" component="div" sx={{ fontWeight: 800, color: '#38bdf8', letterSpacing: '1px', fontSize: '1.1rem' }}>
