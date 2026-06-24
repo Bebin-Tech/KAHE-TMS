@@ -104,13 +104,10 @@ const LoginPage = () => {
             src="/logo.png"
             alt="KAHE Logo"
             sx={{
-              width: '100%',
-              maxWidth: '320px',
-              height: 'auto',
-              borderRadius: '8px',
+              height: 120,
+              width: 'auto',
               mb: 2,
-              filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.15))',
-              imageRendering: 'crisp-edges'
+              objectFit: 'contain'
             }}
           />
           <Typography variant="h5" sx={{ fontWeight: 800, color: '#0066b2', mb: 1, letterSpacing: '0.5px' }}>
