@@ -52,17 +52,30 @@ const DashboardLayout = ({ children, title }) => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#0f172a', color: 'white' }}>
       <Toolbar sx={{ px: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', py: 3, flexDirection: 'column' }}>
         <Box
-          component="img"
-          src="/logo.png"
-          alt="KAHE Logo"
           sx={{
+            bgcolor: 'white',
+            p: 1,
+            borderRadius: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             width: '100%',
-            maxWidth: '220px',
-            height: 'auto',
-            mb: 1,
-            objectFit: 'contain'
+            maxWidth: '200px',
+            mb: 2,
+            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
           }}
-        />
+        >
+          <Box
+            component="img"
+            src="/logo.png"
+            alt="KAHE Logo"
+            sx={{
+              width: '100%',
+              height: 'auto',
+              objectFit: 'contain'
+            }}
+          />
+        </Box>
         <Typography variant="h6" component="div" sx={{ fontWeight: 800, color: '#38bdf8', letterSpacing: '1px', fontSize: '1.1rem' }}>
           KAHE TMS
         </Typography>
