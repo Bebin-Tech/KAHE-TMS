@@ -89,7 +89,7 @@ const HODDashboard = () => {
         <Typography variant="body1" color="text.secondary">Monitor and assign tasks to your faculty members.</Typography>
       </Box>
 
-      <Grid container spacing={3} sx={{ mb: 5 }}>
+      <Grid container spacing={3} sx={{ mb: 5 }} justifyContent="center">
         <Grid item xs={12} md={4}>
           <StatCard title="Assigned Tasks" value={stats.assigned} icon={<AssignmentRounded />} color="#3b82f6" />
         </Grid>
@@ -101,7 +101,7 @@ const HODDashboard = () => {
         </Grid>
       </Grid>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={3} justifyContent="center">
         <Grid item xs={12} lg={12} sx={{ mb: 3 }}>
           <Paper sx={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
             <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>

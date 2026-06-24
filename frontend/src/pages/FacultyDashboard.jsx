@@ -57,7 +57,7 @@ const FacultyDashboard = () => {
         <Typography variant="body1" color="text.secondary">Manage your assigned tasks and report progress.</Typography>
       </Box>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={3} justifyContent="center">
         <Grid item xs={12} md={8}>
           {subtasks.length === 0 ? (
             <Alert severity="info" variant="outlined" sx={{ borderRadius: '16px' }}>

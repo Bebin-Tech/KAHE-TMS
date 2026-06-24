@@ -38,7 +38,7 @@ const AdminDashboard = () => {
         <Typography variant="body1" color="text.secondary">Manage users, departments, and monitor global activity.</Typography>
       </Box>
 
-      <Grid container spacing={3}>
+      <Grid container spacing={3} justifyContent="center">
         <StatBox title="Total Users" value={stats?.total_users || 0} icon={<PeopleRounded />} color="#3b82f6" />
         <StatBox title="Active Tasks" value={stats?.total_tasks || 0} icon={<AssignmentRounded />} color="#8b5cf6" />
         <StatBox title="Departments" value={stats?.departments || 0} icon={<DomainRounded />} color="#10b981" />

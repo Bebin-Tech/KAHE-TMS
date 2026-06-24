@@ -115,27 +115,24 @@ const DeanDashboard = () => {
 
   return (
     <DashboardLayout title="Overview">
-      <Box sx={{ mb: 5 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Box>
-            <Typography variant="h4" sx={{ mb: 1, letterSpacing: '-1px' }}>
-              Welcome back, Dean
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Here is what's happening in the system today.
-            </Typography>
-          </Box>
-          <Button
-            variant="contained"
-            startIcon={<AddRounded />}
-            sx={{ px: 3, py: 1.5, borderRadius: '12px' }}
-            onClick={() => setDialogOpen(true)}
-          >
-            Create New Task
-          </Button>
-        </Box>
+      <Box sx={{ mb: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+        <Typography variant="h4" sx={{ mb: 1, letterSpacing: '-1px', fontWeight: 800 }}>
+          Welcome back, Dean
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+          Here is what's happening in the system today.
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddRounded />}
+          sx={{ px: 3, py: 1.5, borderRadius: '12px' }}
+          onClick={() => setDialogOpen(true)}
+        >
+          Create New Task
+        </Button>
+      </Box>
 
-        <Grid container spacing={3}>
+        <Grid container spacing={3} justifyContent="center">
           <Grid item xs={12} sm={6} md={3}>
             <StatCard title="Total Tasks" value={stats.total} icon={<AssignmentRounded />} color="#3b82f6" trend="+12%" />
           </Grid>
@@ -149,7 +146,6 @@ const DeanDashboard = () => {
             <StatCard title="Overdue" value={stats.overdue} icon={<ErrorOutlineRounded />} color="#ef4444" />
           </Grid>
         </Grid>
-      </Box>
 
       <Paper sx={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
         <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>

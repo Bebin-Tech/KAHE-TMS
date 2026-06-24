@@ -3,7 +3,7 @@ import {
   Box, Drawer, AppBar, Toolbar, List, Typography,
   Divider, IconButton, ListItem, ListItemButton,
   ListItemIcon, ListItemText, Avatar, Menu, MenuItem,
-  Tooltip, useTheme, useMediaQuery
+  Tooltip, useTheme, useMediaQuery, Paper
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -50,19 +50,19 @@ const DashboardLayout = ({ children, title }) => {
 
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#0f172a', color: 'white' }}>
-      <Toolbar sx={{ px: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', py: 3, flexDirection: 'column' }}>
+      <Toolbar sx={{ px: 3, display: 'flex', alignItems: 'center', justifyContent: 'flex-start', py: 3 }}>
         <Box
           sx={{
             bgcolor: 'white',
-            p: 1,
-            borderRadius: '12px',
+            p: 0.4,
+            borderRadius: '6px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '100%',
-            maxWidth: '200px',
-            mb: 2,
-            boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
+            width: '32px',
+            height: '32px',
+            mr: 1.2,
+            boxShadow: '0 2px 4px -1px rgba(0,0,0,0.1)'
           }}
         >
           <Box
@@ -71,12 +71,12 @@ const DashboardLayout = ({ children, title }) => {
             alt="KAHE Logo"
             sx={{
               width: '100%',
-              height: 'auto',
+              height: '100%',
               objectFit: 'contain'
             }}
           />
         </Box>
-        <Typography variant="h6" component="div" sx={{ fontWeight: 800, color: '#38bdf8', letterSpacing: '1px', fontSize: '1.1rem' }}>
+        <Typography variant="h6" component="div" sx={{ fontWeight: 800, color: '#38bdf8', letterSpacing: '0.5px', fontSize: '0.95rem' }}>
           KAHE TMS
         </Typography>
       </Toolbar>
@@ -138,29 +138,27 @@ const DashboardLayout = ({ children, title }) => {
         position="fixed"
         elevation={0}
         sx={{
-          width: { md: `calc(100% - ${open ? drawerWidth : 0}px)` },
-          ml: { md: `${open ? drawerWidth : 0}px` },
+          width: { md: `calc(100% - ${drawerWidth}px)` },
+          ml: { md: `${drawerWidth}px` },
           bgcolor: 'rgba(255, 255, 255, 0.8)',
           backdropFilter: 'blur(8px)',
           color: 'text.primary',
           borderBottom: '1px solid',
           borderColor: 'divider',
-          transition: theme.transitions.create(['width', 'margin'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-          }),
         }}
       >
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconButton
-              color="inherit"
-              edge="start"
-              onClick={handleDrawerToggle}
-              sx={{ mr: 2 }}
-            >
-              {open ? <ChevronLeftRounded /> : <MenuIcon />}
-            </IconButton>
+            {isMobile && (
+              <IconButton
+                color="inherit"
+                edge="start"
+                onClick={handleDrawerToggle}
+                sx={{ mr: 2 }}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
             <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700, letterSpacing: '-0.5px' }}>
               {title}
             </Typography>
@@ -241,11 +239,11 @@ const DashboardLayout = ({ children, title }) => {
       </AppBar>
 
       <Drawer
-        variant={isMobile ? "temporary" : "persistent"}
-        open={open}
+        variant={isMobile ? "temporary" : "permanent"}
+        open={isMobile ? open : true}
         onClose={handleDrawerToggle}
         sx={{
-          width: open ? drawerWidth : 0,
+          width: drawerWidth,
           flexShrink: 0,
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
@@ -264,17 +262,32 @@ const DashboardLayout = ({ children, title }) => {
           p: { xs: 2, md: 4 },
           width: '100%',
           mt: '64px',
-          transition: theme.transitions.create(['margin', 'width'], {
-            easing: theme.transitions.easing.sharp,
-            duration: theme.transitions.duration.leavingScreen,
-          }),
-          ...(open && !isMobile && {
-            ml: `${drawerWidth}px`,
-            width: `calc(100% - ${drawerWidth}px)`,
-          })
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          ml: { md: `${drawerWidth}px` },
+          width: { md: `calc(100% - ${drawerWidth}px)` },
         }}
       >
-        {children}
+        <Paper
+          elevation={0}
+          sx={{
+            width: '100%',
+            maxWidth: '1200px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            p: { xs: 3, md: 6 },
+            borderRadius: '30px',
+            bgcolor: '#f8fafc', // Very light blue-ish grey
+            border: '2px solid #e2e8f0',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+            minHeight: '80vh'
+          }}
+        >
+          {children}
+        </Paper>
       </Box>
     </Box>
   );
