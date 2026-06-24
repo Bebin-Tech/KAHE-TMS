@@ -56,7 +56,7 @@ const DashboardLayout = ({ children, title }) => {
           src="/logo.png"
           alt="KAHE Logo"
           sx={{
-            height: 80,
+            height: 120,
             width: 'auto',
             mb: 1,
             objectFit: 'contain',
