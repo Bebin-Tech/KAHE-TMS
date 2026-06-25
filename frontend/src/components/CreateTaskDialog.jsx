@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import api from '../api/axios';
 
-const CreateTaskDialog = ({ open, onClose, onTaskCreated }) => {
+const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
   const [departments, setDepartments] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -28,9 +28,27 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated }) => {
   useEffect(() => {
     if (open) {
       fetchDepartments();
+      if (task) {
+        setFormData({
+          title: task.title,
+          description: task.description,
+          department: task.department || '',
+          assigned_to_hod: task.assigned_to_hod || '',
+          start_date: task.start_date ? task.start_date.slice(0, 16) : '',
+          deadline: task.deadline ? task.deadline.slice(0, 16) : '',
+          status: task.status,
+          is_special: task.is_special,
+          priority: task.priority
+        });
+        if (task.department) {
+          fetchUsersByDepartment(task.department);
+        }
+      } else {
+        resetForm();
+      }
       setError('');
     }
-  }, [open]);
+  }, [open, task]);
 
   const fetchDepartments = async () => {
     setFetchingData(true);
@@ -67,16 +85,19 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated }) => {
     setLoading(true);
     setError('');
     try {
-      const currentUser = JSON.parse(localStorage.getItem('user'));
-      await api.post('tasks/', {
-        ...formData,
-        created_by: currentUser.id
-      });
+      if (task) {
+        await api.patch(`tasks/${task.id}/`, formData);
+      } else {
+        const currentUser = JSON.parse(localStorage.getItem('user'));
+        await api.post('tasks/', {
+          ...formData,
+          created_by: currentUser.id
+        });
+      }
       onTaskCreated();
       onClose();
-      resetForm();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to create task. Check all fields.');
+      setError(err.response?.data?.detail || 'Failed to process task. Check all fields.');
     } finally {
       setLoading(false);
     }
@@ -101,7 +122,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated }) => {
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
       <form onSubmit={handleSubmit}>
         <DialogTitle sx={{ fontWeight: 800, fontSize: '1.5rem', color: 'primary.main', pb: 1 }}>
-          Create New Task Assignment
+          {task ? 'Edit Task Assignment' : 'Create New Task Assignment'}
         </DialogTitle>
         <DialogContent dividers sx={{ pt: 3 }}>
           {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
@@ -218,7 +239,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated }) => {
             disabled={loading || fetchingData}
             sx={{ px: 4, py: 1.2, borderRadius: '12px', fontWeight: 700, textTransform: 'none' }}
           >
-            {loading ? <CircularProgress size={24} color="inherit" /> : 'Create Task'}
+            {loading ? <CircularProgress size={24} color="inherit" /> : (task ? 'Update Task' : 'Create Task')}
           </Button>
         </DialogActions>
       </form>
