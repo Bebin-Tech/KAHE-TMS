@@ -179,18 +179,19 @@ const UserManagement = () => {
           <Box sx={{
             display: 'flex',
             alignItems: 'center',
-            bgcolor: 'rgba(145, 158, 171, 0.08)',
+            bgcolor: '#fff',
             borderRadius: '12px',
             px: 2,
             py: 1,
-            width: '280px',
-            border: '1px solid transparent',
+            width: '320px',
+            border: '1.5px solid #d1d5db',
+            boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
             '&:focus-within': {
               bgcolor: 'white',
-              border: '1px solid #0066b2',
-              boxShadow: '0 0 0 2px rgba(0, 102, 178, 0.1)'
+              border: '1.5px solid #0066b2',
+              boxShadow: '0 0 0 4px rgba(0, 102, 178, 0.1)'
             },
-            transition: 'all 0.2s'
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
           }}>
             <SearchRounded sx={{ color: '#637381', mr: 1, fontSize: '1.2rem' }} />
             <input
