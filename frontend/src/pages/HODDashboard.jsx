@@ -120,7 +120,10 @@ const HODDashboard = () => {
                 <TableBody>
                   {tasks.map((task) => (
                     <TableRow key={task.id} hover>
-                      <TableCell sx={{ fontWeight: 700 }}>{task.title}</TableCell>
+                      <TableCell sx={{ fontWeight: 700 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{task.title}</Typography>
+                        <Typography variant="caption" color="text.secondary">Assigned by Dean: {task.created_by_name}</Typography>
+                      </TableCell>
                       <TableCell>{new Date(task.deadline).toLocaleDateString()}</TableCell>
                       <TableCell>
                         <Chip label={task.status} size="small" variant="outlined" sx={{ fontWeight: 700 }} />
@@ -140,7 +143,7 @@ const HODDashboard = () => {
                           variant="contained"
                           disabled={task.status === 'SUBMITTED_DEAN' || task.status === 'COMPLETED'}
                           onClick={async () => {
-                            await api.patch(`tasks/${task.id}/`, { status: 'SUBMITTED_DEAN' });
+                            await api.post(`tasks/${task.id}/submit_to_dean/`);
                             fetchData();
                           }}
                         >
@@ -176,7 +179,7 @@ const HODDashboard = () => {
                     <TableRow key={task.id} hover>
                       <TableCell>
                         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{task.title}</Typography>
-                        <Typography variant="caption" color="text.secondary">Main: {task.task_title || 'General'}</Typography>
+                        <Typography variant="caption" color="text.secondary">Assigned by: {task.created_by_name || 'HOD'}</Typography>
                       </TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>

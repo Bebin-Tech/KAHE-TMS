@@ -203,11 +203,7 @@ const DeanDashboard = () => {
                       </Box>
                       <Box>
                         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{task.title}</Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{
-                          display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden'
-                        }}>
-                          {task.description}
-                        </Typography>
+                        <Typography variant="caption" color="primary" sx={{ fontWeight: 700 }}>Assigned to HOD: {task.assigned_to_hod_name}</Typography>
                       </Box>
                     </Box>
                   </TableCell>

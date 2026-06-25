@@ -22,10 +22,12 @@ const ChangePassword = () => {
     setError('');
 
     try {
-      await api.post('users/change_password/', {
+      const response = await api.post('users/change_password/', {
         old_password: oldPassword,
         new_password: newPassword
       });
+
+      console.log('Password update successful:', response.data.message);
 
       // Update stored user info
       const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -41,38 +43,75 @@ const ChangePassword = () => {
       };
       navigate(routes[user.role] || '/login');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to change password');
+      console.error('Password Update Error:', err);
+      if (!err.response) {
+        setError('Network error: Could not reach the server. Please ensure the backend is running.');
+      } else {
+        const msg = err.response?.data?.error || err.response?.data?.detail || `Error ${err.response?.status}: Failed to update password.`;
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f4f7f9' }}>
-      <Paper sx={{ p: 4, width: '100%', maxWidth: 400, borderRadius: 4 }}>
-        <Typography variant="h5" sx={{ fontWeight: 800, mb: 1 }}>Security Update</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f4f7f9', p: 2 }}>
+      <Paper elevation={0} sx={{ p: { xs: 4, md: 6 }, width: '100%', maxWidth: 450, borderRadius: '40px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}>
+        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1, color: '#1e293b' }}>Security Update</Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 4, lineHeight: 1.5 }}>
           For your security, you must change your password before continuing.
         </Typography>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && (
+          <Alert
+            severity="error"
+            variant="filled"
+            sx={{
+              mb: 4,
+              borderRadius: '12px',
+              bgcolor: '#fff1f2',
+              color: '#991b1b',
+              border: '1px solid #fecaca',
+              '& .MuiAlert-icon': { color: '#ef4444' }
+            }}
+          >
+            {error}
+          </Alert>
+        )}
 
-        <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handlePasswordChange} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <TextField
             fullWidth label="Current Password" type="password" required
+            variant="outlined"
             value={oldPassword} onChange={(e) => setOldPassword(e.target.value)}
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
           />
           <TextField
             fullWidth label="New Password" type="password" required
+            variant="outlined"
             value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
           />
           <TextField
             fullWidth label="Confirm New Password" type="password" required
+            variant="outlined"
             value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
           />
           <Button
             type="submit" variant="contained" size="large"
-            disabled={loading} sx={{ mt: 2, py: 1.5, fontWeight: 700 }}
+            disabled={loading}
+            sx={{
+              mt: 2,
+              py: 2,
+              fontWeight: 800,
+              borderRadius: '12px',
+              bgcolor: '#0066b2',
+              '&:hover': { bgcolor: '#005291' },
+              textTransform: 'none',
+              fontSize: '1.1rem'
+            }}
           >
             {loading ? <CircularProgress size={24} color="inherit" /> : 'Update Password'}
           </Button>

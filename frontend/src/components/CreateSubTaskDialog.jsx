@@ -24,8 +24,10 @@ const CreateSubTaskDialog = ({ open, onClose, taskId, onTaskCreated }) => {
 
   const fetchFaculty = async () => {
     setFetching(true);
+    const user = JSON.parse(localStorage.getItem('user'));
     try {
-      const response = await api.get('users/');
+      // Fetch users from the same department
+      const response = await api.get(`users/?department=${user.department}`);
       setFaculty(response.data.filter(u => u.role === 'FACULTY'));
     } catch (err) {
       console.error('Error fetching Faculty:', err);

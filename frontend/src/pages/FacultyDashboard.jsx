@@ -67,7 +67,10 @@ const FacultyDashboard = () => {
             subtasks.map((task) => (
               <Paper key={task.id} sx={{ p: 3, mb: 3, borderRadius: '20px', border: '1px solid', borderColor: 'divider' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 800 }}>{task.title}</Typography>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 800 }}>{task.title}</Typography>
+                    <Typography variant="caption" color="primary" sx={{ fontWeight: 700 }}>Assigned by HOD: {task.created_by_name}</Typography>
+                  </Box>
                   <Chip label={task.status} size="small" color="primary" sx={{ fontWeight: 700 }} />
                 </Box>
                 <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary' }}>{task.description}</Typography>

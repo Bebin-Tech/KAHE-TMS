@@ -19,6 +19,7 @@ class Department(models.Model):
     name = models.CharField(max_length=100)
     block_name = models.CharField(max_length=100, blank=True, null=True)
     description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
     objects = models.Manager()
 
     def __str__(self):
@@ -55,6 +56,7 @@ class Task(models.Model):
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='MEDIUM')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ONGOING')
     is_special = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     attachment = models.FileField(upload_to='tasks/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -67,10 +69,19 @@ class SubTask(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='subtasks')
     title = models.CharField(max_length=255)
     description = models.TextField()
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_subtasks', null=True, blank=True)
     assigned_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='faculty_tasks')
-    status = models.CharField(max_length=20, default='ASSIGNED')
+    status = models.CharField(max_length=20, default='ASSIGNED', choices=(
+        ('ASSIGNED', 'Assigned'),
+        ('IN_PROGRESS', 'In Progress'),
+        ('SUBMITTED', 'Submitted to HOD'),
+        ('APPROVED_HOD', 'Approved by HOD'),
+        ('REJECTED_HOD', 'Rejected by HOD'),
+        ('COMPLETED', 'Completed'),
+    ))
     progress = models.IntegerField(default=0)
     deadline = models.DateTimeField()
+    is_active = models.BooleanField(default=True)
     objects = models.Manager()
 
     def __str__(self):

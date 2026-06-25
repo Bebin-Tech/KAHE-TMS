@@ -16,7 +16,8 @@ import {
   Search,
   Notifications,
   Menu as MenuIcon,
-  ExitToAppRounded
+  ExitToAppRounded,
+  AssignmentTurnedInOutlined
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -48,6 +49,7 @@ const DashboardLayout = ({ children, title }) => {
       { text: 'Department', icon: <BusinessOutlined />, path: '/department-management' }
     ] : []),
     { text: 'Task', icon: <AssignmentOutlined />, path: '/tasks' },
+    { text: 'Completed Tasks', icon: <AssignmentTurnedInOutlined />, path: '/completed-tasks' },
     { text: 'Reports', icon: <AssessmentOutlined />, path: '/reports' },
     { text: 'Settings', icon: <SettingsOutlined />, path: '/settings' },
     { text: 'Complete Module', icon: <FactCheckOutlined />, path: '/complete-module' },
@@ -91,7 +93,7 @@ const DashboardLayout = ({ children, title }) => {
       <Box sx={{ px: 1, mb: 4 }}>
         <Paper elevation={0} sx={{ p: 2, bgcolor: '#f4f6f8', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: 2 }}>
           <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>
-            {user.username?.[0].toUpperCase()}
+            {(user.username?.[0] || 'U').toUpperCase()}
           </Avatar>
           <Box sx={{ overflow: 'hidden' }}>
             <Typography variant="subtitle2" noWrap sx={{ fontWeight: 700, color: '#212b36' }}>
@@ -198,7 +200,7 @@ const DashboardLayout = ({ children, title }) => {
                 onClick={handleMenu}
                 sx={{ width: 32, height: 32, cursor: 'pointer', border: '2px solid white', boxShadow: '0 0 0 1px #e2e8f0', bgcolor: 'primary.main' }}
               >
-                {user.username?.[0].toUpperCase()}
+                {(user.username?.[0] || 'U').toUpperCase()}
               </Avatar>
               <Menu
                 anchorEl={anchorEl}

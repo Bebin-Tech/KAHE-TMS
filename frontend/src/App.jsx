@@ -11,6 +11,7 @@ import Tasks from './pages/Tasks.jsx';
 import Reports from './pages/Reports.jsx';
 import Settings from './pages/Settings.jsx';
 import CompleteModule from './pages/CompleteModule.jsx';
+import CompletedTasks from './pages/CompletedTasks.jsx';
 import ChangePassword from './pages/ChangePassword.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 
@@ -107,6 +108,15 @@ function App() {
           element={
             <ProtectedRoute>
               <CompleteModule />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/completed-tasks"
+          element={
+            <ProtectedRoute>
+              <CompletedTasks />
             </ProtectedRoute>
           }
         />

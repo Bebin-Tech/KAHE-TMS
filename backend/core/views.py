@@ -22,20 +22,29 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
+    queryset = User.objects.filter(is_active=True)
     serializer_class = UserSerializer
 
     def get_queryset(self):
-        queryset = User.objects.all()
+        queryset = User.objects.filter(is_active=True)
         department = self.request.query_params.get('department')
         if department:
             queryset = queryset.filter(department_id=department)
         return queryset
 
+    def destroy(self, request, *args, **kwargs):
+        """Soft delete for user accounts."""
+        instance = self.get_object()
+        if instance.role == 'ADMIN':
+            return Response({'error': 'Cannot delete an Admin account.'}, status=status.HTTP_400_BAD_REQUEST)
+        instance.is_active = False
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     def get_permissions(self):
         # Read actions: any authenticated user (needed for profile / listing HODs)
-        # Write actions: Admin only
-        if self.action in ['list', 'retrieve', 'me', 'hods']:
+        # Write actions: Admin only (except changing own password)
+        if self.action in ['list', 'retrieve', 'me', 'hods', 'change_password']:
             return [permissions.IsAuthenticated()]
         return [permissions.IsAuthenticated(), IsAdminRole()]
 
@@ -87,20 +96,28 @@ class UserViewSet(viewsets.ModelViewSet):
         user.save()
         return Response({'status': 'password_reset', 'message': f'Password reset for {user.username}.'})
 
-    @action(detail=False, methods=['post'], url_path='change_password')
+    @action(detail=False, methods=['post'], url_path='change_password', permission_classes=[permissions.IsAuthenticated])
     def change_password(self, request):
         """User changes their own password on first login."""
         user = request.user
         old_password = request.data.get('old_password')
         new_password = request.data.get('new_password')
+        
+        # Verify old password
         if not user.check_password(old_password):
-            return Response({'error': 'Old password is incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'The current password you entered is incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate new password
         if not new_password or len(new_password) < 6:
-            return Response({'error': 'New password must be at least 6 characters.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'New password must be at least 6 characters long.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        if old_password == new_password:
+            return Response({'error': 'New password cannot be the same as the old password.'}, status=status.HTTP_400_BAD_REQUEST)
+
         user.set_password(new_password)
         user.must_change_password = False
         user.save()
-        return Response({'status': 'password_changed', 'message': 'Password changed successfully.'})
+        return Response({'status': 'password_changed', 'message': 'Password updated successfully.'})
 
     @action(detail=False, methods=['get'])
     def stats(self, request):
@@ -122,62 +139,110 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.all()
+    queryset = Task.objects.filter(is_active=True)
     serializer_class = TaskSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
+        base_queryset = Task.objects.filter(is_active=True)
         if user.role == 'ADMIN':
-            return Task.objects.all()
+            return base_queryset
         elif user.role == 'DEAN':
-            return Task.objects.filter(created_by=user)
+            return base_queryset.filter(created_by=user)
         elif user.role == 'HOD':
-            return Task.objects.filter(assigned_to_hod=user)
+            return base_queryset.filter(assigned_to_hod=user)
         elif user.role == 'FACULTY':
-            return Task.objects.filter(subtasks__assigned_to=user).distinct()
-        return Task.objects.all()
+            return base_queryset.filter(subtasks__assigned_to=user).distinct()
+        return base_queryset
+
+    def destroy(self, request, *args, **kwargs):
+        """Soft delete for tasks."""
+        instance = self.get_object()
+        instance.is_active = False
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['post'])
-    def approve_as_hod(self, request, pk=None):
+    def submit_to_dean(self, request, pk=None):
+        """HOD submits the main task to the Dean."""
         task = self.get_object()
-        task.status = 'HOD_APPROVED'
+        task.status = 'SUBMITTED_DEAN'
         task.save()
-        Notification.objects.create(user=task.created_by, message=f"Task '{task.title}' approved by HOD.")
-        return Response({'status': 'approved by hod'})
+        Notification.objects.create(user=task.created_by, message=f"Task '{task.title}' has been submitted for your review by HOD.")
+        return Response({'status': 'submitted to dean'})
 
     @action(detail=True, methods=['post'])
     def approve_as_dean(self, request, pk=None):
+        """Dean approves the task, marking it as COMPLETED."""
         task = self.get_object()
         task.status = 'COMPLETED'
         task.save()
+        Notification.objects.create(user=task.assigned_to_hod, message=f"Task '{task.title}' has been officially approved by the Dean.")
         return Response({'status': 'completed'})
 
     @action(detail=True, methods=['post'])
-    def reject(self, request, pk=None):
+    def reject_as_dean(self, request, pk=None):
+        """Dean rejects the task, sending it back to the HOD."""
         task = self.get_object()
-        feedback = request.data.get('feedback', '')
-        if request.user.role == 'DEAN':
-            task.status = 'REJECTED_DEAN'
-            Notification.objects.create(user=task.assigned_to_hod, message=f"Task '{task.title}' rejected by Dean: {feedback}")
-        else:
-            task.status = 'REJECTED_HOD'
-            # Find subtasks and notify faculty?
+        feedback = request.data.get('feedback', 'No feedback provided.')
+        task.status = 'REJECTED_DEAN'
         task.save()
-        return Response({'status': 'rejected'})
+        Notification.objects.create(user=task.assigned_to_hod, message=f"Task '{task.title}' was rejected by the Dean. Feedback: {feedback}")
+        return Response({'status': 'rejected by dean'})
 
 
 class SubTaskViewSet(viewsets.ModelViewSet):
-    queryset = SubTask.objects.all()
+    queryset = SubTask.objects.filter(is_active=True)
     serializer_class = SubTaskSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def destroy(self, request, *args, **kwargs):
+        """Soft delete for subtasks."""
+        instance = self.get_object()
+        instance.is_active = False
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def submit_to_hod(self, request, pk=None):
+        """Faculty submits work to the HOD."""
+        subtask = self.get_object()
+        subtask.status = 'SUBMITTED'
+        subtask.progress = 100
+        subtask.save()
+        Notification.objects.create(user=subtask.created_by, message=f"Subtask '{subtask.title}' has been submitted by Faculty.")
+        return Response({'status': 'submitted'})
+
+    @action(detail=True, methods=['post'])
+    def approve_by_hod(self, request, pk=None):
+        """HOD approves faculty work."""
+        subtask = self.get_object()
+        subtask.status = 'APPROVED_HOD'
+        subtask.save()
+        Notification.objects.create(user=subtask.assigned_to, message=f"Your work on '{subtask.title}' has been approved by HOD.")
+        return Response({'status': 'approved'})
+
+    @action(detail=True, methods=['post'])
+    def reject_by_hod(self, request, pk=None):
+        """HOD rejects faculty work and sends it back."""
+        subtask = self.get_object()
+        feedback = request.data.get('feedback', 'No feedback provided.')
+        subtask.status = 'REJECTED_HOD'
+        subtask.progress = 0
+        subtask.save()
+        Notification.objects.create(user=subtask.assigned_to, message=f"Your work on '{subtask.title}' was rejected by HOD. Feedback: {feedback}")
+        return Response({'status': 'rejected'})
 
     @action(detail=True, methods=['post'])
     def update_progress(self, request, pk=None):
         subtask = self.get_object()
         subtask.progress = request.data.get('progress', 0)
         if subtask.progress == 100:
-            subtask.status = 'COMPLETED'
+            subtask.status = 'IN_PROGRESS' # Or stay assigned until explicit submit
         subtask.save()
         return Response({'status': 'progress updated'})
 
@@ -189,9 +254,16 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
 
 class DepartmentViewSet(viewsets.ModelViewSet):
-    queryset = Department.objects.all()
+    queryset = Department.objects.filter(is_active=True)
     serializer_class = DepartmentSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def destroy(self, request, *args, **kwargs):
+        """Soft delete: set is_active to False instead of deleting."""
+        instance = self.get_object()
+        instance.is_active = False
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class NotificationViewSet(viewsets.ModelViewSet):

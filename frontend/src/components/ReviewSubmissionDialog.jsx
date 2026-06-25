@@ -35,18 +35,16 @@ const ReviewSubmissionDialog = ({ open, onClose, task, onProcessed }) => {
     }
   };
 
-  const handleAction = async (status) => {
+  const handleAction = async (action) => {
     setProcessing(true);
+    const user = JSON.parse(localStorage.getItem('user'));
     try {
       if (task.type === 'subtask') {
-        await api.patch(`subtasks/${task.id}/`, {
-          status: status === 'approve' ? 'COMPLETED' : 'REJECTED'
-        });
-        // Add feedback via submission or notification
+        const endpoint = action === 'approve' ? 'approve_by_hod' : 'reject_by_hod';
+        await api.post(`subtasks/${task.id}/${endpoint}/`, { feedback });
       } else {
-        await api.post(`tasks/${task.id}/${status === 'approve' ? 'approve_as_hod' : 'reject'}/`, {
-          feedback
-        });
+        const endpoint = action === 'approve' ? 'approve_as_dean' : 'reject_as_dean';
+        await api.post(`tasks/${task.id}/${endpoint}/`, { feedback });
       }
       onProcessed();
       onClose();

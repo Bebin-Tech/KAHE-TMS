@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import {
-  Paper, Typography, Box, Button, Table, TableBody,
-  TableCell, TableContainer, TableHead, TableRow,
+  Paper, Typography, Box, Button, Grid,
   Chip, IconButton, Dialog, DialogTitle, DialogContent,
-  DialogActions, TextField, MenuItem, Grid, Switch, FormControlLabel
+  DialogActions, TextField, MenuItem, Switch, FormControlLabel,
+  Card, Avatar, Divider, Tooltip
 } from '@mui/material';
-import { AddRounded, EditRounded, LockResetRounded, DeleteRounded, PersonAddRounded } from '@mui/icons-material';
+import {
+  EditRounded,
+  LockResetRounded,
+  DeleteRounded,
+  PersonAddRounded,
+  EmailOutlined,
+  BusinessOutlined,
+  BadgeOutlined
+} from '@mui/icons-material';
 import api from '../api/axios';
 
 const UserManagement = () => {
@@ -66,6 +74,32 @@ const UserManagement = () => {
       fetchData();
     } catch (err) {
       console.error('Error saving user:', err);
+      alert(err.response?.data?.error || 'Failed to save user account.');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this user?')) {
+      try {
+        await api.delete(`users/${id}/`);
+        fetchData();
+      } catch (err) {
+        console.error('Error deleting user:', err);
+        alert('Failed to delete user.');
+      }
+    }
+  };
+
+  const handleResetPassword = async (id) => {
+    const newPass = prompt("Enter new temporary password (min 6 characters):");
+    if (!newPass) return;
+    if (newPass.length < 6) return alert("Password too short.");
+
+    try {
+      await api.post(`users/${id}/reset_password/`, { new_password: newPass });
+      alert("Password reset successfully.");
+    } catch (err) {
+      alert("Failed to reset password.");
     }
   };
 
@@ -78,76 +112,126 @@ const UserManagement = () => {
     }
   };
 
+  const getRoleColor = (role) => {
+    switch (role) {
+      case 'ADMIN': return { bg: '#d1e9fc', color: '#0c53b7' };
+      case 'DEAN': return { bg: '#d0f2ff', color: '#04297a' };
+      case 'HOD': return { bg: '#fff7cd', color: '#7a4f01' };
+      case 'FACULTY': return { bg: '#ecfdf5', color: '#047857' };
+      default: return { bg: '#f4f6f8', color: '#637381' };
+    }
+  };
+
   return (
     <DashboardLayout title="User Management">
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box>
-          <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Manage Personnel</Typography>
-          <Typography variant="body1" color="text.secondary">Create and manage accounts for Dean, HOD, and Faculty.</Typography>
+        <Box sx={{ textAlign: 'left' }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: '#212b36' }}>All users</Typography>
+          <Typography variant="body2" color="text.secondary">Create and manage accounts for all university roles.</Typography>
         </Box>
         <Button
-          variant="contained" startIcon={<PersonAddRounded />}
-          onClick={() => handleOpen()} sx={{ borderRadius: 3, px: 3, py: 1.5 }}
+          variant="contained"
+          startIcon={<PersonAddRounded />}
+          onClick={() => handleOpen()}
+          sx={{ borderRadius: 2, px: 3, py: 1.2, bgcolor: '#0066b2', '&:hover': { bgcolor: '#005291' }, textTransform: 'none', fontWeight: 700 }}
         >
           Add New User
         </Button>
       </Box>
 
-      <TableContainer component={Paper} sx={{ borderRadius: 4, border: '1px solid #e2e8f0' }}>
-        <Table>
-          <TableHead sx={{ bgcolor: '#f8fafc' }}>
-            <TableRow>
-              <TableCell sx={{ fontWeight: 700 }}>Full Name</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>Username / Email</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>Role</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>Department</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-              <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id} hover>
-                <TableCell>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{user.first_name} {user.last_name}</Typography>
-                </TableCell>
-                <TableCell>
-                  <Typography variant="body2">{user.username}</Typography>
-                  <Typography variant="caption" color="text.secondary">{user.email}</Typography>
-                </TableCell>
-                <TableCell>
-                  <Chip label={user.role} size="small" variant="outlined" sx={{ fontWeight: 700 }} />
-                </TableCell>
-                <TableCell>{user.department_name || 'N/A'}</TableCell>
-                <TableCell>
-                  <FormControlLabel
-                    control={<Switch checked={user.is_active} onChange={() => toggleActive(user.id)} size="small" />}
-                    label={user.is_active ? "Active" : "Inactive"}
-                    sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.8rem' } }}
+      <Grid container spacing={3}>
+        {users.length > 0 ? users.map((user) => {
+          const roleStyle = getRoleColor(user.role);
+          return (
+            <Grid item xs={12} sm={6} md={4} key={user.id}>
+              <Card sx={{
+                borderRadius: '16px',
+                boxShadow: '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
+                p: 3,
+                transition: 'transform 0.2s',
+                '&:hover': { transform: 'translateY(-4px)' }
+              }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                  <Avatar
+                    sx={{ width: 48, height: 48, bgcolor: roleStyle.color, fontWeight: 700 }}
+                  >
+                    {user.first_name?.[0]}{user.last_name?.[0]}
+                  </Avatar>
+                  <Chip
+                    label={user.role}
+                    size="small"
+                    sx={{ bgcolor: roleStyle.bg, color: roleStyle.color, fontWeight: 700, borderRadius: '6px' }}
                   />
-                </TableCell>
-                <TableCell align="right">
-                  <IconButton onClick={() => handleOpen(user)} size="small" color="primary">
-                    <EditRounded fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" color="warning">
-                    <LockResetRounded fontSize="small" />
-                  </IconButton>
-                  <IconButton size="small" color="error">
-                    <DeleteRounded fontSize="small" />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+                </Box>
 
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#212b36', mb: 0.5 }}>
+                  {user.first_name} {user.last_name}
+                </Typography>
+                <Typography variant="caption" sx={{ color: '#637381', display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <BadgeOutlined sx={{ fontSize: '1rem' }} /> @{user.username}
+                </Typography>
+
+                <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
+
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 3 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <EmailOutlined sx={{ color: '#919eab', fontSize: '1.2rem' }} />
+                    <Typography variant="body2" sx={{ color: '#212b36' }}>{user.email}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <BusinessOutlined sx={{ color: '#919eab', fontSize: '1.2rem' }} />
+                    <Typography variant="body2" sx={{ color: '#212b36' }}>{user.department_name || 'No Department'}</Typography>
+                  </Box>
+                </Box>
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={user.is_active}
+                        onChange={() => toggleActive(user.id)}
+                        size="small"
+                        color="primary"
+                      />
+                    }
+                    label={user.is_active ? "Active" : "Inactive"}
+                    sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.875rem', fontWeight: 600, color: user.is_active ? '#047857' : '#b91c1c' } }}
+                  />
+                  <Box sx={{ display: 'flex', gap: 0.5 }}>
+                    <Tooltip title="Edit User">
+                      <IconButton onClick={() => handleOpen(user)} size="small" sx={{ color: '#1976d2' }}>
+                        <EditRounded fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Reset Password">
+                      <IconButton onClick={() => handleResetPassword(user.id)} size="small" sx={{ color: '#f59e0b' }}>
+                        <LockResetRounded fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton onClick={() => handleDelete(user.id)} size="small" sx={{ color: '#f44336' }}>
+                        <DeleteRounded fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Box>
+              </Card>
+            </Grid>
+          );
+        }) : (
+          <Grid item xs={12} sx={{ py: 10, textAlign: 'center' }}>
+            <Typography variant="body1" color="text.secondary">No user accounts found.</Typography>
+          </Grid>
+        )}
+      </Grid>
+
+      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px', p: 1 } }}>
         <form onSubmit={handleSubmit}>
-          <DialogTitle sx={{ fontWeight: 800 }}>{editingUser ? 'Edit User' : 'Create User'}</DialogTitle>
-          <DialogContent dividers>
-            <Grid container spacing={2}>
+          <DialogTitle sx={{ fontWeight: 700, px: 3, pt: 3 }}>
+            {editingUser ? 'Edit User Account' : 'Create New Account'}
+          </DialogTitle>
+          <DialogContent sx={{ px: 3 }}>
+            <Grid container spacing={2.5} sx={{ mt: 0.5 }}>
               <Grid item xs={6}>
                 <TextField fullWidth label="First Name" required value={formData.first_name} onChange={(e) => setFormData({...formData, first_name: e.target.value})} />
               </Grid>
@@ -155,7 +239,7 @@ const UserManagement = () => {
                 <TextField fullWidth label="Last Name" required value={formData.last_name} onChange={(e) => setFormData({...formData, last_name: e.target.value})} />
               </Grid>
               <Grid item xs={12}>
-                <TextField fullWidth label="Email" type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                <TextField fullWidth label="Email Address" type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
               </Grid>
               <Grid item xs={12}>
                 <TextField fullWidth label="Username" required value={formData.username} onChange={(e) => setFormData({...formData, username: e.target.value})} />
@@ -166,7 +250,8 @@ const UserManagement = () => {
                 </Grid>
               )}
               <Grid item xs={6}>
-                <TextField select fullWidth label="Role" value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}>
+                <TextField select fullWidth label="Assigned Role" value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}>
+                  <MenuItem value="ADMIN">Admin</MenuItem>
                   <MenuItem value="DEAN">Dean</MenuItem>
                   <MenuItem value="HOD">HOD</MenuItem>
                   <MenuItem value="FACULTY">Faculty</MenuItem>
@@ -182,8 +267,14 @@ const UserManagement = () => {
             </Grid>
           </DialogContent>
           <DialogActions sx={{ p: 3 }}>
-            <Button onClick={() => setOpen(false)} color="inherit">Cancel</Button>
-            <Button type="submit" variant="contained">Save User</Button>
+            <Button onClick={() => setOpen(false)} sx={{ color: '#637381', fontWeight: 700 }}>Cancel</Button>
+            <Button
+              type="submit"
+              variant="contained"
+              sx={{ bgcolor: '#0066b2', '&:hover': { bgcolor: '#005291' }, borderRadius: 1.5, px: 3, fontWeight: 700, textTransform: 'none' }}
+            >
+              {editingUser ? 'Update Account' : 'Create Account'}
+            </Button>
           </DialogActions>
         </form>
       </Dialog>

@@ -49,6 +49,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
 
 class SubTaskSerializer(serializers.ModelSerializer):
     assigned_to_name = serializers.ReadOnlyField(source='assigned_to.get_full_name')
+    created_by_name = serializers.ReadOnlyField(source='created_by.get_full_name')
     class Meta:
         model = SubTask
         fields = '__all__'

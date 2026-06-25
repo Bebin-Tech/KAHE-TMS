@@ -21,6 +21,7 @@ import api from '../api/axios';
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
   const [open, setOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
@@ -37,6 +38,23 @@ const Tasks = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handleEdit = (task) => {
+    setEditingTask(task);
+    setOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this task?')) {
+      try {
+        await api.delete(`tasks/${id}/`);
+        fetchData();
+      } catch (err) {
+        console.error('Error deleting task:', err);
+        alert('Failed to delete task.');
+      }
+    }
+  };
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -140,8 +158,8 @@ const Tasks = () => {
                   </Box>
                 </TableCell>
                 <TableCell align="right">
-                  <IconButton size="small" sx={{ color: '#1976d2' }}><EditRounded fontSize="small" /></IconButton>
-                  <IconButton size="small" sx={{ color: '#f44336' }}><DeleteRounded fontSize="small" /></IconButton>
+                  <IconButton onClick={() => handleEdit(task)} size="small" sx={{ color: '#1976d2' }}><EditRounded fontSize="small" /></IconButton>
+                  <IconButton onClick={() => handleDelete(task.id)} size="small" sx={{ color: '#f44336' }}><DeleteRounded fontSize="small" /></IconButton>
                 </TableCell>
               </TableRow>
             )) : (
@@ -158,8 +176,12 @@ const Tasks = () => {
 
       <CreateTaskDialog
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={() => {
+          setOpen(false);
+          setEditingTask(null);
+        }}
         onTaskCreated={fetchData}
+        task={editingTask}
       />
     </DashboardLayout>
   );

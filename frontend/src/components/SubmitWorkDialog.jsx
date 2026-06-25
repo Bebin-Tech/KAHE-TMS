@@ -36,8 +36,8 @@ const SubmitWorkDialog = ({ open, onClose, subtaskId, onSubmitted }) => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      // Update subtask status
-      await api.patch(`subtasks/${subtaskId}/`, { status: 'SUBMITTED' });
+      // Update subtask status via specialized action
+      await api.post(`subtasks/${subtaskId}/submit_to_hod/`);
 
       onSubmitted();
       onClose();
