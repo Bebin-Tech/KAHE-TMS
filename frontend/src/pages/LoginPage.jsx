@@ -30,7 +30,7 @@ const LoginPage = () => {
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     if (localStorage.getItem('access_token') && user.role) {
-      redirectByRole(user.role);
+      redirectByRole(user);
     }
   }, []);
 

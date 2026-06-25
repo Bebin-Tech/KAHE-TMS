@@ -57,6 +57,7 @@ class TaskSerializer(serializers.ModelSerializer):
     subtasks = SubTaskSerializer(many=True, read_only=True)
     created_by_name = serializers.ReadOnlyField(source='created_by.get_full_name')
     assigned_to_hod_name = serializers.ReadOnlyField(source='assigned_to_hod.get_full_name')
+    department_name = serializers.ReadOnlyField(source='department.name')
     
     class Meta:
         model = Task

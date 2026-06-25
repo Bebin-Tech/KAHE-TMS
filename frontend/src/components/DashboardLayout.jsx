@@ -1,25 +1,26 @@
 import React, { useState } from 'react';
 import {
   Box, Drawer, AppBar, Toolbar, List, Typography,
-  Divider, IconButton, ListItem, ListItemButton,
-  ListItemIcon, ListItemText, Avatar, Menu, MenuItem,
-  Tooltip, useTheme, useMediaQuery, Paper
+  IconButton, ListItem, ListItemButton,
+  ListItemIcon, ListItemText, Avatar, Badge,
+  useTheme, useMediaQuery, Paper, Menu, MenuItem, Divider
 } from '@mui/material';
 import {
+  DashboardOutlined,
+  PeopleOutlined,
+  AssignmentOutlined,
+  AssessmentOutlined,
+  SettingsOutlined,
+  FactCheckOutlined,
+  BusinessOutlined,
+  Search,
+  Notifications,
   Menu as MenuIcon,
-  DashboardRounded,
-  AssignmentRounded,
-  PeopleRounded,
-  SettingsRounded,
-  ExitToAppRounded,
-  NotificationsNoneRounded,
-  ExpandMoreRounded,
-  ChevronLeftRounded,
-  AssessmentRounded
+  ExitToAppRounded
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const drawerWidth = 260;
+const drawerWidth = 280;
 
 const DashboardLayout = ({ children, title }) => {
   const theme = useTheme();
@@ -41,16 +42,21 @@ const DashboardLayout = ({ children, title }) => {
   };
 
   const menuItems = [
-    { text: 'Dashboard', icon: <DashboardRounded />, path: `/${user.role?.toLowerCase()}-dashboard` },
-    ...(user.role === 'ADMIN' ? [{ text: 'User Management', icon: <PeopleRounded />, path: '/user-management' }] : []),
-    { text: 'Tasks', icon: <AssignmentRounded />, path: '/tasks' },
-    { text: 'Reports', icon: <AssessmentRounded />, path: '/reports' },
-    { text: 'Settings', icon: <SettingsRounded />, path: '/settings' },
+    { text: 'Dashboard', icon: <DashboardOutlined />, path: `/${user.role?.toLowerCase()}-dashboard` },
+    ...(user.role === 'ADMIN' ? [
+      { text: 'User', icon: <PeopleOutlined />, path: '/user-management' },
+      { text: 'Department', icon: <BusinessOutlined />, path: '/department-management' }
+    ] : []),
+    { text: 'Task', icon: <AssignmentOutlined />, path: '/tasks' },
+    { text: 'Reports', icon: <AssessmentOutlined />, path: '/reports' },
+    { text: 'Settings', icon: <SettingsOutlined />, path: '/settings' },
+    { text: 'Complete Module', icon: <FactCheckOutlined />, path: '/complete-module' },
   ];
 
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#0f172a', color: 'white' }}>
-      <Toolbar sx={{ px: 3, display: 'flex', alignItems: 'center', justifyContent: 'flex-start', py: 3 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'white', px: 2 }}>
+      {/* Restored Previous Logo */}
+      <Box sx={{ py: 3, px: 2, display: 'flex', alignItems: 'center' }}>
         <Box
           sx={{
             bgcolor: 'white',
@@ -79,165 +85,68 @@ const DashboardLayout = ({ children, title }) => {
         <Typography variant="h6" component="div" sx={{ fontWeight: 800, color: '#38bdf8', letterSpacing: '0.5px', fontSize: '0.95rem' }}>
           KAHE TMS
         </Typography>
-      </Toolbar>
-      <Divider sx={{ bgcolor: 'rgba(255,255,255,0.05)' }} />
-      <List sx={{ px: 2, py: 3, flexGrow: 1 }}>
+      </Box>
+
+      {/* User Card */}
+      <Box sx={{ px: 1, mb: 4 }}>
+        <Paper elevation={0} sx={{ p: 2, bgcolor: '#f4f6f8', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>
+            {user.username?.[0].toUpperCase()}
+          </Avatar>
+          <Box sx={{ overflow: 'hidden' }}>
+            <Typography variant="subtitle2" noWrap sx={{ fontWeight: 700, color: '#212b36' }}>
+              {user.full_name || user.username || 'User'}
+            </Typography>
+            <Typography variant="caption" sx={{ color: '#637381' }}>
+              {user.role}
+            </Typography>
+          </Box>
+        </Paper>
+      </Box>
+
+      {/* Menu List */}
+      <List sx={{ px: 0 }}>
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
-            <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
+            <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
               <ListItemButton
                 onClick={() => navigate(item.path)}
                 sx={{
-                  borderRadius: '12px',
-                  bgcolor: isActive ? 'primary.main' : 'transparent',
-                  color: isActive ? 'white' : 'rgba(255,255,255,0.7)',
+                  borderRadius: '8px',
+                  bgcolor: isActive ? 'rgba(145, 158, 171, 0.08)' : 'transparent',
+                  color: isActive ? '#212b36' : '#637381',
                   '&:hover': {
-                    bgcolor: isActive ? 'primary.main' : 'rgba(255,255,255,0.05)',
-                    color: 'white'
+                    bgcolor: 'rgba(145, 158, 171, 0.04)',
                   },
-                  transition: 'all 0.2s'
+                  py: 1.5
                 }}
               >
                 <ListItemIcon sx={{
-                  color: isActive ? 'white' : 'rgba(255,255,255,0.5)',
-                  minWidth: '40px'
+                  color: isActive ? '#1976d2' : '#637381',
+                  minWidth: '44px',
+                  '& svg': { fontSize: '1.4rem' }
                 }}>
                   {item.icon}
                 </ListItemIcon>
                 <ListItemText
                   primary={item.text}
-                  primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: isActive ? 600 : 500 }}
+                  primaryTypographyProps={{
+                    fontSize: '0.875rem',
+                    fontWeight: isActive ? 700 : 500,
+                  }}
                 />
               </ListItemButton>
             </ListItem>
           );
         })}
       </List>
-
-      <Box sx={{ p: 2, bgcolor: 'rgba(255,255,255,0.03)', borderRadius: '16px', m: 2 }}>
-        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 600, mb: 1, display: 'block' }}>
-          LOGGED IN AS
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main', mr: 1.5, fontSize: '0.8rem' }}>
-            {user.username?.[0].toUpperCase()}
-          </Avatar>
-          <Box sx={{ overflow: 'hidden' }}>
-            <Typography variant="body2" noWrap sx={{ fontWeight: 600 }}>{user.full_name || user.username}</Typography>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>{user.role}</Typography>
-          </Box>
-        </Box>
-      </Box>
     </Box>
   );
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar
-        position="fixed"
-        elevation={0}
-        sx={{
-          width: { md: `calc(100% - ${drawerWidth}px)` },
-          ml: { md: `${drawerWidth}px` },
-          bgcolor: 'rgba(255, 255, 255, 0.8)',
-          backdropFilter: 'blur(8px)',
-          color: 'text.primary',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-        }}
-      >
-        <Toolbar sx={{ justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {isMobile && (
-              <IconButton
-                color="inherit"
-                edge="start"
-                onClick={handleDrawerToggle}
-                sx={{ mr: 2 }}
-              >
-                <MenuIcon />
-              </IconButton>
-            )}
-            <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700, letterSpacing: '-0.5px' }}>
-              {title}
-            </Typography>
-          </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Tooltip title="Notifications">
-              <IconButton size="large" color="inherit">
-                <NotificationsNoneRounded />
-              </IconButton>
-            </Tooltip>
-
-            <Box
-              onClick={handleMenu}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                cursor: 'pointer',
-                p: 0.5,
-                pr: 1.5,
-                borderRadius: '50px',
-                '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' }
-              }}
-            >
-              <Avatar sx={{ width: 35, height: 35, bgcolor: 'primary.main', fontWeight: 700 }}>
-                {user.username?.[0].toUpperCase()}
-              </Avatar>
-              <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-                <Typography variant="subtitle2" sx={{ lineHeight: 1, fontWeight: 700 }}>
-                  {user.username}
-                </Typography>
-              </Box>
-              <ExpandMoreRounded sx={{ color: 'text.secondary', fontSize: '1.2rem' }} />
-            </Box>
-
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-              PaperProps={{
-                elevation: 0,
-                sx: {
-                  overflow: 'visible',
-                  filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.1))',
-                  mt: 1.5,
-                  borderRadius: '12px',
-                  width: 200,
-                  '&:before': {
-                    content: '""',
-                    display: 'block',
-                    position: 'absolute',
-                    top: 0,
-                    right: 14,
-                    width: 10,
-                    height: 10,
-                    bgcolor: 'background.paper',
-                    transform: 'translateY(-50%) rotate(45deg)',
-                    zIndex: 0,
-                  },
-                },
-              }}
-              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-            >
-              <MenuItem onClick={handleClose} sx={{ py: 1.5 }}>Profile</MenuItem>
-              <MenuItem onClick={handleClose} sx={{ py: 1.5 }}>Account Settings</MenuItem>
-              <Divider sx={{ my: 1 }} />
-              <MenuItem onClick={handleLogout} sx={{ py: 1.5, color: 'error.main' }}>
-                <ListItemIcon>
-                  <ExitToAppRounded fontSize="small" sx={{ color: 'error.main' }} />
-                </ListItemIcon>
-                Logout
-              </MenuItem>
-            </Menu>
-          </Box>
-        </Toolbar>
-      </AppBar>
-
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#eaefec' }}>
+      {/* Sidebar */}
       <Drawer
         variant={isMobile ? "temporary" : "permanent"}
         open={isMobile ? open : true}
@@ -248,46 +157,90 @@ const DashboardLayout = ({ children, title }) => {
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: drawerWidth,
-            borderRight: 'none',
+            borderRight: '1px dashed rgba(145, 158, 171, 0.24)',
+            bgcolor: 'white',
           },
         }}
       >
         {drawer}
       </Drawer>
 
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: { xs: 2, md: 4 },
-          width: '100%',
-          mt: '64px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          ml: { md: `${drawerWidth}px` },
-          width: { md: `calc(100% - ${drawerWidth}px)` },
-        }}
-      >
-        <Paper
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        {/* Top Navbar */}
+        <AppBar
+          position="sticky"
           elevation={0}
           sx={{
-            width: '100%',
-            maxWidth: '1200px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            textAlign: 'center',
-            p: { xs: 3, md: 6 },
-            borderRadius: '30px',
-            bgcolor: '#f8fafc', // Very light blue-ish grey
-            border: '2px solid #e2e8f0',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-            minHeight: '80vh'
+            bgcolor: 'rgba(234, 239, 236, 0.8)', // Matches #eaefec with transparency
+            backdropFilter: 'blur(6px)',
+            color: 'text.primary',
+          }}
+        >
+          <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, md: 5 } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              {isMobile && (
+                <IconButton onClick={handleDrawerToggle} edge="start" sx={{ mr: 1 }}>
+                  <MenuIcon />
+                </IconButton>
+              )}
+              <IconButton size="small" sx={{ color: '#637381' }}>
+                <Search />
+              </IconButton>
+            </Box>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <IconButton size="small" sx={{ color: '#637381' }}>
+                <Badge badgeContent={2} color="error">
+                  <Notifications />
+                </Badge>
+              </IconButton>
+              <Avatar
+                onClick={handleMenu}
+                sx={{ width: 32, height: 32, cursor: 'pointer', border: '2px solid white', boxShadow: '0 0 0 1px #e2e8f0', bgcolor: 'primary.main' }}
+              >
+                {user.username?.[0].toUpperCase()}
+              </Avatar>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleClose}
+                PaperProps={{
+                  elevation: 0,
+                  sx: {
+                    filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.1))',
+                    mt: 1.5,
+                    borderRadius: '12px',
+                    width: 200,
+                  },
+                }}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              >
+                <MenuItem onClick={handleClose} sx={{ py: 1.5 }}>Profile</MenuItem>
+                <MenuItem onClick={handleClose} sx={{ py: 1.5 }}>Account Settings</MenuItem>
+                <Divider sx={{ my: 1 }} />
+                <MenuItem onClick={handleLogout} sx={{ py: 1.5, color: 'error.main' }}>
+                  <ListItemIcon>
+                    <ExitToAppRounded fontSize="small" sx={{ color: 'error.main' }} />
+                  </ListItemIcon>
+                  Logout
+                </MenuItem>
+              </Menu>
+            </Box>
+          </Toolbar>
+        </AppBar>
+
+        {/* Main Content Area */}
+        <Box
+          component="main"
+          sx={{
+            flex: 1,
+            px: { xs: 2, md: 5 },
+            py: 4,
           }}
         >
           {children}
-        </Paper>
+        </Box>
       </Box>
     </Box>
   );

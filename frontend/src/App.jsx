@@ -6,6 +6,11 @@ import HODDashboard from './pages/HODDashboard.jsx';
 import FacultyDashboard from './pages/FacultyDashboard.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import UserManagement from './pages/UserManagement.jsx';
+import DepartmentManagement from './pages/DepartmentManagement.jsx';
+import Tasks from './pages/Tasks.jsx';
+import Reports from './pages/Reports.jsx';
+import Settings from './pages/Settings.jsx';
+import CompleteModule from './pages/CompleteModule.jsx';
 import ChangePassword from './pages/ChangePassword.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 
@@ -57,6 +62,51 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={['ADMIN']}>
               <UserManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/department-management"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <DepartmentManagement />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/tasks"
+          element={
+            <ProtectedRoute>
+              <Tasks />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute>
+              <Reports />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Settings />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/complete-module"
+          element={
+            <ProtectedRoute>
+              <CompleteModule />
             </ProtectedRoute>
           }
         />

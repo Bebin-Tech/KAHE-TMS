@@ -17,6 +17,7 @@ class User(AbstractUser):
 
 class Department(models.Model):
     name = models.CharField(max_length=100)
+    block_name = models.CharField(max_length=100, blank=True, null=True)
     description = models.TextField(blank=True)
     objects = models.Manager()
 
@@ -25,7 +26,9 @@ class Department(models.Model):
 
 class Task(models.Model):
     STATUS_CHOICES = (
-        ('DRAFT', 'Draft'),
+        ('ONGOING', 'Ongoing'),
+        ('CANCELLED', 'Cancelled'),
+        ('COMPLETED', 'Completed'),
         ('ASSIGNED', 'Assigned'),
         ('IN_PROGRESS', 'In Progress'),
         ('SUBMITTED_HOD', 'Submitted to HOD'),
@@ -34,7 +37,6 @@ class Task(models.Model):
         ('DEAN_APPROVED', 'Dean Approved'),
         ('REJECTED_HOD', 'Rejected by HOD'),
         ('REJECTED_DEAN', 'Rejected by Dean'),
-        ('COMPLETED', 'Completed'),
     )
     PRIORITY_CHOICES = (
         ('LOW', 'Low'),
@@ -46,10 +48,13 @@ class Task(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tasks')
-    assigned_to_hod = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hod_tasks')
+    assigned_to_hod = models.ForeignKey(User, on_delete=models.CASCADE, related_name='hod_tasks', null=True, blank=True)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='tasks', null=True, blank=True)
+    start_date = models.DateTimeField(null=True, blank=True)
     deadline = models.DateTimeField()
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='MEDIUM')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ASSIGNED')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ONGOING')
+    is_special = models.BooleanField(default=False)
     attachment = models.FileField(upload_to='tasks/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

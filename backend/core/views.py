@@ -25,6 +25,13 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+    def get_queryset(self):
+        queryset = User.objects.all()
+        department = self.request.query_params.get('department')
+        if department:
+            queryset = queryset.filter(department_id=department)
+        return queryset
+
     def get_permissions(self):
         # Read actions: any authenticated user (needed for profile / listing HODs)
         # Write actions: Admin only

@@ -2,43 +2,64 @@ import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, MenuItem, Grid, Typography, Box,
-  CircularProgress, Alert
+  CircularProgress, Alert, FormControlLabel, Checkbox
 } from '@mui/material';
 import api from '../api/axios';
 
 const CreateTaskDialog = ({ open, onClose, onTaskCreated }) => {
-  const [hods, setHods] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [fetchingHods, setFetchingHods] = useState(false);
+  const [fetchingData, setFetchingData] = useState(false);
   const [error, setError] = useState('');
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    department: '',
     assigned_to_hod: '',
+    start_date: '',
     deadline: '',
+    status: 'ONGOING',
+    is_special: false,
     priority: 'MEDIUM'
   });
 
   useEffect(() => {
     if (open) {
-      fetchHods();
+      fetchDepartments();
       setError('');
     }
   }, [open]);
 
-  const fetchHods = async () => {
-    setFetchingHods(true);
+  const fetchDepartments = async () => {
+    setFetchingData(true);
     try {
-      const response = await api.get('users/hods/');
-      setHods(response.data);
-      if (response.data.length === 0) {
-        setError('No HODs found in the system. Please create an HOD account first.');
-      }
+      const response = await api.get('departments/');
+      setDepartments(response.data);
     } catch (err) {
-      setError('Failed to fetch HOD list. Check your connection.');
+      setError('Failed to fetch departments.');
     } finally {
-      setFetchingHods(false);
+      setFetchingData(false);
     }
+  };
+
+  const fetchUsersByDepartment = async (deptId) => {
+    setFetchingData(true);
+    try {
+      // Fetching both HODs and Faculty for this department
+      const response = await api.get(`users/?department=${deptId}`);
+      setUsers(response.data);
+    } catch (err) {
+      setError('Failed to fetch users for this department.');
+    } finally {
+      setFetchingData(false);
+    }
+  };
+
+  const handleDepartmentChange = (deptId) => {
+    setFormData({ ...formData, department: deptId, assigned_to_hod: '' });
+    fetchUsersByDepartment(deptId);
   };
 
   const handleSubmit = async (e) => {
@@ -46,15 +67,14 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated }) => {
     setLoading(true);
     setError('');
     try {
-      const user = JSON.parse(localStorage.getItem('user'));
+      const currentUser = JSON.parse(localStorage.getItem('user'));
       await api.post('tasks/', {
         ...formData,
-        created_by: user.id,
-        status: 'ASSIGNED'
+        created_by: currentUser.id
       });
       onTaskCreated();
       onClose();
-      setFormData({ title: '', description: '', assigned_to_hod: '', deadline: '', priority: 'MEDIUM' });
+      resetForm();
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to create task. Check all fields.');
     } finally {
@@ -62,46 +82,111 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated }) => {
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      department: '',
+      assigned_to_hod: '',
+      start_date: '',
+      deadline: '',
+      status: 'ONGOING',
+      is_special: false,
+      priority: 'MEDIUM'
+    });
+    setUsers([]);
+  };
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
       <form onSubmit={handleSubmit}>
-        <DialogTitle sx={{ fontWeight: 800, fontSize: '1.5rem', color: 'primary.main' }}>
-          Create New Assignment
+        <DialogTitle sx={{ fontWeight: 800, fontSize: '1.5rem', color: 'primary.main', pb: 1 }}>
+          Create New Task Assignment
         </DialogTitle>
-        <DialogContent dividers>
-          {error && <Alert severity="warning" sx={{ mb: 3 }}>{error}</Alert>}
-          <Grid container spacing={2.5}>
+        <DialogContent dividers sx={{ pt: 3 }}>
+          {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+
+          <Grid container spacing={3}>
             <Grid item xs={12}>
               <TextField
-                fullWidth label="Task Title" required variant="filled"
+                fullWidth label="Task Name" required
                 value={formData.title}
                 onChange={(e) => setFormData({...formData, title: e.target.value})}
+                placeholder="Enter a descriptive task name"
               />
             </Grid>
+
             <Grid item xs={12}>
               <TextField
-                fullWidth label="Detailed Instructions" multiline rows={3} required variant="filled"
+                fullWidth label="Task Description" multiline rows={4} required
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
+                placeholder="Describe the task requirements in detail"
               />
             </Grid>
+
             <Grid item xs={12} sm={6}>
               <TextField
-                select fullWidth label="Assign to HOD" required variant="filled"
+                select fullWidth label="Department" required
+                value={formData.department}
+                onChange={(e) => handleDepartmentChange(e.target.value)}
+                disabled={fetchingData}
+              >
+                {departments.map((dept) => (
+                  <MenuItem key={dept.id} value={dept.id}>{dept.name}</MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                select fullWidth label="Assign to Personnel" required
                 value={formData.assigned_to_hod}
                 onChange={(e) => setFormData({...formData, assigned_to_hod: e.target.value})}
-                disabled={fetchingHods || hods.length === 0}
+                disabled={!formData.department || fetchingData}
+                helperText="Select HOD or Faculty from the chosen department"
               >
-                {hods.map((hod) => (
-                  <MenuItem key={hod.id} value={hod.id}>
-                    {hod.first_name} {hod.last_name}
+                {users.map((user) => (
+                  <MenuItem key={user.id} value={user.id}>
+                    {user.first_name} {user.last_name} ({user.role})
                   </MenuItem>
                 ))}
               </TextField>
             </Grid>
+
             <Grid item xs={12} sm={6}>
               <TextField
-                select fullWidth label="Priority" variant="filled"
+                fullWidth label="Start Date" type="datetime-local" required
+                InputLabelProps={{ shrink: true }}
+                value={formData.start_date}
+                onChange={(e) => setFormData({...formData, start_date: e.target.value})}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <TextField
+                fullWidth label="Due Date" type="datetime-local" required
+                InputLabelProps={{ shrink: true }}
+                value={formData.deadline}
+                onChange={(e) => setFormData({...formData, deadline: e.target.value})}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <TextField
+                select fullWidth label="Task Status"
+                value={formData.status}
+                onChange={(e) => setFormData({...formData, status: e.target.value})}
+              >
+                <MenuItem value="ONGOING">Ongoing</MenuItem>
+                <MenuItem value="CANCELLED">Cancelled</MenuItem>
+                <MenuItem value="COMPLETED">Completed</MenuItem>
+              </TextField>
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <TextField
+                select fullWidth label="Priority"
                 value={formData.priority}
                 onChange={(e) => setFormData({...formData, priority: e.target.value})}
               >
@@ -111,25 +196,29 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated }) => {
                 <MenuItem value="URGENT">Urgent</MenuItem>
               </TextField>
             </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth label="Deadline Date & Time" type="datetime-local" required variant="filled"
-                InputLabelProps={{ shrink: true }}
-                value={formData.deadline}
-                onChange={(e) => setFormData({...formData, deadline: e.target.value})}
+
+            <Grid item xs={12} sm={4} sx={{ display: 'flex', alignItems: 'center' }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.is_special}
+                    onChange={(e) => setFormData({...formData, is_special: e.target.checked})}
+                  />
+                }
+                label="Special Task"
               />
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
+        <DialogActions sx={{ p: 3, bgcolor: '#f8fafc' }}>
           <Button onClick={onClose} color="inherit" sx={{ fontWeight: 700 }}>Cancel</Button>
           <Button
             type="submit"
             variant="contained"
-            disabled={loading || hods.length === 0}
-            sx={{ px: 4, py: 1, borderRadius: '10px', fontWeight: 700 }}
+            disabled={loading || fetchingData}
+            sx={{ px: 4, py: 1.2, borderRadius: '12px', fontWeight: 700, textTransform: 'none' }}
           >
-            {loading ? <CircularProgress size={24} color="inherit" /> : 'Confirm Assignment'}
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Create Task'}
           </Button>
         </DialogActions>
       </form>

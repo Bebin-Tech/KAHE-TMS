@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
-import { Grid, Typography, Box } from '@mui/material';
-import { PeopleRounded, AssessmentRounded, AssignmentRounded, DomainRounded } from '@mui/icons-material';
+import { Grid, Typography, Box, Card, Avatar } from '@mui/material';
+import {
+  PeopleOutlined,
+  AccountBalanceOutlined,
+  AssignmentTurnedInOutlined,
+  AssignmentOutlined
+} from '@mui/icons-material';
 import api from '../api/axios';
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState({
+    total_users: 0,
+    departments: 0,
+    completed_tasks: 0,
+    total_tasks: 0
+  });
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -19,33 +29,80 @@ const AdminDashboard = () => {
     fetchStats();
   }, []);
 
-  const StatBox = ({ title, value, icon, color }) => (
-    <Grid item xs={12} sm={6} md={3}>
-      <Box sx={{ p: 3, bgcolor: 'white', borderRadius: 4, display: 'flex', alignItems: 'center', gap: 2, border: '1px solid #e2e8f0' }}>
-        <Box sx={{ p: 1.5, bgcolor: `${color}15`, color: color, borderRadius: 3 }}>{icon}</Box>
-        <Box>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>{title}</Typography>
-          <Typography variant="h5" sx={{ fontWeight: 800 }}>{value}</Typography>
-        </Box>
-      </Box>
-    </Grid>
-  );
+  const summaryCards = [
+    {
+      title: 'Total Users',
+      value: stats.total_users || 0,
+      icon: <PeopleOutlined sx={{ fontSize: 32 }} />,
+      color: '#d1e9fc',
+      iconColor: '#0c53b7'
+    },
+    {
+      title: 'Total Departments',
+      value: stats.departments || 0,
+      icon: <AccountBalanceOutlined sx={{ fontSize: 32 }} />,
+      color: '#d0f2ff',
+      iconColor: '#04297a'
+    },
+    {
+      title: 'Completed Tasks',
+      value: stats.completed_tasks || 0,
+      icon: <AssignmentTurnedInOutlined sx={{ fontSize: 32 }} />,
+      color: '#fff7cd',
+      iconColor: '#7a4f01'
+    },
+    {
+      title: 'Created Tasks',
+      value: stats.total_tasks || 0,
+      icon: <AssignmentOutlined sx={{ fontSize: 32 }} />,
+      color: '#ffe7d9',
+      iconColor: '#7a0c2e'
+    },
+  ];
 
   return (
-    <DashboardLayout title="Admin Overview">
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 800 }}>System Health</Typography>
-        <Typography variant="body1" color="text.secondary">Manage users, departments, and monitor global activity.</Typography>
+    <DashboardLayout title="Dashboard">
+      <Box sx={{ mb: 5 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: '#212b36' }}>
+          Hi, Welcome back
+        </Typography>
       </Box>
 
-      <Grid container spacing={3} justifyContent="center">
-        <StatBox title="Total Users" value={stats?.total_users || 0} icon={<PeopleRounded />} color="#3b82f6" />
-        <StatBox title="Active Tasks" value={stats?.total_tasks || 0} icon={<AssignmentRounded />} color="#8b5cf6" />
-        <StatBox title="Departments" value={stats?.departments || 0} icon={<DomainRounded />} color="#10b981" />
-        <StatBox title="Reports Generated" value={12} icon={<AssessmentRounded />} color="#f59e0b" />
+      {/* Summary Cards */}
+      <Grid container spacing={3} sx={{ mb: 5 }}>
+        {summaryCards.map((card, index) => (
+          <Grid item xs={12} sm={6} md={3} key={index}>
+            <Card sx={{
+              borderRadius: '16px',
+              bgcolor: card.color,
+              boxShadow: 'none',
+              textAlign: 'center',
+              py: 5,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              height: '100%'
+            }}>
+              <Avatar sx={{
+                width: 64,
+                height: 64,
+                mb: 3,
+                bgcolor: 'transparent',
+                backgroundImage: `linear-gradient(135deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.24) 100%)`,
+                color: card.iconColor
+              }}>
+                {card.icon}
+              </Avatar>
+              <Typography variant="h3" sx={{ fontWeight: 800, mb: 0.5, color: '#212b36' }}>
+                {card.value}
+              </Typography>
+              <Typography variant="subtitle2" sx={{ opacity: 0.72, color: '#212b36', fontWeight: 700 }}>
+                {card.title}
+              </Typography>
+            </Card>
+          </Grid>
+        ))}
       </Grid>
-
-      {/* More Admin UI could go here */}
     </DashboardLayout>
   );
 };
