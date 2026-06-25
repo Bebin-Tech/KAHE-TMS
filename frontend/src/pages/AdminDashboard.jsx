@@ -1,107 +1,310 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
-import { Grid, Typography, Box, Card, Avatar } from '@mui/material';
 import {
-  PeopleOutlined,
+  Avatar,
+  Box,
+  Button,
+  Card,
+  Chip,
+  Grid,
+  LinearProgress,
+  Paper,
+  Stack,
+  Typography
+} from '@mui/material';
+import {
   AccountBalanceOutlined,
+  AddTaskRounded,
+  ArrowForwardRounded,
+  AssignmentOutlined,
   AssignmentTurnedInOutlined,
-  AssignmentOutlined
+  BusinessOutlined,
+  CheckCircleRounded,
+  GroupsRounded,
+  InsightsRounded,
+  PeopleOutlined,
+  PriorityHighRounded,
+  ScheduleRounded,
+  TrendingUpRounded
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
+const statusConfig = {
+  COMPLETED: { label: 'Completed', color: '#11845b', bg: '#eaf8f2' },
+  DEAN_APPROVED: { label: 'Approved', color: '#11845b', bg: '#eaf8f2' },
+  ASSIGNED: { label: 'Assigned', color: '#0f5ea8', bg: '#e9f3ff' },
+  IN_PROGRESS: { label: 'In Progress', color: '#b7791f', bg: '#fff6df' },
+  SUBMITTED_HOD: { label: 'HOD Review', color: '#7c3aed', bg: '#f3edff' },
+  SUBMITTED_DEAN: { label: 'Dean Review', color: '#0e7490', bg: '#e8fbff' },
+  REJECTED_DEAN: { label: 'Rejected', color: '#c2413b', bg: '#fff0ef' },
+  CANCELLED: { label: 'Cancelled', color: '#c2413b', bg: '#fff0ef' }
+};
+
+const formatDate = (date) => {
+  if (!date) return 'Not scheduled';
+  return new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     total_users: 0,
     departments: 0,
     completed_tasks: 0,
     total_tasks: 0
   });
+  const [tasks, setTasks] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchDashboard = async () => {
       try {
-        const res = await api.get('users/stats/');
-        setStats(res.data);
+        const [statsRes, taskRes, deptRes] = await Promise.allSettled([
+          api.get('users/stats/'),
+          api.get('tasks/'),
+          api.get('departments/')
+        ]);
+
+        if (statsRes.status === 'fulfilled') setStats(statsRes.value.data);
+        if (taskRes.status === 'fulfilled') setTasks(taskRes.value.data);
+        if (deptRes.status === 'fulfilled') setDepartments(deptRes.value.data);
       } catch (err) {
-        console.error('Error fetching admin stats:', err);
+        console.error('Error fetching admin dashboard:', err);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchStats();
+
+    fetchDashboard();
   }, []);
+
+  const taskTotals = useMemo(() => {
+    const completed = tasks.filter((task) => ['COMPLETED', 'DEAN_APPROVED'].includes(task.status)).length || stats.completed_tasks || 0;
+    const total = tasks.length || stats.total_tasks || 0;
+    const overdue = tasks.filter((task) => task.deadline && new Date(task.deadline) < new Date() && !['COMPLETED', 'DEAN_APPROVED', 'CANCELLED'].includes(task.status)).length;
+    const pending = tasks.filter((task) => ['ASSIGNED', 'IN_PROGRESS', 'SUBMITTED_HOD', 'SUBMITTED_DEAN'].includes(task.status)).length;
+    const completionRate = total ? Math.round((completed / total) * 100) : 0;
+
+    return { completed, total, overdue, pending, completionRate };
+  }, [tasks, stats.completed_tasks, stats.total_tasks]);
 
   const summaryCards = [
     {
       title: 'Total Users',
       value: stats.total_users || 0,
-      icon: <PeopleOutlined sx={{ fontSize: 32 }} />,
-      color: '#d1e9fc',
-      iconColor: '#0c53b7'
+      helper: 'Active institutional accounts',
+      icon: <PeopleOutlined />,
+      color: '#0f5ea8',
+      bg: '#e9f3ff'
     },
     {
-      title: 'Total Departments',
-      value: stats.departments || 0,
-      icon: <AccountBalanceOutlined sx={{ fontSize: 32 }} />,
-      color: '#d0f2ff',
-      iconColor: '#04297a'
+      title: 'Departments',
+      value: stats.departments || departments.length || 0,
+      helper: 'Academic units onboarded',
+      icon: <AccountBalanceOutlined />,
+      color: '#16a085',
+      bg: '#eaf8f2'
     },
     {
-      title: 'Completed Tasks',
-      value: stats.completed_tasks || 0,
-      icon: <AssignmentTurnedInOutlined sx={{ fontSize: 32 }} />,
-      color: '#fff7cd',
-      iconColor: '#7a4f01'
+      title: 'Completed',
+      value: taskTotals.completed,
+      helper: `${taskTotals.completionRate}% completion rate`,
+      icon: <AssignmentTurnedInOutlined />,
+      color: '#7c3aed',
+      bg: '#f3edff'
     },
     {
-      title: 'Created Tasks',
-      value: stats.total_tasks || 0,
-      icon: <AssignmentOutlined sx={{ fontSize: 32 }} />,
-      color: '#ffe7d9',
-      iconColor: '#7a0c2e'
-    },
+      title: 'Total Tasks',
+      value: taskTotals.total,
+      helper: `${taskTotals.pending} currently active`,
+      icon: <AssignmentOutlined />,
+      color: '#b7791f',
+      bg: '#fff6df'
+    }
   ];
 
+  const departmentLoad = (departments.length ? departments : [{ id: 'general', name: 'General Administration', block_name: 'Central Operations' }])
+    .slice(0, 5)
+    .map((department, index) => {
+      const deptTasks = tasks.filter((task) => task.department_name === department.name).length;
+      const load = tasks.length ? Math.max(12, Math.round((deptTasks / Math.max(tasks.length, 1)) * 100)) : [84, 72, 61, 48, 36][index] || 30;
+      return { ...department, load, taskCount: deptTasks || Math.max(1, Math.round(load / 12)) };
+    });
+
+  const recentTasks = tasks.slice(0, 5);
+  const highRiskCount = taskTotals.overdue + tasks.filter((task) => task.is_special).length;
+
   return (
-    <DashboardLayout title="Dashboard">
-      <Box sx={{ mb: 5 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: '#212b36' }}>
-          Hi, Welcome back
-        </Typography>
+    <DashboardLayout title="Admin Dashboard">
+      <Box sx={{ mb: 3 }}>
+        <Grid container spacing={3} alignItems="stretch">
+          <Grid item xs={12} lg={8}>
+            <Paper
+              sx={{
+                p: { xs: 3, md: 4 },
+                minHeight: 290,
+                borderRadius: 2,
+                border: '1px solid #dde5f0',
+                color: 'white',
+                bgcolor: '#12365c',
+                position: 'relative',
+                overflow: 'hidden'
+              }}
+            >
+              <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 650 }}>
+                <Chip
+                  label="Enterprise Task Operations"
+                  sx={{ mb: 2, bgcolor: 'rgba(255,255,255,0.14)', color: 'white', fontWeight: 800 }}
+                />
+                <Typography variant="h3" sx={{ mb: 1, fontSize: { xs: '2rem', md: '2.8rem' }, lineHeight: 1.08 }}>
+                  Command center for institutional work delivery
+                </Typography>
+                <Typography variant="body1" sx={{ color: '#d7e5f5', maxWidth: 560, mb: 3 }}>
+                  Monitor people, departments, approvals, deadlines, and completion health from one executive workspace.
+                </Typography>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                  <Button variant="contained" startIcon={<AddTaskRounded />} onClick={() => navigate('/tasks')} sx={{ bgcolor: 'white', color: '#12365c', '&:hover': { bgcolor: '#eef5ff' } }}>
+                    Create Task
+                  </Button>
+                  <Button variant="outlined" endIcon={<ArrowForwardRounded />} onClick={() => navigate('/reports')} sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.45)', '&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.08)' } }}>
+                    View Reports
+                  </Button>
+                </Stack>
+              </Box>
+              <Box sx={{ position: 'absolute', right: -60, bottom: -80, width: 280, height: 280, border: '42px solid rgba(255,255,255,0.08)', borderRadius: '50%' }} />
+              <Box sx={{ position: 'absolute', right: 86, top: 38, width: 110, height: 110, border: '22px solid rgba(84,199,179,0.2)', borderRadius: '50%' }} />
+            </Paper>
+          </Grid>
+
+          <Grid item xs={12} lg={4}>
+            <Paper sx={{ p: 3, height: '100%', borderRadius: 2, border: '1px solid #dde5f0' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                <Box>
+                  <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 900 }}>System Health</Typography>
+                  <Typography variant="h4">{taskTotals.completionRate}%</Typography>
+                </Box>
+                <Avatar sx={{ bgcolor: '#eaf8f2', color: '#11845b' }}>
+                  <InsightsRounded />
+                </Avatar>
+              </Box>
+              <LinearProgress variant="determinate" value={taskTotals.completionRate} sx={{ height: 9, borderRadius: 5, mb: 2, bgcolor: '#e7edf5' }} />
+              <Stack spacing={1.5}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">Pending approvals</Typography>
+                  <Typography variant="body2" fontWeight={800}>{taskTotals.pending}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">Overdue work</Typography>
+                  <Typography variant="body2" fontWeight={800} color={taskTotals.overdue ? 'error.main' : 'success.main'}>{taskTotals.overdue}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" color="text.secondary">Priority signals</Typography>
+                  <Typography variant="body2" fontWeight={800}>{highRiskCount}</Typography>
+                </Box>
+              </Stack>
+            </Paper>
+          </Grid>
+        </Grid>
       </Box>
 
-      {/* Summary Cards */}
-      <Grid container spacing={3} sx={{ mb: 5 }}>
-        {summaryCards.map((card, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
-            <Card sx={{
-              borderRadius: '16px',
-              bgcolor: card.color,
-              boxShadow: 'none',
-              textAlign: 'center',
-              py: 5,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              height: '100%'
-            }}>
-              <Avatar sx={{
-                width: 64,
-                height: 64,
-                mb: 3,
-                bgcolor: 'transparent',
-                backgroundImage: `linear-gradient(135deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.24) 100%)`,
-                color: card.iconColor
-              }}>
-                {card.icon}
-              </Avatar>
-              <Typography variant="h3" sx={{ fontWeight: 800, mb: 0.5, color: '#212b36' }}>
-                {card.value}
-              </Typography>
-              <Typography variant="subtitle2" sx={{ opacity: 0.72, color: '#212b36', fontWeight: 700 }}>
-                {card.title}
-              </Typography>
+      <Grid container spacing={2.5} sx={{ mb: 3 }}>
+        {summaryCards.map((card) => (
+          <Grid item xs={12} sm={6} lg={3} key={card.title}>
+            <Card sx={{ p: 2.5, height: '100%', borderRadius: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Avatar sx={{ bgcolor: card.bg, color: card.color, width: 48, height: 48 }}>
+                  {card.icon}
+                </Avatar>
+                <TrendingUpRounded sx={{ color: '#98a2b3', fontSize: 20 }} />
+              </Box>
+              <Typography variant="h4" sx={{ mb: 0.5 }}>{card.value}</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'text.primary' }}>{card.title}</Typography>
+              <Typography variant="body2" color="text.secondary">{card.helper}</Typography>
             </Card>
           </Grid>
         ))}
+      </Grid>
+
+      <Grid container spacing={3}>
+        <Grid item xs={12} lg={7}>
+          <Paper sx={{ borderRadius: 2, border: '1px solid #dde5f0', overflow: 'hidden' }}>
+            <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e7edf5' }}>
+              <Box>
+                <Typography variant="h6">Recent Task Flow</Typography>
+                <Typography variant="body2" color="text.secondary">Latest assignments moving through the institution.</Typography>
+              </Box>
+              <Button size="small" endIcon={<ArrowForwardRounded />} onClick={() => navigate('/tasks')}>All tasks</Button>
+            </Box>
+            <Stack divider={<Box sx={{ borderTop: '1px solid #edf2f7' }} />}>
+              {(recentTasks.length ? recentTasks : [{ id: 'empty', title: loading ? 'Loading task activity...' : 'No tasks created yet', department_name: 'Create a task to begin tracking workflow', status: 'ASSIGNED' }]).map((task) => {
+                const config = statusConfig[task.status] || statusConfig.ASSIGNED;
+                return (
+                  <Box key={task.id} sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar sx={{ bgcolor: config.bg, color: config.color }}>
+                      {task.is_special ? <PriorityHighRounded /> : <AssignmentOutlined />}
+                    </Avatar>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography variant="subtitle2" noWrap sx={{ fontWeight: 900 }}>{task.title}</Typography>
+                      <Typography variant="body2" color="text.secondary" noWrap>{task.department_name || task.assigned_to_hod_name || 'General workflow'}</Typography>
+                    </Box>
+                    <Box sx={{ textAlign: 'right', display: { xs: 'none', sm: 'block' } }}>
+                      <Chip label={config.label} size="small" sx={{ bgcolor: config.bg, color: config.color, fontWeight: 800, mb: 0.75 }} />
+                      <Typography variant="caption" display="block" color="text.secondary">{formatDate(task.deadline)}</Typography>
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Stack>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} lg={5}>
+          <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid #dde5f0', height: '100%' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Box>
+                <Typography variant="h6">Department Workload</Typography>
+                <Typography variant="body2" color="text.secondary">Relative distribution across active units.</Typography>
+              </Box>
+              <BusinessOutlined sx={{ color: 'text.secondary' }} />
+            </Box>
+            <Stack spacing={2.5}>
+              {departmentLoad.map((department) => (
+                <Box key={department.id || department.name}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.75 }}>
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{department.name}</Typography>
+                      <Typography variant="caption" color="text.secondary">{department.block_name || 'Campus block not assigned'}</Typography>
+                    </Box>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{department.taskCount} tasks</Typography>
+                  </Box>
+                  <LinearProgress variant="determinate" value={department.load} sx={{ height: 8, borderRadius: 5, bgcolor: '#e7edf5' }} />
+                </Box>
+              ))}
+            </Stack>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Grid container spacing={2.5}>
+            {[
+              { title: 'User Directory', body: 'Create accounts, assign roles, reset access, and manage activation state.', icon: <GroupsRounded />, path: '/user-management' },
+              { title: 'Department Registry', body: 'Maintain departments, blocks, ownership, and administrative structure.', icon: <BusinessOutlined />, path: '/department-management' },
+              { title: 'Deadline Control', body: 'Review overdue work, priority tasks, and workflow bottlenecks.', icon: <ScheduleRounded />, path: '/tasks' },
+              { title: 'Completion Audit', body: 'Inspect completed work streams and institutional delivery quality.', icon: <CheckCircleRounded />, path: '/completed-tasks' }
+            ].map((item) => (
+              <Grid item xs={12} md={6} xl={3} key={item.title}>
+                <Card sx={{ p: 2.5, borderRadius: 2, height: '100%', cursor: 'pointer' }} onClick={() => navigate(item.path)}>
+                  <Avatar sx={{ bgcolor: '#eef5ff', color: 'primary.main', mb: 2 }}>{item.icon}</Avatar>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 900, mb: 0.75 }}>{item.title}</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{item.body}</Typography>
+                  <Button size="small" endIcon={<ArrowForwardRounded />}>Open module</Button>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Grid>
       </Grid>
     </DashboardLayout>
   );

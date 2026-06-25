@@ -13,11 +13,11 @@ import {
   SettingsOutlined,
   FactCheckOutlined,
   BusinessOutlined,
-  Search,
   Notifications,
   Menu as MenuIcon,
   ExitToAppRounded,
-  AssignmentTurnedInOutlined
+  AssignmentTurnedInOutlined,
+  KeyboardArrowDownRounded
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -28,6 +28,7 @@ const DashboardLayout = ({ children, title }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [open, setOpen] = useState(!isMobile);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [pressedPath, setPressedPath] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -35,6 +36,12 @@ const DashboardLayout = ({ children, title }) => {
   const handleDrawerToggle = () => setOpen(!open);
   const handleMenu = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
+  const handleNavigate = (path) => {
+    setPressedPath(path);
+    navigate(path);
+    if (isMobile) setOpen(false);
+    window.setTimeout(() => setPressedPath(''), 160);
+  };
   const handleLogout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
@@ -55,22 +62,23 @@ const DashboardLayout = ({ children, title }) => {
     { text: 'Complete Module', icon: <FactCheckOutlined />, path: '/complete-module' },
   ];
 
+  const roleLabel = user.role ? user.role.replace('_', ' ') : 'Member';
+
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'white', px: 2 }}>
-      {/* Restored Previous Logo */}
-      <Box sx={{ py: 3, px: 2, display: 'flex', alignItems: 'center' }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#101828', color: 'white', px: 2 }}>
+      <Box sx={{ py: 3, px: 1.5, display: 'flex', alignItems: 'center' }}>
         <Box
           sx={{
             bgcolor: 'white',
-            p: 0.4,
-            borderRadius: '6px',
+            p: 0.5,
+            borderRadius: '8px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '32px',
-            height: '32px',
-            mr: 1.2,
-            boxShadow: '0 2px 4px -1px rgba(0,0,0,0.1)'
+            width: 38,
+            height: 38,
+            mr: 1.4,
+            boxShadow: '0 12px 30px -18px rgba(255,255,255,0.65)'
           }}
         >
           <Box
@@ -84,50 +92,103 @@ const DashboardLayout = ({ children, title }) => {
             }}
           />
         </Box>
-        <Typography variant="h6" component="div" sx={{ fontWeight: 800, color: '#38bdf8', letterSpacing: '0.5px', fontSize: '0.95rem' }}>
-          KAHE TMS
-        </Typography>
+        <Box>
+          <Typography variant="subtitle1" component="div" sx={{ fontWeight: 900, color: '#ffffff', letterSpacing: 0, lineHeight: 1 }}>
+            KAHE TMS
+          </Typography>
+          <Typography variant="caption" sx={{ color: '#98a2b3', fontWeight: 700 }}>
+            Admin Control Center
+          </Typography>
+        </Box>
       </Box>
 
-      {/* User Card */}
-      <Box sx={{ px: 1, mb: 4 }}>
-        <Paper elevation={0} sx={{ p: 2, bgcolor: '#f4f6f8', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Avatar sx={{ width: 40, height: 40, bgcolor: 'primary.main' }}>
+      <Box sx={{ px: 0.5, mb: 3 }}>
+        <Paper elevation={0} sx={{
+          p: 1.75,
+          bgcolor: 'rgba(255,255,255,0.06)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 2,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          color: 'white'
+        }}>
+          <Avatar sx={{ width: 40, height: 40, bgcolor: '#3f8ed6', fontWeight: 800 }}>
             {(user.username?.[0] || 'U').toUpperCase()}
           </Avatar>
           <Box sx={{ overflow: 'hidden' }}>
-            <Typography variant="subtitle2" noWrap sx={{ fontWeight: 700, color: '#212b36' }}>
+            <Typography variant="subtitle2" noWrap sx={{ fontWeight: 800, color: 'white' }}>
               {user.full_name || user.username || 'User'}
             </Typography>
-            <Typography variant="caption" sx={{ color: '#637381' }}>
-              {user.role}
+            <Typography variant="caption" sx={{ color: '#c9d4e5', fontWeight: 700 }}>
+              {roleLabel}
             </Typography>
           </Box>
         </Paper>
       </Box>
 
-      {/* Menu List */}
+      <Typography variant="caption" sx={{ px: 1.5, mb: 1, color: '#98a2b3', fontWeight: 900, letterSpacing: '0.08em' }}>
+        WORKSPACE
+      </Typography>
       <List sx={{ px: 0 }}>
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
+          const isPressed = pressedPath === item.path;
           return (
-            <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+            <ListItem key={item.text} disablePadding sx={{ mb: 0.75 }}>
               <ListItemButton
-                onClick={() => navigate(item.path)}
+                disableRipple
+                onClick={() => handleNavigate(item.path)}
                 sx={{
+                  position: 'relative',
+                  overflow: 'hidden',
                   borderRadius: '8px',
-                  bgcolor: isActive ? 'rgba(145, 158, 171, 0.08)' : 'transparent',
-                  color: isActive ? '#212b36' : '#637381',
-                  '&:hover': {
-                    bgcolor: 'rgba(145, 158, 171, 0.04)',
+                  bgcolor: isActive ? 'rgba(63, 142, 214, 0.16)' : 'transparent',
+                  color: isActive ? '#ffffff' : '#c9d4e5',
+                  border: isActive ? '1px solid rgba(63, 142, 214, 0.35)' : '1px solid transparent',
+                  transform: isPressed ? 'scale(0.975)' : 'scale(1)',
+                  transition: 'transform 140ms ease, background-color 220ms ease, border-color 220ms ease, color 220ms ease, box-shadow 220ms ease',
+                  boxShadow: isActive ? 'inset 0 0 0 1px rgba(124, 196, 255, 0.08)' : 'none',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    left: 0,
+                    top: '50%',
+                    width: 4,
+                    height: isActive ? 28 : 0,
+                    borderRadius: '0 999px 999px 0',
+                    bgcolor: '#7cc4ff',
+                    transform: 'translateY(-50%)',
+                    opacity: isActive ? 1 : 0,
+                    transition: 'height 240ms ease, opacity 180ms ease'
                   },
-                  py: 1.5
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)',
+                    transform: isPressed ? 'translateX(0)' : 'translateX(-115%)',
+                    opacity: isPressed ? 1 : 0,
+                    transition: 'transform 260ms ease, opacity 180ms ease',
+                    pointerEvents: 'none'
+                  },
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.08)',
+                    transform: isPressed ? 'scale(0.975)' : 'translateX(4px)',
+                    borderColor: 'rgba(255,255,255,0.1)'
+                  },
+                  '&:active': {
+                    transform: 'scale(0.975)'
+                  },
+                  py: 1.25
                 }}
               >
                 <ListItemIcon sx={{
-                  color: isActive ? '#1976d2' : '#637381',
+                  color: isActive ? '#7cc4ff' : '#98a2b3',
                   minWidth: '44px',
-                  '& svg': { fontSize: '1.4rem' }
+                  transition: 'color 220ms ease, transform 220ms ease',
+                  transform: isActive ? 'scale(1.06)' : 'scale(1)',
+                  '& svg': { fontSize: '1.35rem' }
                 }}>
                   {item.icon}
                 </ListItemIcon>
@@ -135,7 +196,7 @@ const DashboardLayout = ({ children, title }) => {
                   primary={item.text}
                   primaryTypographyProps={{
                     fontSize: '0.875rem',
-                    fontWeight: isActive ? 700 : 500,
+                    fontWeight: isActive ? 800 : 600,
                   }}
                 />
               </ListItemButton>
@@ -147,8 +208,7 @@ const DashboardLayout = ({ children, title }) => {
   );
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#eaefec' }}>
-      {/* Sidebar */}
+    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
       <Drawer
         variant={isMobile ? "temporary" : "permanent"}
         open={isMobile ? open : true}
@@ -159,8 +219,8 @@ const DashboardLayout = ({ children, title }) => {
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: drawerWidth,
-            borderRight: '1px dashed rgba(145, 158, 171, 0.24)',
-            bgcolor: 'white',
+            borderRight: 'none',
+            bgcolor: '#101828',
           },
         }}
       >
@@ -173,35 +233,54 @@ const DashboardLayout = ({ children, title }) => {
           position="sticky"
           elevation={0}
           sx={{
-            bgcolor: 'rgba(234, 239, 236, 0.8)', // Matches #eaefec with transparency
-            backdropFilter: 'blur(6px)',
+            bgcolor: 'rgba(244, 247, 251, 0.88)',
+            backdropFilter: 'blur(14px)',
+            borderBottom: '1px solid #dde5f0',
             color: 'text.primary',
           }}
         >
-          <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 2, md: 5 } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Toolbar sx={{ justifyContent: 'space-between', minHeight: 72, px: { xs: 2, md: 4 } }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
               {isMobile && (
                 <IconButton onClick={handleDrawerToggle} edge="start" sx={{ mr: 1 }}>
                   <MenuIcon />
                 </IconButton>
               )}
-              <IconButton size="small" sx={{ color: '#637381' }}>
-                <Search />
-              </IconButton>
+              <Box>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 800 }}>
+                  Task Management System
+                </Typography>
+                <Typography variant="h6" noWrap sx={{ fontWeight: 900, color: 'text.primary', lineHeight: 1.2 }}>
+                  {title || 'Dashboard'}
+                </Typography>
+              </Box>
             </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <IconButton size="small" sx={{ color: '#637381' }}>
+              <IconButton size="small" sx={{ color: 'text.secondary', bgcolor: 'white', border: '1px solid #dde5f0' }}>
                 <Badge badgeContent={2} color="error">
                   <Notifications />
                 </Badge>
               </IconButton>
-              <Avatar
+              <Box
                 onClick={handleMenu}
-                sx={{ width: 32, height: 32, cursor: 'pointer', border: '2px solid white', boxShadow: '0 0 0 1px #e2e8f0', bgcolor: 'primary.main' }}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  cursor: 'pointer',
+                  bgcolor: 'white',
+                  border: '1px solid #dde5f0',
+                  borderRadius: 2,
+                  p: 0.5,
+                  pl: 0.75
+                }}
               >
-                {(user.username?.[0] || 'U').toUpperCase()}
-              </Avatar>
+                <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontWeight: 800 }}>
+                  {(user.username?.[0] || 'U').toUpperCase()}
+                </Avatar>
+                <KeyboardArrowDownRounded sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'block' } }} />
+              </Box>
               <Menu
                 anchorEl={anchorEl}
                 open={Boolean(anchorEl)}
@@ -211,7 +290,7 @@ const DashboardLayout = ({ children, title }) => {
                   sx: {
                     filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.1))',
                     mt: 1.5,
-                    borderRadius: '12px',
+                    borderRadius: '10px',
                     width: 200,
                   },
                 }}
@@ -232,13 +311,12 @@ const DashboardLayout = ({ children, title }) => {
           </Toolbar>
         </AppBar>
 
-        {/* Main Content Area */}
         <Box
           component="main"
           sx={{
             flex: 1,
-            px: { xs: 2, md: 5 },
-            py: 4,
+            px: { xs: 2, md: 4 },
+            py: 3,
           }}
         >
           {children}

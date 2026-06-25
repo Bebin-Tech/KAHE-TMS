@@ -3,29 +3,47 @@ import { createTheme } from '@mui/material/styles';
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#0066b2', // KAHE Blue
-      light: '#4b94e4',
-      dark: '#003c82',
+      main: '#0f5ea8',
+      light: '#3f8ed6',
+      dark: '#0a3f72',
     },
     secondary: {
-      main: '#28a745', // KAHE Green
-      light: '#5dd471',
-      dark: '#007717',
+      main: '#16a085',
+      light: '#54c7b3',
+      dark: '#0c6d5b',
+    },
+    success: {
+      main: '#11845b',
+    },
+    warning: {
+      main: '#b7791f',
+    },
+    error: {
+      main: '#c2413b',
     },
     background: {
-      default: '#f8fafc',
+      default: '#f4f7fb',
       paper: '#ffffff',
     },
     text: {
-      primary: '#1e293b',
-      secondary: '#64748b',
+      primary: '#172033',
+      secondary: '#667085',
     },
+    divider: '#dde5f0',
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 10,
   },
   typography: {
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    h3: {
+      fontWeight: 800,
+      letterSpacing: 0,
+    },
+    h4: {
+      fontWeight: 800,
+      letterSpacing: 0,
+    },
     h5: {
       fontWeight: 700,
     },
@@ -38,23 +56,54 @@ const theme = createTheme({
     },
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundColor: '#f4f7fb',
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
-          padding: '8px 20px',
+          padding: '9px 18px',
+          borderRadius: 8,
         },
         containedPrimary: {
           boxShadow: 'none',
           '&:hover': {
-            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+            boxShadow: '0 10px 22px -12px rgba(15, 94, 168, 0.8)',
           },
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          border: '1px solid #dde5f0',
+          boxShadow: '0 16px 40px -30px rgba(15, 32, 58, 0.55)',
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+          backgroundImage: 'none',
+          boxShadow: '0 16px 40px -32px rgba(15, 32, 58, 0.55)',
+        },
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          borderBottomColor: '#e7edf5',
+        },
+        head: {
+          color: '#667085',
+          fontWeight: 800,
+          fontSize: '0.75rem',
+          letterSpacing: '0.04em',
+          textTransform: 'uppercase',
         },
       },
     },
