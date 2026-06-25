@@ -4,7 +4,7 @@ import {
   Paper, Typography, Box, Button, Grid,
   Chip, IconButton, Dialog, DialogTitle, DialogContent,
   DialogActions, TextField, MenuItem, Switch, FormControlLabel,
-  Card, Avatar, Divider, Tooltip
+  Card, Avatar, Divider, Tooltip, Pagination, PaginationItem
 } from '@mui/material';
 import {
   EditRounded,
@@ -13,7 +13,8 @@ import {
   PersonAddRounded,
   EmailOutlined,
   BusinessOutlined,
-  BadgeOutlined
+  BadgeOutlined,
+  SearchRounded
 } from '@mui/icons-material';
 import api from '../api/axios';
 
@@ -22,10 +23,14 @@ const UserManagement = () => {
   const [departments, setDepartments] = useState([]);
   const [open, setOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     username: '', email: '', first_name: '', last_name: '',
     role: 'FACULTY', department: '', password: ''
   });
+
+  const roles = ['FACULTY', 'HOD', 'DEAN', 'ADMIN'];
 
   const fetchData = async () => {
     try {
@@ -43,6 +48,22 @@ const UserManagement = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const handlePageChange = (event, value) => {
+    setPage(value);
+  };
+
+  const filteredUsers = users.filter(user => {
+    const matchesRole = user.role === roles[page - 1];
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch =
+      user.first_name?.toLowerCase().includes(searchLower) ||
+      user.last_name?.toLowerCase().includes(searchLower) ||
+      user.username?.toLowerCase().includes(searchLower) ||
+      user.email?.toLowerCase().includes(searchLower);
+
+    return matchesRole && matchesSearch;
+  });
 
   const handleOpen = (user = null) => {
     if (user) {
@@ -64,17 +85,41 @@ const UserManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Prepare data: convert empty department string to null
+    const submitData = { ...formData };
+    if (submitData.department === '') {
+      submitData.department = null;
+    }
+
     try {
       if (editingUser) {
-        await api.patch(`users/${editingUser.id}/`, formData);
+        await api.patch(`users/${editingUser.id}/`, submitData);
       } else {
-        await api.post('users/create_user/', formData);
+        await api.post('users/create_user/', submitData);
       }
       setOpen(false);
       fetchData();
     } catch (err) {
       console.error('Error saving user:', err);
-      alert(err.response?.data?.error || 'Failed to save user account.');
+      const errorData = err.response?.data;
+
+      // Handle session expiration specifically
+      if (err.response?.status === 401) return;
+
+      let errorMessage = 'Failed to save user account.';
+      if (errorData) {
+        if (typeof errorData === 'object') {
+          errorMessage = Object.entries(errorData)
+            .map(([key, value]) => {
+              const val = Array.isArray(value) ? value.join(', ') : (typeof value === 'object' ? JSON.stringify(value) : value);
+              return `${key}: ${val}`;
+            })
+            .join('\n');
+        } else {
+          errorMessage = errorData;
+        }
+      }
+      alert(errorMessage);
     }
   };
 
@@ -124,23 +169,94 @@ const UserManagement = () => {
 
   return (
     <DashboardLayout title="User Management">
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box sx={{ textAlign: 'left' }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: '#212b36' }}>All users</Typography>
-          <Typography variant="body2" color="text.secondary">Create and manage accounts for all university roles.</Typography>
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          <Box sx={{ textAlign: 'left' }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: '#212b36' }}>All users</Typography>
+            <Typography variant="body2" color="text.secondary">Viewing <b>{roles[page - 1]}</b> accounts.</Typography>
+          </Box>
+
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            bgcolor: 'rgba(145, 158, 171, 0.08)',
+            borderRadius: '12px',
+            px: 2,
+            py: 1,
+            width: '280px',
+            border: '1px solid transparent',
+            '&:focus-within': {
+              bgcolor: 'white',
+              border: '1px solid #0066b2',
+              boxShadow: '0 0 0 2px rgba(0, 102, 178, 0.1)'
+            },
+            transition: 'all 0.2s'
+          }}>
+            <SearchRounded sx={{ color: '#637381', mr: 1, fontSize: '1.2rem' }} />
+            <input
+              type="text"
+              placeholder="Search by name or email..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                outline: 'none',
+                width: '100%',
+                fontSize: '0.875rem',
+                color: '#212b36',
+                fontWeight: 500
+              }}
+            />
+          </Box>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<PersonAddRounded />}
-          onClick={() => handleOpen()}
-          sx={{ borderRadius: 2, px: 3, py: 1.2, bgcolor: '#0066b2', '&:hover': { bgcolor: '#005291' }, textTransform: 'none', fontWeight: 700 }}
-        >
-          Add New User
-        </Button>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+          <Button
+            variant="contained"
+            startIcon={<PersonAddRounded />}
+            onClick={() => handleOpen()}
+            sx={{ borderRadius: 2, px: 3, py: 1.2, bgcolor: '#0066b2', '&:hover': { bgcolor: '#005291' }, textTransform: 'none', fontWeight: 700 }}
+          >
+            Add New User
+          </Button>
+
+          <Pagination
+            count={roles.length}
+            page={page}
+            onChange={handlePageChange}
+            renderItem={(item) => (
+              <PaginationItem
+                {...item}
+                sx={{
+                  bgcolor: item.selected ? '#333' : '#1e1e1e',
+                  color: 'white',
+                  borderRadius: '8px',
+                  width: '40px',
+                  height: '40px',
+                  margin: '0 4px',
+                  border: '1px solid #444',
+                  '&:hover': {
+                    bgcolor: '#444'
+                  },
+                  '&.Mui-selected': {
+                    bgcolor: '#444',
+                    fontWeight: 800,
+                    '&:hover': {
+                      bgcolor: '#555'
+                    }
+                  },
+                  '& .MuiPaginationItem-icon': {
+                    color: 'white'
+                  }
+                }}
+              />
+            )}
+          />
+        </Box>
       </Box>
 
       <Grid container spacing={3}>
-        {users.length > 0 ? users.map((user) => {
+        {filteredUsers.length > 0 ? filteredUsers.map((user) => {
           const roleStyle = getRoleColor(user.role);
           return (
             <Grid item xs={12} sm={6} md={4} key={user.id}>

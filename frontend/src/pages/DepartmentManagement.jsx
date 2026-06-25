@@ -60,6 +60,25 @@ const DepartmentManagement = () => {
       fetchData();
     } catch (err) {
       console.error('Error saving department:', err);
+      const errorData = err.response?.data;
+
+      // Handle session expiration specifically
+      if (err.response?.status === 401) return;
+
+      let errorMessage = 'Failed to save department.';
+      if (errorData) {
+        if (typeof errorData === 'object') {
+          errorMessage = Object.entries(errorData)
+            .map(([key, value]) => {
+              const val = Array.isArray(value) ? value.join(', ') : (typeof value === 'object' ? JSON.stringify(value) : value);
+              return `${key}: ${val}`;
+            })
+            .join('\n');
+        } else {
+          errorMessage = errorData;
+        }
+      }
+      alert(errorMessage);
     }
   };
 

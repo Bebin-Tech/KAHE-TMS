@@ -84,20 +84,34 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Prepare data
+    const submitData = { ...formData };
+    if (submitData.department === '') submitData.department = null;
+    if (submitData.assigned_to_hod === '') submitData.assigned_to_hod = null;
+
     try {
       if (task) {
-        await api.patch(`tasks/${task.id}/`, formData);
+        await api.patch(`tasks/${task.id}/`, submitData);
       } else {
         const currentUser = JSON.parse(localStorage.getItem('user'));
         await api.post('tasks/', {
-          ...formData,
+          ...submitData,
           created_by: currentUser.id
         });
       }
       onTaskCreated();
       onClose();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to process task. Check all fields.');
+      console.error('Error processing task:', err);
+      const errorData = err.response?.data;
+      let errorMessage = 'Failed to process task. Check all fields.';
+      if (errorData) {
+        errorMessage = Object.entries(errorData)
+          .map(([key, value]) => `${key}: ${value}`)
+          .join('\n');
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
