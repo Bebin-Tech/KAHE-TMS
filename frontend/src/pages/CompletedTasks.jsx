@@ -42,7 +42,7 @@ const CompletedTasks = () => {
         </Typography>
       </Box>
 
-      <TableContainer component={Paper} sx={{ borderRadius: '16px', boxShadow: '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)', border: 'none' }}>
+      <TableContainer component={Paper}>
         <Table>
           <TableHead sx={{ bgcolor: '#f4f6f8' }}>
             <TableRow>

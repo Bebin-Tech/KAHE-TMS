@@ -148,11 +148,15 @@ const AdminDashboard = () => {
                 overflow: 'hidden'
               }}
             >
-              <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 650 }}>
-                <Typography variant="h3" sx={{ mb: 1, fontSize: { xs: '2rem', md: '2.8rem' }, lineHeight: 1.08 }}>
+              <Box sx={{ position: 'relative', zIndex: 1, maxWidth: '100%', textAlign: 'center' }}>
+                <Typography
+                  variant="h3"
+                  noWrap
+                  sx={{ mb: 1, fontSize: { xs: '1.15rem', sm: '1.7rem', md: '2.35rem' }, lineHeight: 1.08 }}
+                >
                   Karpagam Academy of Higher Education – Workflow
                 </Typography>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <Stack direction="row" spacing={2.5} justifyContent="center" alignItems="center" sx={{ mt: 3, flexWrap: 'wrap' }}>
                   <Button variant="contained" startIcon={<AddTaskRounded />} onClick={() => navigate('/tasks')} sx={{ bgcolor: 'white', color: '#12365c', '&:hover': { bgcolor: '#eef5ff' } }}>
                     Create Task
                   </Button>
