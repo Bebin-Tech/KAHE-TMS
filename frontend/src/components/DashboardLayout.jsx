@@ -11,7 +11,6 @@ import {
   AssignmentOutlined,
   AssessmentOutlined,
   SettingsOutlined,
-  FactCheckOutlined,
   BusinessOutlined,
   Notifications,
   Menu as MenuIcon,
@@ -59,7 +58,6 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     { text: 'Completed Tasks', icon: <AssignmentTurnedInOutlined />, path: '/completed-tasks' },
     { text: 'Reports', icon: <AssessmentOutlined />, path: '/reports' },
     { text: 'Settings', icon: <SettingsOutlined />, path: '/settings' },
-    { text: 'Complete Module', icon: <FactCheckOutlined />, path: '/complete-module' },
   ];
 
   const roleLabel = user.role ? user.role.replace('_', ' ') : 'Member';

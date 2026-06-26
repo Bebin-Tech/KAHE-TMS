@@ -5,7 +5,7 @@ import { FactCheckOutlined } from '@mui/icons-material';
 
 const CompleteModule = () => {
   return (
-    <DashboardLayout title="Complete Module">
+    <DashboardLayout title="Complete Module" hideSidebar>
       <Card sx={{
         borderRadius: '16px',
         boxShadow: '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
