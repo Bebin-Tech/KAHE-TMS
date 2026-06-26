@@ -169,8 +169,8 @@ const UserManagement = () => {
 
   return (
     <DashboardLayout title="User Management">
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'stretch', lg: 'flex-end' }, gap: 3, flexDirection: { xs: 'column', lg: 'row' } }}>
+        <Box sx={{ display: 'flex', alignItems: { xs: 'stretch', md: 'center' }, gap: 3, flexDirection: { xs: 'column', md: 'row' }, flex: 1 }}>
           <Box sx={{ textAlign: 'left' }}>
             <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: '#212b36' }}>All users</Typography>
             <Typography variant="body2" color="text.secondary">Viewing <b>{roles[page - 1]}</b> accounts.</Typography>
@@ -183,7 +183,7 @@ const UserManagement = () => {
             borderRadius: '12px',
             px: 2,
             py: 1,
-            width: '320px',
+            width: { xs: '100%', md: '340px' },
             border: '1.5px solid #d1d5db',
             boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
             '&:focus-within': {
@@ -211,12 +211,12 @@ const UserManagement = () => {
             />
           </Box>
         </Box>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row-reverse' }, alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
           <Button
             variant="contained"
             startIcon={<PersonAddRounded />}
             onClick={() => handleOpen()}
-            sx={{ borderRadius: 2, px: 3, py: 1.2, bgcolor: '#0066b2', '&:hover': { bgcolor: '#005291' }, textTransform: 'none', fontWeight: 700 }}
+            sx={{ borderRadius: 2, px: 3, py: 1.2, bgcolor: '#0066b2', '&:hover': { bgcolor: '#005291' }, textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}
           >
             Add New User
           </Button>
@@ -229,25 +229,25 @@ const UserManagement = () => {
               <PaginationItem
                 {...item}
                 sx={{
-                  bgcolor: item.selected ? '#333' : '#1e1e1e',
-                  color: 'white',
+                  bgcolor: item.selected ? 'primary.main' : 'white',
+                  color: item.selected ? 'white' : 'text.primary',
                   borderRadius: '8px',
                   width: '40px',
                   height: '40px',
                   margin: '0 4px',
-                  border: '1px solid #444',
+                  border: '1px solid #dde5f0',
                   '&:hover': {
-                    bgcolor: '#444'
+                    bgcolor: item.selected ? 'primary.dark' : '#eef5ff'
                   },
                   '&.Mui-selected': {
-                    bgcolor: '#444',
+                    bgcolor: 'primary.main',
                     fontWeight: 800,
                     '&:hover': {
-                      bgcolor: '#555'
+                      bgcolor: 'primary.dark'
                     }
                   },
                   '& .MuiPaginationItem-icon': {
-                    color: 'white'
+                    color: 'inherit'
                   }
                 }}
               />
@@ -262,11 +262,10 @@ const UserManagement = () => {
           return (
             <Grid item xs={12} sm={6} md={4} key={user.id}>
               <Card sx={{
-                borderRadius: '16px',
-                boxShadow: '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
                 p: 3,
-                transition: 'transform 0.2s',
-                '&:hover': { transform: 'translateY(-4px)' }
+                minHeight: '100%',
+                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 22px 48px -32px rgba(15, 32, 58, 0.65)' }
               }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                   <Avatar

@@ -1,5 +1,15 @@
 import { createTheme } from '@mui/material/styles';
 
+const academicFontFamily = [
+  'Aptos',
+  'Segoe UI',
+  'Inter',
+  'Roboto',
+  'Helvetica Neue',
+  'Arial',
+  'sans-serif',
+].join(', ');
+
 const theme = createTheme({
   palette: {
     primary: {
@@ -35,7 +45,12 @@ const theme = createTheme({
     borderRadius: 10,
   },
   typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: academicFontFamily,
+    htmlFontSize: 16,
+    allVariants: {
+      fontFamily: academicFontFamily,
+      letterSpacing: 0,
+    },
     h3: {
       fontWeight: 800,
       letterSpacing: 0,
@@ -50,24 +65,47 @@ const theme = createTheme({
     h6: {
       fontWeight: 600,
     },
+    subtitle1: {
+      fontWeight: 600,
+    },
+    subtitle2: {
+      fontWeight: 600,
+    },
+    body1: {
+      lineHeight: 1.6,
+    },
+    body2: {
+      lineHeight: 1.55,
+    },
     button: {
       textTransform: 'none',
       fontWeight: 600,
+      letterSpacing: 0,
     },
   },
   components: {
     MuiCssBaseline: {
       styleOverrides: {
+        html: {
+          fontFamily: academicFontFamily,
+        },
         body: {
           backgroundColor: '#f4f7fb',
+          fontFamily: academicFontFamily,
+          fontFeatureSettings: '"kern"',
+          textRendering: 'optimizeLegibility',
+        },
+        'button, input, textarea, select, table': {
+          fontFamily: academicFontFamily,
         },
       },
     },
     MuiButton: {
       styleOverrides: {
         root: {
-          padding: '9px 18px',
+          padding: '10px 20px',
           borderRadius: 8,
+          lineHeight: 1.35,
         },
         containedPrimary: {
           boxShadow: 'none',
@@ -81,7 +119,8 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           border: '1px solid #dde5f0',
-          boxShadow: '0 16px 40px -30px rgba(15, 32, 58, 0.55)',
+          borderRadius: 12,
+          boxShadow: '0 18px 44px -34px rgba(15, 32, 58, 0.58)',
         },
       },
     },
@@ -89,7 +128,17 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          boxShadow: '0 16px 40px -32px rgba(15, 32, 58, 0.55)',
+          borderRadius: 12,
+          boxShadow: '0 18px 44px -34px rgba(15, 32, 58, 0.58)',
+        },
+      },
+    },
+    MuiTableContainer: {
+      styleOverrides: {
+        root: {
+          border: '1px solid #dde5f0',
+          borderRadius: 12,
+          overflow: 'hidden',
         },
       },
     },
@@ -97,6 +146,8 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderBottomColor: '#e7edf5',
+          paddingTop: 16,
+          paddingBottom: 16,
         },
         head: {
           color: '#667085',
@@ -104,6 +155,62 @@ const theme = createTheme({
           fontSize: '0.75rem',
           letterSpacing: '0.04em',
           textTransform: 'uppercase',
+        },
+      },
+    },
+    MuiTableRow: {
+      styleOverrides: {
+        root: {
+          '&.MuiTableRow-hover:hover': {
+            backgroundColor: '#f8fbff',
+          },
+        },
+      },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          borderRadius: 10,
+          backgroundColor: '#ffffff',
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#d7e0ec',
+          },
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#9bb5d1',
+          },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#0f5ea8',
+            borderWidth: 1.5,
+          },
+        },
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          color: '#667085',
+          fontWeight: 600,
+        },
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          borderRadius: 14,
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          fontWeight: 700,
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
         },
       },
     },

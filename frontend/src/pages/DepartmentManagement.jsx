@@ -95,7 +95,7 @@ const DepartmentManagement = () => {
 
   return (
     <DashboardLayout title="Department Management">
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
         <Box sx={{ textAlign: 'left' }}>
           <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: '#212b36' }}>Departments</Typography>
           <Typography variant="body2" color="text.secondary">Manage university departments and their physical locations.</Typography>
@@ -104,13 +104,13 @@ const DepartmentManagement = () => {
           variant="contained"
           startIcon={<AddRounded />}
           onClick={() => handleOpen()}
-          sx={{ borderRadius: 2, px: 3, py: 1, bgcolor: '#0066b2', '&:hover': { bgcolor: '#005291' }, textTransform: 'none', fontWeight: 700 }}
+          sx={{ borderRadius: 2, px: 3, py: 1, bgcolor: '#0066b2', '&:hover': { bgcolor: '#005291' }, textTransform: 'none', fontWeight: 700, alignSelf: { xs: 'flex-start', md: 'center' } }}
         >
           Add Department
         </Button>
       </Box>
 
-      <TableContainer component={Paper} sx={{ borderRadius: '16px', boxShadow: '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)', border: 'none' }}>
+      <TableContainer component={Paper}>
         <Table>
           <TableHead sx={{ bgcolor: '#f4f6f8' }}>
             <TableRow>

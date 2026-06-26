@@ -7,26 +7,26 @@ const CompleteModule = () => {
   return (
     <DashboardLayout title="Complete Module" hideSidebar>
       <Card sx={{
-        borderRadius: '16px',
-        boxShadow: '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
-        p: 4,
-        minHeight: 400,
+        p: { xs: 3, md: 5 },
+        minHeight: 420,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         bgcolor: 'white'
       }}>
-        <Box sx={{ textAlign: 'center' }}>
-          <FactCheckOutlined sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, mb: 1, color: '#212b36' }}>
+        <Box sx={{ textAlign: 'center', maxWidth: 640 }}>
+          <Box sx={{ width: 88, height: 88, mx: 'auto', mb: 2.5, borderRadius: '18px', bgcolor: '#eaf8f2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <FactCheckOutlined sx={{ fontSize: 48, color: 'success.main' }} />
+          </Box>
+          <Typography variant="h5" sx={{ fontWeight: 800, mb: 1, color: 'text.primary' }}>
             Complete Module
           </Typography>
-          <Typography variant="body2" sx={{ color: '#637381' }}>
+          <Typography variant="body1" color="text.secondary">
             System overview and detailed activity tracking.
           </Typography>
 
-          <Box sx={{ mt: 5, p: 3, bgcolor: '#f4f6f8', borderRadius: '16px', border: '1px dashed #e2e8f0', width: '100%', minWidth: { md: 600 } }}>
+          <Box sx={{ mt: 5, p: 3, bgcolor: '#f8fbff', borderRadius: 2, border: '1px dashed #c9d8ea', width: '100%', minWidth: { md: 560 } }}>
             <Typography variant="body1" color="text.secondary">
               No recent activity to display in the Complete Module.
             </Typography>
