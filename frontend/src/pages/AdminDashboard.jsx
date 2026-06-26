@@ -19,12 +19,8 @@ import {
   AssignmentOutlined,
   AssignmentTurnedInOutlined,
   BusinessOutlined,
-  CheckCircleRounded,
-  GroupsRounded,
-  InsightsRounded,
   PeopleOutlined,
   PriorityHighRounded,
-  ScheduleRounded,
   TrendingUpRounded
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -134,13 +130,12 @@ const AdminDashboard = () => {
     });
 
   const recentTasks = tasks.slice(0, 5);
-  const highRiskCount = taskTotals.overdue + tasks.filter((task) => task.is_special).length;
 
   return (
-    <DashboardLayout title="Admin Dashboard">
+    <DashboardLayout title="Karpagam Academy of Higher Education – Workflow">
       <Box sx={{ mb: 3 }}>
         <Grid container spacing={3} alignItems="stretch">
-          <Grid item xs={12} lg={8}>
+          <Grid item xs={12}>
             <Paper
               sx={{
                 p: { xs: 3, md: 4 },
@@ -154,15 +149,8 @@ const AdminDashboard = () => {
               }}
             >
               <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 650 }}>
-                <Chip
-                  label="Enterprise Task Operations"
-                  sx={{ mb: 2, bgcolor: 'rgba(255,255,255,0.14)', color: 'white', fontWeight: 800 }}
-                />
                 <Typography variant="h3" sx={{ mb: 1, fontSize: { xs: '2rem', md: '2.8rem' }, lineHeight: 1.08 }}>
-                  Command center for institutional work delivery
-                </Typography>
-                <Typography variant="body1" sx={{ color: '#d7e5f5', maxWidth: 560, mb: 3 }}>
-                  Monitor people, departments, approvals, deadlines, and completion health from one executive workspace.
+                  Karpagam Academy of Higher Education – Workflow
                 </Typography>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
                   <Button variant="contained" startIcon={<AddTaskRounded />} onClick={() => navigate('/tasks')} sx={{ bgcolor: 'white', color: '#12365c', '&:hover': { bgcolor: '#eef5ff' } }}>
@@ -175,35 +163,6 @@ const AdminDashboard = () => {
               </Box>
               <Box sx={{ position: 'absolute', right: -60, bottom: -80, width: 280, height: 280, border: '42px solid rgba(255,255,255,0.08)', borderRadius: '50%' }} />
               <Box sx={{ position: 'absolute', right: 86, top: 38, width: 110, height: 110, border: '22px solid rgba(84,199,179,0.2)', borderRadius: '50%' }} />
-            </Paper>
-          </Grid>
-
-          <Grid item xs={12} lg={4}>
-            <Paper sx={{ p: 3, height: '100%', borderRadius: 2, border: '1px solid #dde5f0' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Box>
-                  <Typography variant="overline" sx={{ color: 'text.secondary', fontWeight: 900 }}>System Health</Typography>
-                  <Typography variant="h4">{taskTotals.completionRate}%</Typography>
-                </Box>
-                <Avatar sx={{ bgcolor: '#eaf8f2', color: '#11845b' }}>
-                  <InsightsRounded />
-                </Avatar>
-              </Box>
-              <LinearProgress variant="determinate" value={taskTotals.completionRate} sx={{ height: 9, borderRadius: 5, mb: 2, bgcolor: '#e7edf5' }} />
-              <Stack spacing={1.5}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Pending approvals</Typography>
-                  <Typography variant="body2" fontWeight={800}>{taskTotals.pending}</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Overdue work</Typography>
-                  <Typography variant="body2" fontWeight={800} color={taskTotals.overdue ? 'error.main' : 'success.main'}>{taskTotals.overdue}</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="body2" color="text.secondary">Priority signals</Typography>
-                  <Typography variant="body2" fontWeight={800}>{highRiskCount}</Typography>
-                </Box>
-              </Stack>
             </Paper>
           </Grid>
         </Grid>
@@ -286,25 +245,6 @@ const AdminDashboard = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12}>
-          <Grid container spacing={2.5}>
-            {[
-              { title: 'User Directory', body: 'Create accounts, assign roles, reset access, and manage activation state.', icon: <GroupsRounded />, path: '/user-management' },
-              { title: 'Department Registry', body: 'Maintain departments, blocks, ownership, and administrative structure.', icon: <BusinessOutlined />, path: '/department-management' },
-              { title: 'Deadline Control', body: 'Review overdue work, priority tasks, and workflow bottlenecks.', icon: <ScheduleRounded />, path: '/tasks' },
-              { title: 'Completion Audit', body: 'Inspect completed work streams and institutional delivery quality.', icon: <CheckCircleRounded />, path: '/completed-tasks' }
-            ].map((item) => (
-              <Grid item xs={12} md={6} xl={3} key={item.title}>
-                <Card sx={{ p: 2.5, borderRadius: 2, height: '100%', cursor: 'pointer' }} onClick={() => navigate(item.path)}>
-                  <Avatar sx={{ bgcolor: '#eef5ff', color: 'primary.main', mb: 2 }}>{item.icon}</Avatar>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 900, mb: 0.75 }}>{item.title}</Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>{item.body}</Typography>
-                  <Button size="small" endIcon={<ArrowForwardRounded />}>Open module</Button>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Grid>
       </Grid>
     </DashboardLayout>
   );

@@ -23,7 +23,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 const drawerWidth = 280;
 
-const DashboardLayout = ({ children, title }) => {
+const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [open, setOpen] = useState(!isMobile);
@@ -209,23 +209,25 @@ const DashboardLayout = ({ children, title }) => {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Drawer
-        variant={isMobile ? "temporary" : "permanent"}
-        open={isMobile ? open : true}
-        onClose={handleDrawerToggle}
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            boxSizing: 'border-box',
+      {!hideSidebar && (
+        <Drawer
+          variant={isMobile ? "temporary" : "permanent"}
+          open={isMobile ? open : true}
+          onClose={handleDrawerToggle}
+          sx={{
             width: drawerWidth,
-            borderRight: 'none',
-            bgcolor: '#101828',
-          },
-        }}
-      >
-        {drawer}
-      </Drawer>
+            flexShrink: 0,
+            '& .MuiDrawer-paper': {
+              boxSizing: 'border-box',
+              width: drawerWidth,
+              borderRight: 'none',
+              bgcolor: '#101828',
+            },
+          }}
+        >
+          {drawer}
+        </Drawer>
+      )}
 
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* Top Navbar */}
@@ -241,7 +243,7 @@ const DashboardLayout = ({ children, title }) => {
         >
           <Toolbar sx={{ justifyContent: 'space-between', minHeight: 72, px: { xs: 2, md: 4 } }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
-              {isMobile && (
+              {isMobile && !hideSidebar && (
                 <IconButton onClick={handleDrawerToggle} edge="start" sx={{ mr: 1 }}>
                   <MenuIcon />
                 </IconButton>
