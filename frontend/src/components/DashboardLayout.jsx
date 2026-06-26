@@ -51,12 +51,14 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardOutlined />, path: `/${user.role?.toLowerCase()}-dashboard` },
     ...(user.role === 'ADMIN' ? [
-      { text: 'User', icon: <PeopleOutlined />, path: '/user-management' },
       { text: 'Department', icon: <BusinessOutlined />, path: '/department-management' }
     ] : []),
     { text: 'Task', icon: <AssignmentOutlined />, path: '/tasks' },
-    { text: 'Completed Tasks', icon: <AssignmentTurnedInOutlined />, path: '/completed-tasks' },
-    { text: 'Reports', icon: <AssessmentOutlined />, path: '/reports' },
+    { text: 'Completed Task', icon: <AssignmentTurnedInOutlined />, path: '/completed-tasks' },
+    { text: 'Report', icon: <AssessmentOutlined />, path: '/reports' },
+    ...(user.role === 'ADMIN' ? [
+      { text: 'User', icon: <PeopleOutlined />, path: '/user-management' }
+    ] : []),
     { text: 'Settings', icon: <SettingsOutlined />, path: '/settings' },
   ];
 

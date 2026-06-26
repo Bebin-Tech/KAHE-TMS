@@ -101,10 +101,10 @@ const DepartmentManagement = () => {
           <Typography variant="body2" color="text.secondary">Manage university departments and their physical locations.</Typography>
         </Box>
         <Button
-          variant="contained"
+          variant="outlined"
           startIcon={<AddRounded />}
           onClick={() => handleOpen()}
-          sx={{ borderRadius: 2, px: 3, py: 1, bgcolor: '#0066b2', '&:hover': { bgcolor: '#005291' }, textTransform: 'none', fontWeight: 700, alignSelf: { xs: 'flex-start', md: 'center' } }}
+          sx={{ alignSelf: { xs: 'flex-start', md: 'center' } }}
         >
           Add Department
         </Button>

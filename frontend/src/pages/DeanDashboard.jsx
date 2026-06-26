@@ -123,9 +123,8 @@ const DeanDashboard = () => {
           Here is what's happening in the system today.
         </Typography>
         <Button
-          variant="contained"
+          variant="outlined"
           startIcon={<AddRounded />}
-          sx={{ px: 3, py: 1.5, borderRadius: '12px' }}
           onClick={() => setDialogOpen(true)}
         >
           Create New Task

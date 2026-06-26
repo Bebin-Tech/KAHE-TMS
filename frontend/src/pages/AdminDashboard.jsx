@@ -157,10 +157,10 @@ const AdminDashboard = () => {
                   Karpagam Academy of Higher Education – Workflow
                 </Typography>
                 <Stack direction="row" spacing={2.5} justifyContent="center" alignItems="center" sx={{ mt: 3, flexWrap: 'wrap' }}>
-                  <Button variant="contained" startIcon={<AddTaskRounded />} onClick={() => navigate('/tasks')} sx={{ bgcolor: 'white', color: '#12365c', '&:hover': { bgcolor: '#eef5ff' } }}>
+                  <Button variant="outlined" startIcon={<AddTaskRounded />} onClick={() => navigate('/tasks')}>
                     Create Task
                   </Button>
-                  <Button variant="outlined" endIcon={<ArrowForwardRounded />} onClick={() => navigate('/reports')} sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.45)', '&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.08)' } }}>
+                  <Button variant="outlined" endIcon={<ArrowForwardRounded />} onClick={() => navigate('/reports')}>
                     View Reports
                   </Button>
                 </Stack>

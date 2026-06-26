@@ -213,10 +213,10 @@ const UserManagement = () => {
         </Box>
         <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row-reverse' }, alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
           <Button
-            variant="contained"
+            variant="outlined"
             startIcon={<PersonAddRounded />}
             onClick={() => handleOpen()}
-            sx={{ borderRadius: 2, px: 3, py: 1.2, bgcolor: '#0066b2', '&:hover': { bgcolor: '#005291' }, textTransform: 'none', fontWeight: 700, whiteSpace: 'nowrap' }}
+            sx={{ whiteSpace: 'nowrap' }}
           >
             Add New User
           </Button>

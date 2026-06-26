@@ -92,10 +92,10 @@ const Tasks = () => {
           </Typography>
         </Box>
         <Button
-          variant="contained"
+          variant="outlined"
           startIcon={<AddRounded />}
           onClick={() => setOpen(true)}
-          sx={{ borderRadius: 2, px: 3, py: 1.2, bgcolor: '#0066b2', '&:hover': { bgcolor: '#005291' }, textTransform: 'none', fontWeight: 700, alignSelf: { xs: 'flex-start', md: 'center' } }}
+          sx={{ alignSelf: { xs: 'flex-start', md: 'center' } }}
         >
           Create New Task
         </Button>

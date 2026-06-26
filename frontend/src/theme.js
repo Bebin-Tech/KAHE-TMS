@@ -107,6 +107,23 @@ const theme = createTheme({
           borderRadius: 8,
           lineHeight: 1.35,
         },
+        outlinedPrimary: {
+          backgroundColor: '#ffffff',
+          borderColor: '#3f8ed6',
+          borderWidth: 1.5,
+          color: '#0f5ea8',
+          fontSize: '1rem',
+          fontWeight: 700,
+          minHeight: 48,
+          padding: '10px 26px',
+          boxShadow: '0 10px 24px -18px rgba(15, 94, 168, 0.7)',
+          '&:hover': {
+            backgroundColor: '#f4f9ff',
+            borderColor: '#0f5ea8',
+            borderWidth: 1.5,
+            boxShadow: '0 16px 30px -20px rgba(15, 94, 168, 0.8)',
+          },
+        },
         containedPrimary: {
           boxShadow: 'none',
           '&:hover': {
