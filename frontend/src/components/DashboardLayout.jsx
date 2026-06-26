@@ -20,7 +20,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const drawerWidth = 280;
+const drawerWidth = 292;
 
 const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const theme = useTheme();
@@ -63,20 +63,20 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const roleLabel = user.role ? user.role.replace('_', ' ') : 'Member';
 
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#101828', color: 'white', px: 2 }}>
-      <Box sx={{ py: 3, px: 1.5, display: 'flex', alignItems: 'center' }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#101828', color: 'white', px: 2.25 }}>
+      <Box sx={{ py: 3.25, px: 1.25, display: 'flex', alignItems: 'center', gap: 1.6 }}>
         <Box
           sx={{
             bgcolor: 'white',
-            p: 0.5,
-            borderRadius: '8px',
+            p: 0.55,
+            borderRadius: '10px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: 38,
-            height: 38,
-            mr: 1.4,
-            boxShadow: '0 12px 30px -18px rgba(255,255,255,0.65)'
+            width: 52,
+            height: 52,
+            border: '1px solid rgba(255,255,255,0.72)',
+            boxShadow: '0 18px 38px -18px rgba(255,255,255,0.72)'
           }}
         >
           <Box
@@ -91,18 +91,15 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           />
         </Box>
         <Box>
-          <Typography variant="subtitle1" component="div" sx={{ fontWeight: 900, color: '#ffffff', letterSpacing: 0, lineHeight: 1 }}>
+          <Typography variant="h6" component="div" sx={{ fontWeight: 900, color: '#ffffff', letterSpacing: 0, lineHeight: 1.1 }}>
             KAHE TMS
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#98a2b3', fontWeight: 700 }}>
-            Admin Control Center
           </Typography>
         </Box>
       </Box>
 
       <Box sx={{ px: 0.5, mb: 3 }}>
         <Paper elevation={0} sx={{
-          p: 1.75,
+          p: 2,
           bgcolor: 'rgba(255,255,255,0.06)',
           border: '1px solid rgba(255,255,255,0.1)',
           borderRadius: 2,
@@ -125,7 +122,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
         </Paper>
       </Box>
 
-      <Typography variant="caption" sx={{ px: 1.5, mb: 1, color: '#98a2b3', fontWeight: 900, letterSpacing: '0.08em' }}>
+      <Typography variant="caption" sx={{ px: 1.5, mb: 1.25, color: '#98a2b3', fontWeight: 900, letterSpacing: '0.08em' }}>
         WORKSPACE
       </Typography>
       <List sx={{ px: 0 }}>
@@ -178,7 +175,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   '&:active': {
                     transform: 'scale(0.975)'
                   },
-                  py: 1.25
+                  py: 1.35
                 }}
               >
                 <ListItemIcon sx={{
@@ -233,13 +230,13 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           position="sticky"
           elevation={0}
           sx={{
-            bgcolor: 'rgba(244, 247, 251, 0.88)',
+            bgcolor: 'rgba(248, 250, 253, 0.92)',
             backdropFilter: 'blur(14px)',
             borderBottom: '1px solid #dde5f0',
             color: 'text.primary',
           }}
         >
-          <Toolbar sx={{ justifyContent: 'space-between', minHeight: 72, px: { xs: 2, md: 4 } }}>
+          <Toolbar sx={{ justifyContent: 'space-between', minHeight: 76, px: { xs: 2, md: 4 } }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
               {isMobile && !hideSidebar && (
                 <IconButton onClick={handleDrawerToggle} edge="start" sx={{ mr: 1 }}>
@@ -316,7 +313,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           sx={{
             flex: 1,
             px: { xs: 2, md: 4 },
-            py: 3,
+            py: { xs: 2.5, md: 3.5 },
           }}
         >
           {children}
