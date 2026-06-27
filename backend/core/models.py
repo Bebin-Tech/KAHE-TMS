@@ -98,6 +98,33 @@ class Submission(models.Model):
     is_approved = models.BooleanField(default=False)
     objects = models.Manager()
 
+class TaskReport(models.Model):
+    ROLE_CHOICES = User.ROLE_CHOICES
+
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='report_entries')
+    subtask = models.ForeignKey(SubTask, on_delete=models.CASCADE, related_name='report_entries', null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='task_report_entries')
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='assigned_report_entries', null=True, blank=True)
+    assigned_at = models.DateTimeField()
+    work_started_at = models.DateTimeField(null=True, blank=True)
+    work_completed_at = models.DateTimeField(null=True, blank=True)
+    submission_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20)
+    rejected_by = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='rejected_report_entries', null=True, blank=True)
+    rejection_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True)
+    resubmission_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    objects = models.Manager()
+
+    class Meta:
+        ordering = ['-assigned_at', '-updated_at']
+
+    def __str__(self):
+        return f"{self.task.title} - {self.user} - {self.status}"
+
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     message = models.TextField()

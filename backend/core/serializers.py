@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
-from .models import User, Department, Task, SubTask, Submission, Notification
+from .models import User, Department, Task, SubTask, Submission, TaskReport, Notification
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
@@ -16,6 +16,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             'username': user.username, # type: ignore
             'email': user.email, # type: ignore
             'role': user.role, # type: ignore
+            'department': user.department_id, # type: ignore
             'full_name': user.get_full_name(), # type: ignore
             'must_change_password': user.must_change_password # type: ignore
         }
@@ -69,6 +70,46 @@ class SubmissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Submission
         fields = '__all__'
+
+class TaskReportSerializer(serializers.ModelSerializer):
+    user_name = serializers.SerializerMethodField()
+    assigned_by_name = serializers.SerializerMethodField()
+    rejected_by_name = serializers.SerializerMethodField()
+    task_name = serializers.ReadOnlyField(source='task.title')
+    dean_name = serializers.SerializerMethodField()
+    hod_name = serializers.SerializerMethodField()
+    faculty_name = serializers.SerializerMethodField()
+    subtask_title = serializers.ReadOnlyField(source='subtask.title')
+
+    class Meta:
+        model = TaskReport
+        fields = '__all__'
+
+    def get_user_name(self, obj):
+        return obj.user.get_full_name() or obj.user.username
+
+    def get_assigned_by_name(self, obj):
+        if not obj.assigned_by:
+            return ''
+        return obj.assigned_by.get_full_name() or obj.assigned_by.username
+
+    def get_rejected_by_name(self, obj):
+        if not obj.rejected_by:
+            return ''
+        return obj.rejected_by.get_full_name() or obj.rejected_by.username
+
+    def get_dean_name(self, obj):
+        return obj.task.created_by.get_full_name() or obj.task.created_by.username
+
+    def get_hod_name(self, obj):
+        if not obj.task.assigned_to_hod:
+            return ''
+        return obj.task.assigned_to_hod.get_full_name() or obj.task.assigned_to_hod.username
+
+    def get_faculty_name(self, obj):
+        if obj.role == 'FACULTY':
+            return obj.user.get_full_name() or obj.user.username
+        return ''
 
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
