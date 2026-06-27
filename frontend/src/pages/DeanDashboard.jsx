@@ -77,7 +77,7 @@ const DeanDashboard = () => {
             <Chip
               label={trend}
               size="small"
-              sx={{ bgcolor: '#ecfdf5', color: '#059669', fontWeight: 700, fontSize: '0.7rem' }}
+              sx={{ bgcolor: '#e8f7f6', color: '#1f7f79', fontWeight: 700, fontSize: '0.7rem' }}
             />
           )}
         </Box>
@@ -94,14 +94,14 @@ const DeanDashboard = () => {
 
   const getStatusChip = (status) => {
     const configs = {
-      'ASSIGNED': { color: '#3b82f6', bg: '#eff6ff', label: 'Assigned' },
-      'IN_PROGRESS': { color: '#f59e0b', bg: '#fffbe6', label: 'In Progress' },
-      'SUBMITTED_HOD': { color: '#8b5cf6', bg: '#f5f3ff', label: 'HOD Review' },
-      'HOD_APPROVED': { color: '#10b981', bg: '#ecfdf5', label: 'HOD Approved' },
-      'SUBMITTED_DEAN': { color: '#06b6d4', bg: '#ecfeff', label: 'Dean Review' },
-      'DEAN_APPROVED': { color: '#059669', bg: '#f0fdf4', label: 'Completed' },
+      'ASSIGNED': { color: '#237dba', bg: '#eaf3ff', label: 'Assigned' },
+      'IN_PROGRESS': { color: '#8a6f00', bg: '#fff8d9', label: 'In Progress' },
+      'SUBMITTED_HOD': { color: '#1E1E2C', bg: '#ececf1', label: 'HOD Review' },
+      'HOD_APPROVED': { color: '#1f7f79', bg: '#e8f7f6', label: 'HOD Approved' },
+      'SUBMITTED_DEAN': { color: '#237dba', bg: '#eaf3ff', label: 'Dean Review' },
+      'DEAN_APPROVED': { color: '#1f7f79', bg: '#e8f7f6', label: 'Completed' },
       'REJECTED_DEAN': { color: '#ef4444', bg: '#fef2f2', label: 'Rejected' },
-      'COMPLETED': { color: '#059669', bg: '#f0fdf4', label: 'Completed' },
+      'COMPLETED': { color: '#1f7f79', bg: '#e8f7f6', label: 'Completed' },
     };
     const config = configs[status] || configs['ASSIGNED'];
     return (
@@ -138,13 +138,13 @@ const DeanDashboard = () => {
 
         <Grid container spacing={3} justifyContent="center">
           <Grid item xs={12} sm={6} md={3}>
-            <StatCard title="Total Tasks" value={stats.total} icon={<AssignmentRounded />} color="#3b82f6" trend="+12%" />
+            <StatCard title="Total Tasks" value={stats.total} icon={<AssignmentRounded />} color="#3B8FF3" trend="+12%" />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <StatCard title="Pending Review" value={stats.pending} icon={<PendingActionsRounded />} color="#8b5cf6" trend="+3 today" />
+            <StatCard title="Pending Review" value={stats.pending} icon={<PendingActionsRounded />} color="#1E1E2C" trend="+3 today" />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <StatCard title="Completed" value={stats.completed} icon={<CheckCircleRounded />} color="#10b981" />
+            <StatCard title="Completed" value={stats.completed} icon={<CheckCircleRounded />} color="#34B1AA" />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <StatCard title="Overdue" value={stats.overdue} icon={<ErrorOutlineRounded />} color="#ef4444" />
@@ -182,7 +182,7 @@ const DeanDashboard = () => {
 
         <TableContainer>
           <Table sx={{ minWidth: 800 }}>
-            <TableHead sx={{ bgcolor: '#f8fafc' }}>
+            <TableHead sx={{ bgcolor: '#f4f9ff' }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: 700, color: 'text.secondary' }}>Task Details</TableCell>
                 <TableCell sx={{ fontWeight: 700, color: 'text.secondary' }}>Assigned HOD</TableCell>
@@ -200,8 +200,8 @@ const DeanDashboard = () => {
                       <Box sx={{
                         width: 40, height: 40,
                         borderRadius: '10px',
-                        bgcolor: task.priority === 'HIGH' ? '#fef2f2' : '#eff6ff',
-                        color: task.priority === 'HIGH' ? '#ef4444' : '#3b82f6',
+                        bgcolor: task.priority === 'HIGH' ? '#fef2f2' : '#eaf3ff',
+                        color: task.priority === 'HIGH' ? '#ef4444' : '#237dba',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', mr: 2
                       }}>
                         <AssignmentRounded sx={{ fontSize: '1.2rem' }} />
@@ -313,3 +313,4 @@ const DeanDashboard = () => {
 };
 
 export default DeanDashboard;
+

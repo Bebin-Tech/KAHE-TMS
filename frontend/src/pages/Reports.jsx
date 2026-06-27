@@ -49,11 +49,11 @@ const formatDateTime = (value) => {
 const statusLabel = (status) => status?.replaceAll('_', ' ') || 'Unknown';
 
 const getStatusColor = (status) => {
-  if (['COMPLETED', 'APPROVED_HOD'].includes(status)) return { bg: '#ecfdf5', color: '#047857' };
+  if (['COMPLETED', 'APPROVED_HOD'].includes(status)) return { bg: '#e8f7f6', color: '#1f7f79' };
   if (['REJECTED_HOD', 'REJECTED_DEAN'].includes(status)) return { bg: '#fef2f2', color: '#b91c1c' };
-  if (['SUBMITTED', 'SUBMITTED_DEAN'].includes(status)) return { bg: '#ecfeff', color: '#0e7490' };
-  if (status === 'IN_PROGRESS') return { bg: '#fff7ed', color: '#c2410c' };
-  return { bg: '#eff6ff', color: '#1d4ed8' };
+  if (['SUBMITTED', 'SUBMITTED_DEAN'].includes(status)) return { bg: '#eaf3ff', color: '#237dba' };
+  if (status === 'IN_PROGRESS') return { bg: '#fff8d9', color: '#8a6f00' };
+  return { bg: '#eaf3ff', color: '#237dba' };
 };
 
 const Reports = () => {
@@ -135,7 +135,7 @@ const Reports = () => {
   return (
     <DashboardLayout title="Reports">
       <Box sx={{ mb: 4, display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-        <Box sx={{ width: 56, height: 56, flexShrink: 0, borderRadius: '14px', bgcolor: '#e9f3ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box sx={{ width: 56, height: 56, flexShrink: 0, borderRadius: '14px', bgcolor: '#eaf3ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <AssessmentRounded sx={{ color: 'primary.main', fontSize: 32 }} />
         </Box>
         <Box>
@@ -148,7 +148,7 @@ const Reports = () => {
         </Box>
       </Box>
 
-      <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, border: '1px solid #dde5f0', borderRadius: '12px' }}>
+      <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, border: '1px solid #e5e2df', borderRadius: '12px' }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={3}>
             <TextField
@@ -225,9 +225,9 @@ const Reports = () => {
         </Grid>
       </Paper>
 
-      <TableContainer component={Paper} sx={{ border: '1px solid #dde5f0', borderRadius: '12px' }}>
+      <TableContainer component={Paper} sx={{ border: '1px solid #e5e2df', borderRadius: '12px' }}>
         <Table sx={{ minWidth: 1350 }}>
-          <TableHead sx={{ bgcolor: '#f8fafc' }}>
+          <TableHead sx={{ bgcolor: '#f4f9ff' }}>
             <TableRow>
               <TableCell sx={{ fontWeight: 800 }}>Task</TableCell>
               <TableCell sx={{ fontWeight: 800 }}>User</TableCell>
@@ -313,3 +313,4 @@ const Reports = () => {
 };
 
 export default Reports;
+

@@ -44,7 +44,7 @@ const CompletedTasks = () => {
 
       <TableContainer component={Paper}>
         <Table>
-          <TableHead sx={{ bgcolor: '#f4f6f8' }}>
+          <TableHead sx={{ bgcolor: '#f4f9ff' }}>
             <TableRow>
               <TableCell sx={{ fontWeight: 700, color: '#637381' }}>Task Details</TableCell>
               <TableCell sx={{ fontWeight: 700, color: '#637381' }}>Completed By</TableCell>
@@ -57,7 +57,7 @@ const CompletedTasks = () => {
               <TableRow key={task.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: '#ecfdf5', color: '#047857' }}>
+                    <Avatar sx={{ bgcolor: '#e8f7f6', color: '#1f7f79' }}>
                       <AssignmentTurnedInOutlined />
                     </Avatar>
                     <Box>
@@ -72,7 +72,7 @@ const CompletedTasks = () => {
                 </TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <VerifiedUserRounded sx={{ color: '#1976d2', fontSize: '1rem' }} />
+                    <VerifiedUserRounded sx={{ color: '#3B8FF3', fontSize: '1rem' }} />
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>{task.created_by_name} (Dean)</Typography>
                   </Box>
                 </TableCell>
@@ -81,7 +81,7 @@ const CompletedTasks = () => {
                     label="VERIFIED"
                     icon={<CheckCircleRounded />}
                     size="small"
-                    sx={{ bgcolor: '#ecfdf5', color: '#047857', fontWeight: 800, borderRadius: '8px' }}
+                    sx={{ bgcolor: '#e8f7f6', color: '#1f7f79', fontWeight: 800, borderRadius: '8px' }}
                   />
                 </TableCell>
               </TableRow>
@@ -100,3 +100,4 @@ const CompletedTasks = () => {
 };
 
 export default CompletedTasks;
+

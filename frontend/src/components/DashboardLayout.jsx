@@ -75,7 +75,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const loginLabel = user.full_name || roleLabel;
 
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#101828', color: 'white', px: 2.25 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#1E1E2C', color: 'white', px: 2.25 }}>
       <Box sx={{ py: 3.25, px: 1.25, display: 'flex', alignItems: 'center', gap: 1.6 }}>
         <Box
           sx={{
@@ -120,21 +120,21 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           gap: 1.5,
           color: 'white'
         }}>
-          <Avatar sx={{ width: 40, height: 40, bgcolor: '#3f8ed6', fontWeight: 800 }}>
+          <Avatar sx={{ width: 40, height: 40, bgcolor: '#3B8FF3', color: '#1E1E2C', fontWeight: 900 }}>
             {(user.username?.[0] || 'U').toUpperCase()}
           </Avatar>
           <Box sx={{ overflow: 'hidden' }}>
             <Typography variant="subtitle2" noWrap sx={{ fontWeight: 800, color: 'white' }}>
               {user.full_name || user.username || 'User'}
             </Typography>
-            <Typography variant="caption" sx={{ color: '#c9d4e5', fontWeight: 700 }}>
+            <Typography variant="caption" sx={{ color: '#d7d4dc', fontWeight: 700 }}>
               {roleLabel}
             </Typography>
           </Box>
         </Paper>
       </Box>
 
-      <Typography variant="caption" sx={{ px: 1.5, mb: 1.25, color: '#98a2b3', fontWeight: 900, letterSpacing: '0.08em' }}>
+      <Typography variant="caption" sx={{ px: 1.5, mb: 1.25, color: '#aaa6b5', fontWeight: 900, letterSpacing: '0.08em' }}>
         WORKSPACE
       </Typography>
       <List sx={{ px: 0 }}>
@@ -150,12 +150,12 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   position: 'relative',
                   overflow: 'hidden',
                   borderRadius: '8px',
-                  bgcolor: isActive ? 'rgba(63, 142, 214, 0.16)' : 'transparent',
-                  color: isActive ? '#ffffff' : '#c9d4e5',
-                  border: isActive ? '1px solid rgba(63, 142, 214, 0.35)' : '1px solid transparent',
+                  bgcolor: isActive ? '#eaf3ff' : 'transparent',
+                  color: isActive ? '#1E1E2C' : '#d7d4dc',
+                  border: isActive ? '1px solid rgba(59, 143, 243, 0.85)' : '1px solid transparent',
                   transform: isPressed ? 'scale(0.975)' : 'scale(1)',
                   transition: 'transform 140ms ease, background-color 220ms ease, border-color 220ms ease, color 220ms ease, box-shadow 220ms ease',
-                  boxShadow: isActive ? 'inset 0 0 0 1px rgba(124, 196, 255, 0.08)' : 'none',
+                  boxShadow: isActive ? 'inset 0 0 0 1px rgba(59, 143, 243, 0.16)' : 'none',
                   '&::before': {
                     content: '""',
                     position: 'absolute',
@@ -164,7 +164,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                     width: 4,
                     height: isActive ? 28 : 0,
                     borderRadius: '0 999px 999px 0',
-                    bgcolor: '#7cc4ff',
+                    bgcolor: '#3B8FF3',
                     transform: 'translateY(-50%)',
                     opacity: isActive ? 1 : 0,
                     transition: 'height 240ms ease, opacity 180ms ease'
@@ -180,7 +180,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                     pointerEvents: 'none'
                   },
                   '&:hover': {
-                    bgcolor: 'rgba(255,255,255,0.08)',
+                    bgcolor: isActive ? '#eaf3ff' : 'rgba(59,143,243,0.12)',
                     transform: isPressed ? 'scale(0.975)' : 'translateX(4px)',
                     borderColor: 'rgba(255,255,255,0.1)'
                   },
@@ -191,7 +191,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 }}
               >
                 <ListItemIcon sx={{
-                  color: isActive ? '#7cc4ff' : '#98a2b3',
+                  color: isActive ? '#3B8FF3' : '#aaa6b5',
                   minWidth: '44px',
                   transition: 'color 220ms ease, transform 220ms ease',
                   transform: isActive ? 'scale(1.06)' : 'scale(1)',
@@ -228,7 +228,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
               boxSizing: 'border-box',
               width: drawerWidth,
               borderRight: 'none',
-              bgcolor: '#101828',
+              bgcolor: '#1E1E2C',
             },
           }}
         >
@@ -242,9 +242,9 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           position="sticky"
           elevation={0}
           sx={{
-            bgcolor: 'rgba(248, 250, 253, 0.92)',
+            bgcolor: 'rgba(246, 246, 247, 0.94)',
             backdropFilter: 'blur(14px)',
-            borderBottom: '1px solid #dde5f0',
+            borderBottom: '1px solid #e5e2df',
             color: 'text.primary',
           }}
         >
@@ -285,9 +285,9 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 sx={{
                   px: { xs: 1.25, sm: 1.75 },
                   py: 0.9,
-                  border: '1px solid #dde5f0',
+                  border: '1px solid #c9ece8',
                   borderRadius: 2,
-                  bgcolor: '#ecfdf5',
+                  bgcolor: '#e8f7f6',
                   display: 'flex',
                   alignItems: 'center',
                   minHeight: 42,
@@ -298,7 +298,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 <Typography
                   variant="body2"
                   noWrap
-                  sx={{ color: '#047857', fontWeight: 800, maxWidth: { xs: '100%', sm: 240 } }}
+                  sx={{ color: '#1f7f79', fontWeight: 800, maxWidth: { xs: '100%', sm: 240 } }}
                 >
                   Logged in: {loginLabel}
                 </Typography>
@@ -311,7 +311,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   gap: 1,
                   cursor: 'pointer',
                   bgcolor: 'white',
-                  border: '1px solid #dde5f0',
+                  border: '1px solid #e5e2df',
                   borderRadius: 2,
                   p: 0.5,
                   pl: 0.75,
@@ -422,3 +422,4 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
 };
 
 export default DashboardLayout;
+

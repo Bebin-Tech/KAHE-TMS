@@ -111,7 +111,7 @@ const LoginPage = () => {
               objectFit: 'contain'
             }}
           />
-          <Typography variant="h5" sx={{ fontWeight: 800, color: '#0066b2', mb: 1, letterSpacing: '0.5px' }}>
+          <Typography variant="h5" sx={{ fontWeight: 800, color: '#1E1E2C', mb: 1, letterSpacing: '0.5px' }}>
             KAHE TMS
           </Typography>
           <Typography variant="body2" className="text-gray-500 mt-1">
@@ -148,7 +148,7 @@ const LoginPage = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <PersonOutline sx={{ color: '#94a3b8', fontSize: 20 }} />
+                  <PersonOutline sx={{ color: '#3B8FF3', fontSize: 20 }} />
                 </InputAdornment>
               ),
               className: "rounded-[10px] bg-white"
@@ -156,8 +156,8 @@ const LoginPage = () => {
             sx={{
               '& .MuiOutlinedInput-root': {
                 '& fieldset': { borderColor: '#e2e8f0' },
-                '&:hover fieldset': { borderColor: '#0066b2' },
-                '&.Mui-focused fieldset': { borderColor: '#0066b2' },
+                '&:hover fieldset': { borderColor: '#3B8FF3' },
+                '&.Mui-focused fieldset': { borderColor: '#3B8FF3' },
               }
             }}
           />
@@ -173,7 +173,7 @@ const LoginPage = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <LockOutlined sx={{ color: '#94a3b8', fontSize: 20 }} />
+                  <LockOutlined sx={{ color: '#3B8FF3', fontSize: 20 }} />
                 </InputAdornment>
               ),
               endAdornment: (
@@ -188,13 +188,13 @@ const LoginPage = () => {
                   </IconButton>
                 </InputAdornment>
               ),
-              className: "rounded-[10px] bg-[#eff4ff]"
+              className: "rounded-[10px] bg-[#eaf3ff]"
             }}
             sx={{
               '& .MuiOutlinedInput-root': {
                 '& fieldset': { borderColor: '#e2e8f0' },
-                '&:hover fieldset': { borderColor: '#0066b2' },
-                '&.Mui-focused fieldset': { borderColor: '#0066b2' },
+                '&:hover fieldset': { borderColor: '#3B8FF3' },
+                '&.Mui-focused fieldset': { borderColor: '#3B8FF3' },
               }
             }}
           />
@@ -205,12 +205,13 @@ const LoginPage = () => {
             size="large"
             type="submit"
             disabled={loading}
-            className="bg-[#0066b2] hover:bg-[#005291] text-white py-3 rounded-lg normal-case font-bold text-lg mt-4 shadow-none"
+            className="text-white py-3 rounded-lg normal-case font-bold text-lg mt-4 shadow-none"
             sx={{
               mt: 2,
               textTransform: 'none',
-              backgroundColor: '#0066b2',
-              '&:hover': { backgroundColor: '#005291' },
+              backgroundColor: '#3B8FF3',
+              color: '#1E1E2C',
+              '&:hover': { backgroundColor: '#237dba', color: 'white' },
               height: '52px'
             }}
           >
@@ -228,3 +229,4 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+

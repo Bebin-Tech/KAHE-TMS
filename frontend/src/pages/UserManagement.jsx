@@ -159,10 +159,10 @@ const UserManagement = () => {
 
   const getRoleColor = (role) => {
     switch (role) {
-      case 'ADMIN': return { bg: '#d1e9fc', color: '#0c53b7' };
-      case 'DEAN': return { bg: '#d0f2ff', color: '#04297a' };
-      case 'HOD': return { bg: '#fff7cd', color: '#7a4f01' };
-      case 'FACULTY': return { bg: '#ecfdf5', color: '#047857' };
+      case 'ADMIN': return { bg: '#ececf1', color: '#1E1E2C' };
+      case 'DEAN': return { bg: '#eaf3ff', color: '#237dba' };
+      case 'HOD': return { bg: '#fff8d9', color: '#8a6f00' };
+      case 'FACULTY': return { bg: '#e8f7f6', color: '#1f7f79' };
       default: return { bg: '#f4f6f8', color: '#637381' };
     }
   };
@@ -188,7 +188,7 @@ const UserManagement = () => {
             boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
             '&:focus-within': {
               bgcolor: 'white',
-              border: '1.5px solid #0066b2',
+              border: '1.5px solid #3B8FF3',
               boxShadow: '0 0 0 4px rgba(0, 102, 178, 0.1)'
             },
             transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
@@ -235,9 +235,9 @@ const UserManagement = () => {
                   width: '40px',
                   height: '40px',
                   margin: '0 4px',
-                  border: '1px solid #dde5f0',
+                      border: '1px solid #e5e2df',
                   '&:hover': {
-                    bgcolor: item.selected ? 'primary.dark' : '#eef5ff'
+                    bgcolor: item.selected ? 'primary.dark' : '#eaf3ff'
                   },
                   '&.Mui-selected': {
                     bgcolor: 'primary.main',
@@ -315,7 +315,7 @@ const UserManagement = () => {
                   />
                   <Box sx={{ display: 'flex', gap: 0.5 }}>
                     <Tooltip title="Edit User">
-                      <IconButton onClick={() => handleOpen(user)} size="small" sx={{ color: '#1976d2' }}>
+                      <IconButton onClick={() => handleOpen(user)} size="small" sx={{ color: '#237dba' }}>
                         <EditRounded fontSize="small" />
                       </IconButton>
                     </Tooltip>
@@ -387,7 +387,7 @@ const UserManagement = () => {
             <Button
               type="submit"
               variant="contained"
-              sx={{ bgcolor: '#0066b2', '&:hover': { bgcolor: '#005291' }, borderRadius: 1.5, px: 3, fontWeight: 700, textTransform: 'none' }}
+              sx={{ bgcolor: '#3B8FF3', color: '#1E1E2C', '&:hover': { bgcolor: '#237dba', color: 'white' }, borderRadius: 1.5, px: 3, fontWeight: 700, textTransform: 'none' }}
             >
               {editingUser ? 'Update Account' : 'Create Account'}
             </Button>
@@ -399,3 +399,4 @@ const UserManagement = () => {
 };
 
 export default UserManagement;
+

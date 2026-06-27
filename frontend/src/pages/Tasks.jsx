@@ -60,17 +60,17 @@ const Tasks = () => {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'COMPLETED': return <CheckCircleRounded sx={{ color: '#059669', fontSize: '1rem' }} />;
+      case 'COMPLETED': return <CheckCircleRounded sx={{ color: '#1f7f79', fontSize: '1rem' }} />;
       case 'CANCELLED': return <CancelRounded sx={{ color: '#ef4444', fontSize: '1rem' }} />;
-      default: return <ScheduleRounded sx={{ color: '#3b82f6', fontSize: '1rem' }} />;
+      default: return <ScheduleRounded sx={{ color: '#237dba', fontSize: '1rem' }} />;
     }
   };
 
   const getStatusChip = (status) => {
     const colors = {
-      'ONGOING': { bg: '#eff6ff', color: '#1d4ed8' },
+      'ONGOING': { bg: '#eaf3ff', color: '#237dba' },
       'CANCELLED': { bg: '#fef2f2', color: '#b91c1c' },
-      'COMPLETED': { bg: '#ecfdf5', color: '#047857' }
+      'COMPLETED': { bg: '#e8f7f6', color: '#1f7f79' }
     };
     const style = colors[status] || colors['ONGOING'];
     return (
@@ -105,7 +105,7 @@ const Tasks = () => {
 
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 760 }}>
-          <TableHead sx={{ bgcolor: '#f4f6f8' }}>
+          <TableHead sx={{ bgcolor: '#f4f9ff' }}>
             <TableRow>
               <TableCell sx={{ fontWeight: 700, color: '#637381' }}>Task Details</TableCell>
               <TableCell sx={{ fontWeight: 700, color: '#637381' }}>Assignee</TableCell>
@@ -119,7 +119,7 @@ const Tasks = () => {
               <TableRow key={task.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: task.is_special ? '#fff7cd' : '#f4f6f8', color: task.is_special ? '#7a4f01' : '#637381' }}>
+                    <Avatar sx={{ bgcolor: task.is_special ? '#fff8d9' : '#eaf3ff', color: task.is_special ? '#8a6f00' : '#237dba' }}>
                       <AssignmentOutlined />
                     </Avatar>
                     <Box>
@@ -148,7 +148,7 @@ const Tasks = () => {
                     <Typography variant="caption" sx={{ fontWeight: 600, color: '#637381' }}>
                       Start: {task.start_date ? new Date(task.start_date).toLocaleDateString() : 'N/A'}
                     </Typography>
-                    <Typography variant="caption" sx={{ fontWeight: 600, color: '#1976d2' }}>
+                    <Typography variant="caption" sx={{ fontWeight: 600, color: '#237dba' }}>
                       Due: {new Date(task.deadline).toLocaleDateString()}
                     </Typography>
                   </Box>
@@ -160,7 +160,7 @@ const Tasks = () => {
                   </Box>
                 </TableCell>
                 <TableCell align="right">
-                  <IconButton onClick={() => handleEdit(task)} size="small" sx={{ color: '#1976d2' }}><EditRounded fontSize="small" /></IconButton>
+                  <IconButton onClick={() => handleEdit(task)} size="small" sx={{ color: '#237dba' }}><EditRounded fontSize="small" /></IconButton>
                   <IconButton onClick={() => handleDelete(task.id)} size="small" sx={{ color: '#f44336' }}><DeleteRounded fontSize="small" /></IconButton>
                 </TableCell>
               </TableRow>
@@ -198,3 +198,4 @@ const Tasks = () => {
 };
 
 export default Tasks;
+

@@ -125,13 +125,13 @@ const HODDashboard = () => {
 
       <Grid container spacing={3} sx={{ mb: 5 }} justifyContent="center">
         <Grid item xs={12} md={4}>
-          <StatCard title="Assigned Tasks" value={stats.assigned} icon={<AssignmentRounded />} color="#3b82f6" />
+          <StatCard title="Assigned Tasks" value={stats.assigned} icon={<AssignmentRounded />} color="#3B8FF3" />
         </Grid>
         <Grid item xs={12} md={4}>
-          <StatCard title="Sub-Tasks Active" value={14} icon={<GroupWorkRounded />} color="#8b5cf6" />
+          <StatCard title="Sub-Tasks Active" value={14} icon={<GroupWorkRounded />} color="#1E1E2C" />
         </Grid>
         <Grid item xs={12} md={4}>
-          <StatCard title="Pending Review" value={stats.pendingReview} icon={<FactCheckRounded />} color="#10b981" />
+          <StatCard title="Pending Review" value={stats.pendingReview} icon={<FactCheckRounded />} color="#34B1AA" />
         </Grid>
       </Grid>
 
@@ -143,7 +143,7 @@ const HODDashboard = () => {
             </Box>
             <TableContainer>
               <Table>
-                <TableHead sx={{ bgcolor: '#f8fafc' }}>
+                <TableHead sx={{ bgcolor: '#f4f9ff' }}>
                   <TableRow>
                     <TableCell sx={{ fontWeight: 700 }}>Task Title</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Deadline</TableCell>
@@ -210,7 +210,7 @@ const HODDashboard = () => {
             </Box>
             <TableContainer>
               <Table>
-                <TableHead sx={{ bgcolor: '#f8fafc' }}>
+                <TableHead sx={{ bgcolor: '#f4f9ff' }}>
                   <TableRow>
                     <TableCell sx={{ fontWeight: 700 }}>Faculty Task</TableCell>
                     <TableCell sx={{ fontWeight: 700 }}>Assigned To</TableCell>
@@ -343,3 +343,4 @@ const HODDashboard = () => {
 };
 
 export default HODDashboard;
+

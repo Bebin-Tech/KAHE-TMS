@@ -28,12 +28,12 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
 const statusConfig = {
-  COMPLETED: { label: 'Completed', color: '#11845b', bg: '#eaf8f2' },
-  DEAN_APPROVED: { label: 'Approved', color: '#11845b', bg: '#eaf8f2' },
-  ASSIGNED: { label: 'Assigned', color: '#0f5ea8', bg: '#e9f3ff' },
-  IN_PROGRESS: { label: 'In Progress', color: '#b7791f', bg: '#fff6df' },
-  SUBMITTED_HOD: { label: 'HOD Review', color: '#7c3aed', bg: '#f3edff' },
-  SUBMITTED_DEAN: { label: 'Dean Review', color: '#0e7490', bg: '#e8fbff' },
+  COMPLETED: { label: 'Completed', color: '#1f7f79', bg: '#e8f7f6' },
+  DEAN_APPROVED: { label: 'Approved', color: '#1f7f79', bg: '#e8f7f6' },
+  ASSIGNED: { label: 'Assigned', color: '#237dba', bg: '#eaf3ff' },
+  IN_PROGRESS: { label: 'In Progress', color: '#8a6f00', bg: '#fff8d9' },
+  SUBMITTED_HOD: { label: 'HOD Review', color: '#1E1E2C', bg: '#ececf1' },
+  SUBMITTED_DEAN: { label: 'Dean Review', color: '#237dba', bg: '#eaf3ff' },
   REJECTED_DEAN: { label: 'Rejected', color: '#c2413b', bg: '#fff0ef' },
   CANCELLED: { label: 'Cancelled', color: '#c2413b', bg: '#fff0ef' }
 };
@@ -95,32 +95,32 @@ const AdminDashboard = () => {
       value: stats.total_users || 0,
       helper: 'Active institutional accounts',
       icon: <PeopleOutlined />,
-      color: '#0f5ea8',
-      bg: '#e9f3ff'
+      color: '#237dba',
+      bg: '#eaf3ff'
     },
     {
       title: 'Departments',
       value: stats.departments || departments.length || 0,
       helper: 'Academic units onboarded',
       icon: <AccountBalanceOutlined />,
-      color: '#16a085',
-      bg: '#eaf8f2'
+      color: '#1f7f79',
+      bg: '#e8f7f6'
     },
     {
       title: 'Completed',
       value: taskTotals.completed,
       helper: `${taskTotals.completionRate}% completion rate`,
       icon: <AssignmentTurnedInOutlined />,
-      color: '#7c3aed',
-      bg: '#f3edff'
+      color: '#1E1E2C',
+      bg: '#ececf1'
     },
     {
       title: 'Total Tasks',
       value: taskTotals.total,
       helper: `${taskTotals.pending} currently active`,
       icon: <AssignmentOutlined />,
-      color: '#b7791f',
-      bg: '#fff6df'
+      color: '#8a6f00',
+      bg: '#fff8d9'
     }
   ];
 
@@ -146,7 +146,7 @@ const AdminDashboard = () => {
                 borderRadius: 2,
                 border: '1px solid #dde5f0',
                 color: 'white',
-                bgcolor: '#12365c',
+                bgcolor: '#1E1E2C',
                 position: 'relative',
                 overflow: 'hidden'
               }}
@@ -168,8 +168,8 @@ const AdminDashboard = () => {
                   </Button>
                 </Stack>
               </Box>
-              <Box sx={{ position: 'absolute', right: -60, bottom: -80, width: 280, height: 280, border: '42px solid rgba(255,255,255,0.08)', borderRadius: '50%' }} />
-              <Box sx={{ position: 'absolute', right: 86, top: 38, width: 110, height: 110, border: '22px solid rgba(84,199,179,0.2)', borderRadius: '50%' }} />
+              <Box sx={{ position: 'absolute', right: -60, bottom: -80, width: 280, height: 280, border: '42px solid rgba(59,143,243,0.16)', borderRadius: '50%' }} />
+              <Box sx={{ position: 'absolute', right: 86, top: 38, width: 110, height: 110, border: '22px solid rgba(52,177,170,0.24)', borderRadius: '50%' }} />
             </Paper>
           </Grid>
         </Grid>
@@ -258,3 +258,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+

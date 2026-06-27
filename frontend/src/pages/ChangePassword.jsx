@@ -56,7 +56,7 @@ const ChangePassword = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f4f7f9', p: 2 }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f6f6f7', p: 2 }}>
       <Paper elevation={0} sx={{ p: { xs: 4, md: 6 }, width: '100%', maxWidth: 450, borderRadius: '40px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}>
         <Typography variant="h4" sx={{ fontWeight: 800, mb: 1, color: '#1e293b' }}>Security Update</Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 4, lineHeight: 1.5 }}>
@@ -107,8 +107,9 @@ const ChangePassword = () => {
               py: 2,
               fontWeight: 800,
               borderRadius: '12px',
-              bgcolor: '#0066b2',
-              '&:hover': { bgcolor: '#005291' },
+              bgcolor: '#3B8FF3',
+              color: '#1E1E2C',
+              '&:hover': { bgcolor: '#237dba', color: 'white' },
               textTransform: 'none',
               fontSize: '1.1rem'
             }}
@@ -122,3 +123,4 @@ const ChangePassword = () => {
 };
 
 export default ChangePassword;
+

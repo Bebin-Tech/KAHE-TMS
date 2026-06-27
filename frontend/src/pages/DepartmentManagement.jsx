@@ -112,7 +112,7 @@ const DepartmentManagement = () => {
 
       <TableContainer component={Paper}>
         <Table>
-          <TableHead sx={{ bgcolor: '#f4f6f8' }}>
+          <TableHead sx={{ bgcolor: '#f4f9ff' }}>
             <TableRow>
               <TableCell sx={{ fontWeight: 700, color: '#637381' }}>Department Name</TableCell>
               <TableCell sx={{ fontWeight: 700, color: '#637381' }}>Block Name</TableCell>
@@ -124,7 +124,7 @@ const DepartmentManagement = () => {
               <TableRow key={dept.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: '#e3f2fd', color: '#1976d2' }}>
+                    <Avatar sx={{ bgcolor: '#eaf3ff', color: '#237dba' }}>
                       <BusinessRounded />
                     </Avatar>
                     <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#212b36' }}>{dept.name}</Typography>
@@ -134,7 +134,7 @@ const DepartmentManagement = () => {
                   <Typography variant="body2" sx={{ color: '#637381' }}>{dept.block_name || 'N/A'}</Typography>
                 </TableCell>
                 <TableCell align="right">
-                  <IconButton onClick={() => handleOpen(dept)} size="small" sx={{ color: '#1976d2' }}>
+                  <IconButton onClick={() => handleOpen(dept)} size="small" sx={{ color: '#237dba' }}>
                     <EditRounded fontSize="small" />
                   </IconButton>
                   <IconButton onClick={() => handleDelete(dept.id)} size="small" sx={{ color: '#f44336' }}>
@@ -184,7 +184,7 @@ const DepartmentManagement = () => {
             <Button
               type="submit"
               variant="contained"
-              sx={{ bgcolor: '#0066b2', '&:hover': { bgcolor: '#005291' }, borderRadius: 1.5, px: 3, fontWeight: 700, textTransform: 'none' }}
+              sx={{ bgcolor: '#3B8FF3', color: '#1E1E2C', '&:hover': { bgcolor: '#237dba', color: 'white' }, borderRadius: 1.5, px: 3, fontWeight: 700, textTransform: 'none' }}
             >
               {editingDept ? 'Save Changes' : 'Create Department'}
             </Button>
@@ -196,3 +196,4 @@ const DepartmentManagement = () => {
 };
 
 export default DepartmentManagement;
+
