@@ -121,7 +121,7 @@ const DeanDashboard = () => {
   return (
     <DashboardLayout title="Overview">
       <Box sx={{ mb: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-        <Typography variant="h4" sx={{ mb: 1, letterSpacing: '-1px', fontWeight: 800 }}>
+        <Typography variant="h4" sx={{ mb: 1, fontWeight: 800, fontSize: { xs: '1.45rem', sm: '2.125rem' } }}>
           Welcome back, Dean
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
@@ -152,9 +152,9 @@ const DeanDashboard = () => {
         </Grid>
 
       <Paper sx={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
-        <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Box sx={{ p: { xs: 2, md: 3 }, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, gap: 2, flexDirection: { xs: 'column', md: 'row' }, borderBottom: '1px solid', borderColor: 'divider' }}>
           <Typography variant="h6">Recent Task Assignments</Typography>
-          <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ display: 'flex', gap: 1.5, width: { xs: '100%', md: 'auto' } }}>
             <Box sx={{
               display: 'flex',
               alignItems: 'center',
@@ -163,7 +163,8 @@ const DeanDashboard = () => {
               borderRadius: '10px',
               border: '1px solid',
               borderColor: 'divider',
-              width: { xs: '150px', sm: '250px' }
+              width: { xs: '100%', sm: '250px' },
+              minWidth: 0
             }}>
               <SearchRounded sx={{ color: 'text.secondary', mr: 1, fontSize: '1.2rem' }} />
               <InputBase

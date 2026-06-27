@@ -56,7 +56,7 @@ const FacultyDashboard = () => {
   return (
     <DashboardLayout title="My Assignments">
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 800 }}>My Work Console</Typography>
+        <Typography variant="h4" sx={{ mb: 1, fontWeight: 800, fontSize: { xs: '1.45rem', sm: '2.125rem' } }}>My Work Console</Typography>
         <Typography variant="body1" color="text.secondary">Manage your assigned tasks and report progress.</Typography>
       </Box>
 
@@ -69,7 +69,7 @@ const FacultyDashboard = () => {
           ) : (
             subtasks.map((task) => (
               <Paper key={task.id} sx={{ p: 3, mb: 3, borderRadius: '20px', border: '1px solid', borderColor: 'divider' }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, gap: 1.5, flexDirection: { xs: 'column', sm: 'row' } }}>
                   <Box>
                     <Typography variant="h6" sx={{ fontWeight: 800 }}>{task.title}</Typography>
                     <Typography variant="caption" color="primary" sx={{ fontWeight: 700 }}>Assigned by HOD: {task.created_by_name}</Typography>
@@ -86,7 +86,7 @@ const FacultyDashboard = () => {
                   <LinearProgress variant="determinate" value={task.progress} sx={{ height: 10, borderRadius: 5 }} />
                 </Box>
 
-                <Box sx={{ display: 'flex', gap: 2 }}>
+                <Box sx={{ display: 'flex', gap: 1.5, flexDirection: { xs: 'column', sm: 'row' } }}>
                   <Button
                     variant="contained"
                     startIcon={<CloudUploadRounded />}
