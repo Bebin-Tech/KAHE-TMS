@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
+import useAutoRefresh from '../hooks/useAutoRefresh';
 import {
   Avatar,
   Box,
@@ -54,27 +55,29 @@ const AdminDashboard = () => {
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const [statsRes, taskRes, deptRes] = await Promise.allSettled([
-          api.get('users/stats/'),
-          api.get('tasks/'),
-          api.get('departments/')
-        ]);
+  const fetchDashboard = useCallback(async () => {
+    try {
+      const [statsRes, taskRes, deptRes] = await Promise.allSettled([
+        api.get('users/stats/'),
+        api.get('tasks/'),
+        api.get('departments/')
+      ]);
 
-        if (statsRes.status === 'fulfilled') setStats(statsRes.value.data);
-        if (taskRes.status === 'fulfilled') setTasks(taskRes.value.data);
-        if (deptRes.status === 'fulfilled') setDepartments(deptRes.value.data);
-      } catch (err) {
-        console.error('Error fetching admin dashboard:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboard();
+      if (statsRes.status === 'fulfilled') setStats(statsRes.value.data);
+      if (taskRes.status === 'fulfilled') setTasks(taskRes.value.data);
+      if (deptRes.status === 'fulfilled') setDepartments(deptRes.value.data);
+    } catch (err) {
+      console.error('Error fetching admin dashboard:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchDashboard();
+  }, [fetchDashboard]);
+
+  useAutoRefresh(fetchDashboard, 10000);
 
   const taskTotals = useMemo(() => {
     const completed = tasks.filter((task) => ['COMPLETED', 'DEAN_APPROVED'].includes(task.status)).length || stats.completed_tasks || 0;

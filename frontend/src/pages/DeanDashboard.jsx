@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import CreateTaskDialog from '../components/CreateTaskDialog';
 import ReviewSubmissionDialog from '../components/ReviewSubmissionDialog';
 import TaskSuccessDialog from '../components/TaskSuccessDialog';
+import useAutoRefresh from '../hooks/useAutoRefresh';
 import {
   Grid, Paper, Typography, Box, Button,
   Table, TableBody, TableCell, TableContainer,
@@ -34,7 +35,7 @@ const DeanDashboard = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [successTask, setSuccessTask] = useState(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const response = await api.get('tasks/');
       setTasks(response.data);
@@ -47,11 +48,13 @@ const DeanDashboard = () => {
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
+
+  useAutoRefresh(fetchData, 10000, !dialogOpen && !reviewOpen && !successTask);
 
   const handleOpenReview = (task) => {
     setSelectedTask({ ...task, type: 'task' });
