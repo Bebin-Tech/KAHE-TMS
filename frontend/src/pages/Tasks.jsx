@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import CreateTaskDialog from '../components/CreateTaskDialog';
+import TaskSuccessDialog from '../components/TaskSuccessDialog';
 import {
   Paper, Typography, Box, Button, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow,
@@ -23,6 +24,7 @@ const Tasks = () => {
   const [open, setOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [successTask, setSuccessTask] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -180,8 +182,16 @@ const Tasks = () => {
           setOpen(false);
           setEditingTask(null);
         }}
-        onTaskCreated={fetchData}
+        onTaskCreated={(savedTask, wasCreated) => {
+          fetchData();
+          if (wasCreated) setSuccessTask(savedTask);
+        }}
         task={editingTask}
+      />
+      <TaskSuccessDialog
+        open={Boolean(successTask)}
+        onClose={() => setSuccessTask(null)}
+        taskTitle={successTask?.title}
       />
     </DashboardLayout>
   );

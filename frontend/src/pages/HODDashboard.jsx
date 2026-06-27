@@ -6,7 +6,9 @@ import {
   Grid, Paper, Typography, Box, Button,
   Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Chip, IconButton,
-  Card, CardContent, LinearProgress, Avatar
+  Card, CardContent, LinearProgress, Avatar,
+  Dialog, DialogTitle, DialogContent, DialogActions, TextField,
+  CircularProgress
 } from '@mui/material';
 import {
   AssignmentRounded,
@@ -28,6 +30,9 @@ const HODDashboard = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewTask, setReviewTask] = useState(null);
+  const [submitTask, setSubmitTask] = useState(null);
+  const [submissionContent, setSubmissionContent] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -59,6 +64,32 @@ const HODDashboard = () => {
   const handleOpenSubTaskDialog = (task) => {
     setSelectedTask(task);
     setDialogOpen(true);
+  };
+
+  const handleStartWork = async (task) => {
+    try {
+      await api.patch(`tasks/${task.id}/`, { status: 'IN_PROGRESS' });
+      fetchData();
+    } catch (err) {
+      console.error('Error starting task:', err);
+    }
+  };
+
+  const handleSubmitToDean = async () => {
+    if (!submitTask) return;
+    setSubmitting(true);
+    try {
+      await api.post(`tasks/${submitTask.id}/submit_to_dean/`, {
+        content: submissionContent || 'Completed task submitted by HOD for Dean review.'
+      });
+      setSubmitTask(null);
+      setSubmissionContent('');
+      fetchData();
+    } catch (err) {
+      console.error('Error submitting task to Dean:', err);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const StatCard = ({ title, value, icon, color }) => (
@@ -129,6 +160,16 @@ const HODDashboard = () => {
                         <Chip label={task.status} size="small" variant="outlined" sx={{ fontWeight: 700 }} />
                       </TableCell>
                       <TableCell align="right">
+                        {['ASSIGNED', 'REJECTED_DEAN'].includes(task.status) && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => handleStartWork(task)}
+                            sx={{ mr: 1 }}
+                          >
+                            Start Work
+                          </Button>
+                        )}
                         <Button
                           size="small"
                           variant="outlined"
@@ -142,9 +183,9 @@ const HODDashboard = () => {
                           size="small"
                           variant="contained"
                           disabled={task.status === 'SUBMITTED_DEAN' || task.status === 'COMPLETED'}
-                          onClick={async () => {
-                            await api.post(`tasks/${task.id}/submit_to_dean/`);
-                            fetchData();
+                          onClick={() => {
+                            setSubmitTask(task);
+                            setSubmissionContent('');
                           }}
                         >
                           Submit to Dean
@@ -249,6 +290,7 @@ const HODDashboard = () => {
           open={dialogOpen}
           onClose={() => setDialogOpen(false)}
           taskId={selectedTask.id}
+          taskDepartmentId={selectedTask.department}
           onTaskCreated={fetchData}
         />
       )}
@@ -260,6 +302,39 @@ const HODDashboard = () => {
           onProcessed={fetchData}
         />
       )}
+      <Dialog
+        open={Boolean(submitTask)}
+        onClose={() => setSubmitTask(null)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: '20px' } }}
+      >
+        <DialogTitle sx={{ fontWeight: 800 }}>Submit Task to Dean</DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Add the final HOD summary. Approved faculty submissions are retained with the task and can be reviewed by the Dean.
+          </Typography>
+          <TextField
+            fullWidth
+            label="Final Submission Summary"
+            multiline
+            minRows={4}
+            value={submissionContent}
+            onChange={(e) => setSubmissionContent(e.target.value)}
+            placeholder="Summarize the completed work and corrections made..."
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setSubmitTask(null)} color="inherit">Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleSubmitToDean}
+            disabled={submitting}
+          >
+            {submitting ? <CircularProgress size={22} color="inherit" /> : 'Submit to Dean'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </DashboardLayout>
   );
 };
