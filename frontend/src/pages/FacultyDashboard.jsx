@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import SubmitWorkDialog from '../components/SubmitWorkDialog';
+import useAutoRefresh from '../hooks/useAutoRefresh';
 import {
   Grid, Paper, Typography, Box, Button,
   Chip, LinearProgress, CircularProgress, Alert
@@ -18,7 +19,7 @@ const FacultyDashboard = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const response = await api.get('subtasks/');
       setSubtasks(response.data);
@@ -27,11 +28,13 @@ const FacultyDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
+
+  useAutoRefresh(fetchData, 10000, !dialogOpen);
 
   const handleOpenSubmit = (task) => {
     setSelectedTask(task);

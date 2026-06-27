@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import CreateSubTaskDialog from '../components/CreateSubTaskDialog';
 import ReviewSubmissionDialog from '../components/ReviewSubmissionDialog';
+import useAutoRefresh from '../hooks/useAutoRefresh';
 import {
   Grid, Paper, Typography, Box, Button,
   Table, TableBody, TableCell, TableContainer,
@@ -34,7 +35,7 @@ const HODDashboard = () => {
   const [submissionContent, setSubmissionContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [taskRes, subRes] = await Promise.all([
         api.get('tasks/'),
@@ -50,11 +51,13 @@ const HODDashboard = () => {
     } catch (err) {
       console.error('Error fetching HOD data:', err);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
+
+  useAutoRefresh(fetchData, 10000, !dialogOpen && !reviewOpen && !submitTask);
 
   const handleOpenReview = (item, type) => {
     setReviewTask({ ...item, type });
