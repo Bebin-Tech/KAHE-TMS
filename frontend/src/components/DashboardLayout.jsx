@@ -269,7 +269,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   py: 0.9,
                   border: '1px solid #dde5f0',
                   borderRadius: 2,
-                  bgcolor: 'white',
+                  bgcolor: '#ecfdf5',
                   display: 'flex',
                   alignItems: 'center',
                   minHeight: 42
@@ -278,7 +278,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 <Typography
                   variant="body2"
                   noWrap
-                  sx={{ color: '#344054', fontWeight: 800, maxWidth: { xs: 130, sm: 240 } }}
+                  sx={{ color: '#047857', fontWeight: 800, maxWidth: { xs: 130, sm: 240 } }}
                 >
                   Logged in: {loginLabel}
                 </Typography>
