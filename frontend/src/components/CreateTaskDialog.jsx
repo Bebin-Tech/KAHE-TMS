@@ -20,7 +20,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
     assigned_to_hod: '',
     start_date: '',
     deadline: '',
-    status: 'ONGOING',
+    status: 'ASSIGNED',
     is_special: false,
     priority: 'MEDIUM'
   });
@@ -65,9 +65,8 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
   const fetchUsersByDepartment = async (deptId) => {
     setFetchingData(true);
     try {
-      // Fetching both HODs and Faculty for this department
       const response = await api.get(`users/?department=${deptId}`);
-      setUsers(response.data);
+      setUsers(response.data.filter((user) => user.role === 'HOD'));
     } catch (err) {
       setError('Failed to fetch users for this department.');
     } finally {
@@ -89,18 +88,22 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
     const submitData = { ...formData };
     if (submitData.department === '') submitData.department = null;
     if (submitData.assigned_to_hod === '') submitData.assigned_to_hod = null;
+    if (!task) submitData.status = 'ASSIGNED';
 
     try {
+      let savedTask;
       if (task) {
-        await api.patch(`tasks/${task.id}/`, submitData);
+        const response = await api.patch(`tasks/${task.id}/`, submitData);
+        savedTask = response.data;
       } else {
         const currentUser = JSON.parse(localStorage.getItem('user'));
-        await api.post('tasks/', {
+        const response = await api.post('tasks/', {
           ...submitData,
           created_by: currentUser.id
         });
+        savedTask = response.data;
       }
-      onTaskCreated();
+      onTaskCreated(savedTask, !task);
       onClose();
     } catch (err) {
       console.error('Error processing task:', err);
@@ -125,7 +128,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
       assigned_to_hod: '',
       start_date: '',
       deadline: '',
-      status: 'ONGOING',
+      status: 'ASSIGNED',
       is_special: false,
       priority: 'MEDIUM'
     });
@@ -175,11 +178,11 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
 
             <Grid item xs={12} sm={6}>
               <TextField
-                select fullWidth label="Assign to Personnel" required
+                select fullWidth label="Assign to HOD" required
                 value={formData.assigned_to_hod}
                 onChange={(e) => setFormData({...formData, assigned_to_hod: e.target.value})}
                 disabled={!formData.department || fetchingData}
-                helperText="Select HOD or Faculty from the chosen department"
+                helperText="Select the department HOD who will own this task"
               >
                 {users.map((user) => (
                   <MenuItem key={user.id} value={user.id}>
@@ -207,19 +210,24 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
               />
             </Grid>
 
+            {task && (
             <Grid item xs={12} sm={4}>
               <TextField
                 select fullWidth label="Task Status"
                 value={formData.status}
                 onChange={(e) => setFormData({...formData, status: e.target.value})}
               >
-                <MenuItem value="ONGOING">Ongoing</MenuItem>
+                <MenuItem value="ASSIGNED">Assigned</MenuItem>
+                <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
+                <MenuItem value="SUBMITTED_DEAN">Submitted to Dean</MenuItem>
+                <MenuItem value="REJECTED_DEAN">Rejected by Dean</MenuItem>
                 <MenuItem value="CANCELLED">Cancelled</MenuItem>
                 <MenuItem value="COMPLETED">Completed</MenuItem>
               </TextField>
             </Grid>
+            )}
 
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={task ? 4 : 6}>
               <TextField
                 select fullWidth label="Priority"
                 value={formData.priority}
@@ -232,7 +240,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
               </TextField>
             </Grid>
 
-            <Grid item xs={12} sm={4} sx={{ display: 'flex', alignItems: 'center' }}>
+            <Grid item xs={12} sm={task ? 4 : 6} sx={{ display: 'flex', alignItems: 'center' }}>
               <FormControlLabel
                 control={
                   <Checkbox

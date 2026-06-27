@@ -37,7 +37,6 @@ const ReviewSubmissionDialog = ({ open, onClose, task, onProcessed }) => {
 
   const handleAction = async (action) => {
     setProcessing(true);
-    const user = JSON.parse(localStorage.getItem('user'));
     try {
       if (task.type === 'subtask') {
         const endpoint = action === 'approve' ? 'approve_by_hod' : 'reject_by_hod';
@@ -62,7 +61,9 @@ const ReviewSubmissionDialog = ({ open, onClose, task, onProcessed }) => {
         {loading ? <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}><CircularProgress /></Box> : (
           submission ? (
             <Box>
-              <Typography variant="subtitle2" gutterBottom color="primary">FACULTY COMMENTS</Typography>
+              <Typography variant="subtitle2" gutterBottom color="primary">
+                {task.type === 'subtask' ? 'FACULTY COMMENTS' : 'HOD SUBMISSION SUMMARY'}
+              </Typography>
               <Typography variant="body1" sx={{ mb: 3 }}>{submission.content}</Typography>
 
               {submission.attachment && (

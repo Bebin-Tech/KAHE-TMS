@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import api from '../api/axios';
 
-const CreateSubTaskDialog = ({ open, onClose, taskId, onTaskCreated }) => {
+const CreateSubTaskDialog = ({ open, onClose, taskId, taskDepartmentId, onTaskCreated }) => {
   const [faculty, setFaculty] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
@@ -20,14 +20,16 @@ const CreateSubTaskDialog = ({ open, onClose, taskId, onTaskCreated }) => {
     if (open) {
       fetchFaculty();
     }
-  }, [open]);
+  }, [open, taskDepartmentId]);
 
   const fetchFaculty = async () => {
+    if (!taskDepartmentId) {
+      setFaculty([]);
+      return;
+    }
     setFetching(true);
-    const user = JSON.parse(localStorage.getItem('user'));
     try {
-      // Fetch users from the same department
-      const response = await api.get(`users/?department=${user.department}`);
+      const response = await api.get(`users/?department=${taskDepartmentId}`);
       setFaculty(response.data.filter(u => u.role === 'FACULTY'));
     } catch (err) {
       console.error('Error fetching Faculty:', err);
@@ -80,7 +82,8 @@ const CreateSubTaskDialog = ({ open, onClose, taskId, onTaskCreated }) => {
                 select fullWidth label="Select Faculty Member" required
                 value={formData.assigned_to}
                 onChange={(e) => setFormData({...formData, assigned_to: e.target.value})}
-                disabled={fetching}
+                disabled={fetching || !taskDepartmentId}
+                helperText={!taskDepartmentId ? 'Choose a main task with a department before assigning faculty.' : 'Choose any available faculty member in this department.'}
               >
                 {faculty.map((f) => (
                   <MenuItem key={f.id} value={f.id}>
