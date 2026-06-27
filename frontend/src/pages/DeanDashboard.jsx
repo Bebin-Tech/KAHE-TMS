@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import CreateTaskDialog from '../components/CreateTaskDialog';
 import ReviewSubmissionDialog from '../components/ReviewSubmissionDialog';
+import TaskSuccessDialog from '../components/TaskSuccessDialog';
 import {
   Grid, Paper, Typography, Box, Button,
   Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Chip, IconButton,
-  InputBase, Card, CardContent, LinearProgress, Tooltip
+  InputBase, Card, CardContent, LinearProgress, Tooltip, Avatar
 } from '@mui/material';
 import {
   AddRounded,
@@ -31,6 +32,7 @@ const DeanDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [reviewOpen, setReviewOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [successTask, setSuccessTask] = useState(null);
 
   const fetchData = async () => {
     try {
@@ -282,7 +284,16 @@ const DeanDashboard = () => {
       <CreateTaskDialog
         open={dialogOpen}
         onClose={() => setDialogOpen(false)}
-        onTaskCreated={fetchData}
+        onTaskCreated={(savedTask, wasCreated) => {
+          fetchData();
+          if (wasCreated) setSuccessTask(savedTask);
+        }}
+      />
+
+      <TaskSuccessDialog
+        open={Boolean(successTask)}
+        onClose={() => setSuccessTask(null)}
+        taskTitle={successTask?.title}
       />
 
       {selectedTask && (

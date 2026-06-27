@@ -88,9 +88,9 @@ const FacultyDashboard = () => {
                     variant="contained"
                     startIcon={<CloudUploadRounded />}
                     onClick={() => handleOpenSubmit(task)}
-                    disabled={task.status === 'SUBMITTED' || task.status === 'COMPLETED'}
+                    disabled={['SUBMITTED', 'APPROVED_HOD', 'COMPLETED'].includes(task.status)}
                   >
-                    {task.status === 'SUBMITTED' ? 'Submitted' : 'Submit Work'}
+                    {task.status === 'SUBMITTED' ? 'Submitted' : task.status === 'APPROVED_HOD' ? 'Approved' : 'Submit Work'}
                   </Button>
                   <Button
                     variant="outlined"
