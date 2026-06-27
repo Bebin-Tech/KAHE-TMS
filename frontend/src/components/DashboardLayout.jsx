@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import {
   Box, Drawer, AppBar, Toolbar, List, Typography,
   IconButton, ListItem, ListItemButton,
-  ListItemIcon, ListItemText, Avatar, Badge,
-  useTheme, useMediaQuery, Paper, Menu, MenuItem, Divider
+  ListItemIcon, ListItemText, Avatar,
+  useTheme, useMediaQuery, Paper, Menu, MenuItem, Divider,
+  Dialog, DialogTitle, DialogContent, DialogActions, Button
 } from '@mui/material';
 import {
   DashboardOutlined,
@@ -12,7 +13,6 @@ import {
   AssessmentOutlined,
   SettingsOutlined,
   BusinessOutlined,
-  Notifications,
   Menu as MenuIcon,
   ExitToAppRounded,
   AssignmentTurnedInOutlined,
@@ -27,6 +27,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [open, setOpen] = useState(!isMobile);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [pressedPath, setPressedPath] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,6 +41,10 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     navigate(path);
     if (isMobile) setOpen(false);
     window.setTimeout(() => setPressedPath(''), 160);
+  };
+  const handleLogoutClick = () => {
+    handleClose();
+    setLogoutDialogOpen(true);
   };
   const handleLogout = () => {
     localStorage.removeItem('access_token');
@@ -63,6 +68,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   ];
 
   const roleLabel = user.role ? user.role.replace('_', ' ') : 'Member';
+  const loginLabel = user.full_name || roleLabel;
 
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#101828', color: 'white', px: 2.25 }}>
@@ -256,11 +262,27 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <IconButton size="small" sx={{ color: 'text.secondary', bgcolor: 'white', border: '1px solid #dde5f0' }}>
-                <Badge badgeContent={2} color="error">
-                  <Notifications />
-                </Badge>
-              </IconButton>
+              <Paper
+                elevation={0}
+                sx={{
+                  px: { xs: 1.25, sm: 1.75 },
+                  py: 0.9,
+                  border: '1px solid #dde5f0',
+                  borderRadius: 2,
+                  bgcolor: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  minHeight: 42
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  noWrap
+                  sx={{ color: '#344054', fontWeight: 800, maxWidth: { xs: 130, sm: 240 } }}
+                >
+                  Logged in: {loginLabel}
+                </Typography>
+              </Paper>
               <Box
                 onClick={handleMenu}
                 sx={{
@@ -299,7 +321,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 <MenuItem onClick={handleClose} sx={{ py: 1.5 }}>Profile</MenuItem>
                 <MenuItem onClick={handleClose} sx={{ py: 1.5 }}>Account Settings</MenuItem>
                 <Divider sx={{ my: 1 }} />
-                <MenuItem onClick={handleLogout} sx={{ py: 1.5, color: 'error.main' }}>
+                <MenuItem onClick={handleLogoutClick} sx={{ py: 1.5, color: 'error.main' }}>
                   <ListItemIcon>
                     <ExitToAppRounded fontSize="small" sx={{ color: 'error.main' }} />
                   </ListItemIcon>
@@ -309,6 +331,29 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             </Box>
           </Toolbar>
         </AppBar>
+
+        <Dialog
+          open={logoutDialogOpen}
+          onClose={() => setLogoutDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+          PaperProps={{ sx: { borderRadius: '16px' } }}
+        >
+          <DialogTitle sx={{ fontWeight: 900 }}>Confirm Logout</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary">
+              Are you sure you want to log out?
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 3 }}>
+            <Button onClick={() => setLogoutDialogOpen(false)} color="inherit" sx={{ fontWeight: 800 }}>
+              Cancel
+            </Button>
+            <Button onClick={handleLogout} variant="contained" color="error" sx={{ fontWeight: 800 }}>
+              Logout
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         <Box
           component="main"
