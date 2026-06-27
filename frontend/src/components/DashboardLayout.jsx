@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Box, Drawer, AppBar, Toolbar, List, Typography,
   IconButton, ListItem, ListItemButton,
@@ -32,6 +32,10 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  useEffect(() => {
+    setOpen(!isMobile);
+  }, [isMobile]);
 
   const handleDrawerToggle = () => setOpen(!open);
   const handleMenu = (event) => setAnchorEl(event.currentTarget);
@@ -244,24 +248,38 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             color: 'text.primary',
           }}
         >
-          <Toolbar sx={{ justifyContent: 'space-between', minHeight: 76, px: { xs: 2, md: 4 } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, minWidth: 0 }}>
+          <Toolbar
+            sx={{
+              justifyContent: 'space-between',
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              minHeight: { xs: 92, sm: 76 },
+              px: { xs: 1.5, sm: 2, md: 4 },
+              py: { xs: 1.25, sm: 0 },
+              gap: { xs: 1, sm: 2 },
+              flexWrap: { xs: 'wrap', sm: 'nowrap' }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, minWidth: 0, flex: '1 1 auto' }}>
               {isMobile && !hideSidebar && (
-                <IconButton onClick={handleDrawerToggle} edge="start" sx={{ mr: 1 }}>
+                <IconButton onClick={handleDrawerToggle} edge="start" sx={{ mr: { xs: 0, sm: 1 } }}>
                   <MenuIcon />
                 </IconButton>
               )}
-              <Box>
-                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 800 }}>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="caption" noWrap sx={{ color: 'text.secondary', fontWeight: 800, display: 'block' }}>
                   Task Management System
                 </Typography>
-                <Typography variant="h6" noWrap sx={{ fontWeight: 900, color: 'text.primary', lineHeight: 1.2 }}>
+                <Typography
+                  variant="h6"
+                  noWrap
+                  sx={{ fontWeight: 900, color: 'text.primary', lineHeight: 1.2, fontSize: { xs: '1rem', sm: '1.25rem' } }}
+                >
                   {title || 'Dashboard'}
                 </Typography>
               </Box>
             </Box>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flex: { xs: '1 0 100%', sm: '0 0 auto' }, justifyContent: { xs: 'space-between', sm: 'flex-end' }, minWidth: 0 }}>
               <Paper
                 elevation={0}
                 sx={{
@@ -272,13 +290,15 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   bgcolor: '#ecfdf5',
                   display: 'flex',
                   alignItems: 'center',
-                  minHeight: 42
+                  minHeight: 42,
+                  minWidth: 0,
+                  flex: { xs: '1 1 auto', sm: '0 1 auto' }
                 }}
               >
                 <Typography
                   variant="body2"
                   noWrap
-                  sx={{ color: '#047857', fontWeight: 800, maxWidth: { xs: 130, sm: 240 } }}
+                  sx={{ color: '#047857', fontWeight: 800, maxWidth: { xs: '100%', sm: 240 } }}
                 >
                   Logged in: {loginLabel}
                 </Typography>
@@ -294,7 +314,8 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   border: '1px solid #dde5f0',
                   borderRadius: 2,
                   p: 0.5,
-                  pl: 0.75
+                  pl: 0.75,
+                  flexShrink: 0
                 }}
               >
                 <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontWeight: 800 }}>
@@ -388,8 +409,9 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           component="main"
           sx={{
             flex: 1,
-            px: { xs: 2, md: 4 },
-            py: { xs: 2.5, md: 3.5 },
+            px: { xs: 1.5, sm: 2, md: 4 },
+            py: { xs: 2, md: 3.5 },
+            minWidth: 0,
           }}
         >
           {children}
