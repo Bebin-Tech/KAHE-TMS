@@ -92,10 +92,11 @@ const LoginPage = () => {
   };
 
   return (
-    <Box className="min-h-screen flex flex-col items-center justify-center bg-[#f4f7f9] p-4">
+    <Box className="min-h-screen flex flex-col items-center justify-center bg-[#f4f7f9] p-4" sx={{ py: { xs: 3, sm: 4 } }}>
       <Paper
         elevation={0}
         className="w-full max-w-[400px] p-8 rounded-[20px] flex flex-col items-center shadow-sm bg-white"
+        sx={{ p: { xs: 3, sm: 4 }, mx: 'auto' }}
       >
         {/* Logo */}
         <div className="mb-6 flex flex-col items-center text-center">
@@ -104,7 +105,7 @@ const LoginPage = () => {
             src="/logo.png"
             alt="KAHE Logo"
             sx={{
-              height: 120,
+              height: { xs: 88, sm: 120 },
               width: 'auto',
               mb: 2,
               objectFit: 'contain'

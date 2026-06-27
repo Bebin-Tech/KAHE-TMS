@@ -119,7 +119,7 @@ const HODDashboard = () => {
   return (
     <DashboardLayout title="Department Overview">
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ mb: 1, letterSpacing: '-1px' }}>Department Management</Typography>
+        <Typography variant="h4" sx={{ mb: 1, fontSize: { xs: '1.45rem', sm: '2.125rem' } }}>Department Management</Typography>
         <Typography variant="body1" color="text.secondary">Monitor and assign tasks to your faculty members.</Typography>
       </Box>
 
@@ -163,12 +163,12 @@ const HODDashboard = () => {
                         <Chip label={task.status} size="small" variant="outlined" sx={{ fontWeight: 700 }} />
                       </TableCell>
                       <TableCell align="right">
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, flexWrap: 'wrap' }}>
                         {['ASSIGNED', 'REJECTED_DEAN'].includes(task.status) && (
                           <Button
                             size="small"
                             variant="outlined"
                             onClick={() => handleStartWork(task)}
-                            sx={{ mr: 1 }}
                           >
                             Start Work
                           </Button>
@@ -178,7 +178,6 @@ const HODDashboard = () => {
                           variant="outlined"
                           startIcon={<AddRounded />}
                           onClick={() => handleOpenSubTaskDialog(task)}
-                          sx={{ mr: 1 }}
                         >
                           Add Sub-Task
                         </Button>
@@ -193,6 +192,7 @@ const HODDashboard = () => {
                         >
                           Submit to Dean
                         </Button>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}
