@@ -19,6 +19,22 @@ const statusOptions = [
   'COMPLETED'
 ];
 
+const actionOptions = [
+  'Created task',
+  'Assigned task to HOD',
+  'Assigned sub-task to Faculty',
+  'Started task work',
+  'Worked on sub-task',
+  'Submitted work to HOD',
+  'Reviewed and approved faculty submission',
+  'Reviewed and rejected faculty submission',
+  'Submitted task to Dean',
+  'Received task for review',
+  'Approved task',
+  'Rejected task',
+  'Task completed after Dean approval'
+];
+
 const formatDateTime = (value) => {
   if (!value) return 'Not recorded';
   return new Date(value).toLocaleString(undefined, {
@@ -49,6 +65,7 @@ const Reports = () => {
     dean: '',
     hod: '',
     faculty: '',
+    action: '',
     status: '',
     date_from: '',
     date_to: ''
@@ -102,6 +119,7 @@ const Reports = () => {
       dean: '',
       hod: '',
       faculty: '',
+      action: '',
       status: '',
       date_from: '',
       date_to: ''
@@ -167,9 +185,17 @@ const Reports = () => {
             </TextField>
           </Grid>
           <Grid item xs={12} md={3}>
+            <TextField select fullWidth label="Action" value={filters.action} onChange={(e) => handleFilterChange('action', e.target.value)}>
+              <MenuItem value="">All Actions</MenuItem>
+              {actionOptions.map((action) => (
+                <MenuItem key={action} value={action}>{action}</MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+          <Grid item xs={12} md={3}>
             <TextField
               fullWidth
-              label="Assigned From"
+              label="Activity From"
               type="date"
               InputLabelProps={{ shrink: true }}
               value={filters.date_from}
@@ -179,7 +205,7 @@ const Reports = () => {
           <Grid item xs={12} md={3}>
             <TextField
               fullWidth
-              label="Assigned To"
+              label="Activity To"
               type="date"
               InputLabelProps={{ shrink: true }}
               value={filters.date_to}
@@ -200,19 +226,19 @@ const Reports = () => {
       </Paper>
 
       <TableContainer component={Paper} sx={{ border: '1px solid #dde5f0', borderRadius: '12px' }}>
-        <Table sx={{ minWidth: 1300 }}>
+        <Table sx={{ minWidth: 1350 }}>
           <TableHead sx={{ bgcolor: '#f8fafc' }}>
             <TableRow>
+              <TableCell sx={{ fontWeight: 800 }}>Task</TableCell>
               <TableCell sx={{ fontWeight: 800 }}>User</TableCell>
               <TableCell sx={{ fontWeight: 800 }}>Role</TableCell>
-              <TableCell sx={{ fontWeight: 800 }}>Task</TableCell>
+              <TableCell sx={{ fontWeight: 800 }}>Action Performed</TableCell>
+              <TableCell sx={{ fontWeight: 800 }}>Action Date & Time</TableCell>
               <TableCell sx={{ fontWeight: 800 }}>Assigned By</TableCell>
               <TableCell sx={{ fontWeight: 800 }}>Assigned Date</TableCell>
-              <TableCell sx={{ fontWeight: 800 }}>Work Start</TableCell>
-              <TableCell sx={{ fontWeight: 800 }}>Work Completion</TableCell>
-              <TableCell sx={{ fontWeight: 800 }}>Submission</TableCell>
+              <TableCell sx={{ fontWeight: 800 }}>Submission / Completion</TableCell>
               <TableCell sx={{ fontWeight: 800 }}>Rejection / Resubmission</TableCell>
-              <TableCell sx={{ fontWeight: 800 }}>Status</TableCell>
+              <TableCell sx={{ fontWeight: 800 }}>Current Status</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -227,6 +253,10 @@ const Reports = () => {
               return (
                 <TableRow key={report.id} hover>
                   <TableCell>
+                    <Typography variant="body2" sx={{ fontWeight: 800 }}>{report.task_name}</Typography>
+                    <Typography variant="caption" color="text.secondary">Dean: {report.dean_name || 'N/A'} | HOD: {report.hod_name || 'N/A'}</Typography>
+                  </TableCell>
+                  <TableCell>
                     <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{report.user_name}</Typography>
                     {report.role === 'FACULTY' && (
                       <Typography variant="caption" color="text.secondary">{report.subtask_title}</Typography>
@@ -234,14 +264,15 @@ const Reports = () => {
                   </TableCell>
                   <TableCell>{report.role}</TableCell>
                   <TableCell>
-                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{report.task_name}</Typography>
-                    <Typography variant="caption" color="text.secondary">Dean: {report.dean_name || 'N/A'} | HOD: {report.hod_name || 'N/A'}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 800 }}>{report.action_performed || 'Action recorded'}</Typography>
                   </TableCell>
+                  <TableCell>{formatDateTime(report.action_at || report.assigned_at)}</TableCell>
                   <TableCell>{report.assigned_by_name || 'N/A'}</TableCell>
                   <TableCell>{formatDateTime(report.assigned_at)}</TableCell>
-                  <TableCell>{formatDateTime(report.work_started_at)}</TableCell>
-                  <TableCell>{formatDateTime(report.work_completed_at)}</TableCell>
-                  <TableCell>{formatDateTime(report.submission_at)}</TableCell>
+                  <TableCell>
+                    <Typography variant="caption" sx={{ display: 'block' }}>Submitted: {formatDateTime(report.submission_at)}</Typography>
+                    <Typography variant="caption" sx={{ display: 'block' }}>Completed: {formatDateTime(report.work_completed_at)}</Typography>
+                  </TableCell>
                   <TableCell>
                     {report.rejection_at ? (
                       <Box>

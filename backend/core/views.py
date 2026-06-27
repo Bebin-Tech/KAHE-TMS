@@ -18,24 +18,24 @@ class IsAdminRole(permissions.BasePermission):
         return request.user and request.user.is_authenticated and request.user.role == 'ADMIN'
 
 
-def upsert_task_report(task, user, role, status, subtask=None, assigned_by=None, **updates):
+def record_task_activity(task, user, role, status, action_performed, subtask=None, assigned_by=None, **updates):
     if not user:
         return None
 
+    action_at = updates.pop('action_at', timezone.now())
     defaults = {
+        'task': task,
+        'subtask': subtask,
+        'user': user,
         'role': role,
         'status': status,
         'assigned_by': assigned_by,
-        'assigned_at': updates.pop('assigned_at', task.created_at or timezone.now()),
+        'assigned_at': updates.pop('assigned_at', action_at),
+        'action_performed': action_performed,
+        'action_at': action_at,
     }
     defaults.update({key: value for key, value in updates.items() if value is not None})
-    report, _ = TaskReport.objects.update_or_create(
-        task=task,
-        subtask=subtask,
-        user=user,
-        defaults=defaults
-    )
-    return report
+    return TaskReport.objects.create(**defaults)
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -187,20 +187,22 @@ class TaskViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         task_status = 'ASSIGNED' if serializer.validated_data.get('assigned_to_hod') else 'ONGOING'
         task = serializer.save(status=task_status)
-        upsert_task_report(
+        record_task_activity(
             task=task,
             user=task.created_by,
             role='DEAN',
             status=task_status,
+            action_performed='Created task',
             assigned_by=task.created_by,
             assigned_at=task.created_at
         )
         if task.assigned_to_hod:
-            upsert_task_report(
+            record_task_activity(
                 task=task,
                 user=task.assigned_to_hod,
                 role='HOD',
                 status='ASSIGNED',
+                action_performed='Assigned task to HOD',
                 assigned_by=task.created_by,
                 assigned_at=task.created_at
             )
@@ -212,26 +214,16 @@ class TaskViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         task = serializer.save()
         now = timezone.now()
-        upsert_task_report(
+        record_task_activity(
             task=task,
-            user=task.created_by,
-            role='DEAN',
+            user=self.request.user,
+            role=self.request.user.role,
             status=task.status,
-            assigned_by=task.created_by,
+            action_performed='Updated task status' if task.status != 'IN_PROGRESS' else 'Started task work',
+            assigned_by=task.created_by if self.request.user == task.assigned_to_hod else self.request.user,
             assigned_at=task.created_at,
             work_completed_at=now if task.status == 'COMPLETED' else None
         )
-        if task.assigned_to_hod:
-            upsert_task_report(
-                task=task,
-                user=task.assigned_to_hod,
-                role='HOD',
-                status=task.status,
-                assigned_by=task.created_by,
-                assigned_at=task.created_at,
-                work_started_at=now if task.status == 'IN_PROGRESS' else None,
-                work_completed_at=now if task.status == 'SUBMITTED_DEAN' else None
-            )
 
     @action(detail=True, methods=['post'])
     def submit_to_dean(self, request, pk=None):
@@ -260,24 +252,29 @@ class TaskViewSet(viewsets.ModelViewSet):
         )
         task.status = 'SUBMITTED_DEAN'
         task.save()
-        upsert_task_report(
+        now = timezone.now()
+        record_task_activity(
             task=task,
             user=task.assigned_to_hod,
             role='HOD',
             status='SUBMITTED_DEAN',
+            action_performed='Submitted task to Dean',
             assigned_by=task.created_by,
             assigned_at=task.created_at,
-            work_completed_at=timezone.now(),
-            submission_at=timezone.now(),
-            resubmission_at=timezone.now() if TaskReport.objects.filter(task=task, user=task.assigned_to_hod, rejection_at__isnull=False).exists() else None
+            work_completed_at=now,
+            submission_at=now,
+            resubmission_at=now if TaskReport.objects.filter(task=task, user=task.assigned_to_hod, rejection_at__isnull=False).exists() else None,
+            action_at=now
         )
-        upsert_task_report(
+        record_task_activity(
             task=task,
             user=task.created_by,
             role='DEAN',
             status='SUBMITTED_DEAN',
+            action_performed='Received task for review',
             assigned_by=task.created_by,
-            assigned_at=task.created_at
+            assigned_at=task.created_at,
+            action_at=now
         )
         Notification.objects.create(user=task.created_by, message=f"Task '{task.title}' has been submitted for your review by HOD.")
         return Response({'status': 'submitted to dean'})
@@ -294,23 +291,27 @@ class TaskViewSet(viewsets.ModelViewSet):
         task.status = 'COMPLETED'
         task.save()
         now = timezone.now()
-        upsert_task_report(
+        record_task_activity(
             task=task,
             user=task.created_by,
             role='DEAN',
             status='COMPLETED',
+            action_performed='Approved task',
             assigned_by=task.created_by,
             assigned_at=task.created_at,
-            work_completed_at=now
+            work_completed_at=now,
+            action_at=now
         )
-        upsert_task_report(
+        record_task_activity(
             task=task,
             user=task.assigned_to_hod,
             role='HOD',
             status='COMPLETED',
+            action_performed='Task completed after Dean approval',
             assigned_by=task.created_by,
             assigned_at=task.created_at,
-            work_completed_at=now
+            work_completed_at=now,
+            action_at=now
         )
         Notification.objects.create(user=task.assigned_to_hod, message=f"Task '{task.title}' has been officially approved by the Dean.")
         return Response({'status': 'completed'})
@@ -328,27 +329,31 @@ class TaskViewSet(viewsets.ModelViewSet):
         task.status = 'REJECTED_DEAN'
         task.save()
         now = timezone.now()
-        upsert_task_report(
+        record_task_activity(
             task=task,
             user=task.assigned_to_hod,
             role='HOD',
             status='REJECTED_DEAN',
+            action_performed='Received task rejection from Dean',
             assigned_by=task.created_by,
             assigned_at=task.created_at,
             rejected_by=request.user,
             rejection_at=now,
-            rejection_reason=feedback
+            rejection_reason=feedback,
+            action_at=now
         )
-        upsert_task_report(
+        record_task_activity(
             task=task,
             user=task.created_by,
             role='DEAN',
             status='REJECTED_DEAN',
+            action_performed='Rejected task',
             assigned_by=task.created_by,
             assigned_at=task.created_at,
             rejected_by=request.user,
             rejection_at=now,
-            rejection_reason=feedback
+            rejection_reason=feedback,
+            action_at=now
         )
         Notification.objects.create(user=task.assigned_to_hod, message=f"Task '{task.title}' was rejected by the Dean. Feedback: {feedback}")
         return Response({'status': 'rejected by dean'})
@@ -381,12 +386,13 @@ class SubTaskViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         subtask = serializer.save(created_by=self.request.user)
-        upsert_task_report(
+        record_task_activity(
             task=subtask.task,
             subtask=subtask,
             user=subtask.assigned_to,
             role='FACULTY',
             status='ASSIGNED',
+            action_performed='Assigned sub-task to Faculty',
             assigned_by=self.request.user,
             assigned_at=timezone.now()
         )
@@ -399,16 +405,18 @@ class SubTaskViewSet(viewsets.ModelViewSet):
         subtask.progress = 100
         subtask.save()
         now = timezone.now()
-        upsert_task_report(
+        record_task_activity(
             task=subtask.task,
             subtask=subtask,
             user=subtask.assigned_to,
             role='FACULTY',
             status='SUBMITTED',
+            action_performed='Submitted work to HOD',
             assigned_by=subtask.created_by,
             assigned_at=subtask.report_entries.first().assigned_at if subtask.report_entries.exists() else now,
             work_completed_at=now,
-            submission_at=now
+            submission_at=now,
+            action_at=now
         )
         Notification.objects.create(user=subtask.created_by, message=f"Subtask '{subtask.title}' has been submitted by Faculty.")
         return Response({'status': 'submitted'})
@@ -426,16 +434,29 @@ class SubTaskViewSet(viewsets.ModelViewSet):
             latest_submission.feedback = request.data.get('feedback', latest_submission.feedback)
             latest_submission.save()
         now = timezone.now()
-        upsert_task_report(
+        record_task_activity(
             task=subtask.task,
             subtask=subtask,
             user=subtask.assigned_to,
             role='FACULTY',
             status='APPROVED_HOD',
+            action_performed='Faculty work approved by HOD',
             assigned_by=subtask.created_by,
             assigned_at=subtask.report_entries.first().assigned_at if subtask.report_entries.exists() else now,
             work_completed_at=now,
-            submission_at=latest_submission.submitted_at if latest_submission else None
+            submission_at=latest_submission.submitted_at if latest_submission else None,
+            action_at=now
+        )
+        record_task_activity(
+            task=subtask.task,
+            subtask=subtask,
+            user=request.user,
+            role=request.user.role,
+            status='APPROVED_HOD',
+            action_performed='Reviewed and approved faculty submission',
+            assigned_by=subtask.created_by,
+            assigned_at=subtask.report_entries.first().assigned_at if subtask.report_entries.exists() else now,
+            action_at=now
         )
         Notification.objects.create(user=subtask.assigned_to, message=f"Your work on '{subtask.title}' has been approved by HOD.")
         return Response({'status': 'approved'})
@@ -454,17 +475,33 @@ class SubTaskViewSet(viewsets.ModelViewSet):
             latest_submission.is_approved = False
             latest_submission.save()
         now = timezone.now()
-        upsert_task_report(
+        record_task_activity(
             task=subtask.task,
             subtask=subtask,
             user=subtask.assigned_to,
             role='FACULTY',
             status='REJECTED_HOD',
+            action_performed='Faculty work rejected by HOD',
             assigned_by=subtask.created_by,
             assigned_at=subtask.report_entries.first().assigned_at if subtask.report_entries.exists() else now,
             rejected_by=request.user,
             rejection_at=now,
-            rejection_reason=feedback
+            rejection_reason=feedback,
+            action_at=now
+        )
+        record_task_activity(
+            task=subtask.task,
+            subtask=subtask,
+            user=request.user,
+            role=request.user.role,
+            status='REJECTED_HOD',
+            action_performed='Reviewed and rejected faculty submission',
+            assigned_by=subtask.created_by,
+            assigned_at=subtask.report_entries.first().assigned_at if subtask.report_entries.exists() else now,
+            rejected_by=request.user,
+            rejection_at=now,
+            rejection_reason=feedback,
+            action_at=now
         )
         Notification.objects.create(user=subtask.assigned_to, message=f"Your work on '{subtask.title}' was rejected by HOD. Feedback: {feedback}")
         return Response({'status': 'rejected'})
@@ -478,15 +515,17 @@ class SubTaskViewSet(viewsets.ModelViewSet):
         subtask.save()
         if int(subtask.progress) > 0:
             now = timezone.now()
-            upsert_task_report(
+            record_task_activity(
                 task=subtask.task,
                 subtask=subtask,
                 user=subtask.assigned_to,
                 role='FACULTY',
                 status='IN_PROGRESS',
+                action_performed='Worked on sub-task',
                 assigned_by=subtask.created_by,
                 assigned_at=subtask.report_entries.first().assigned_at if subtask.report_entries.exists() else now,
-                work_started_at=now
+                work_started_at=now,
+                action_at=now
             )
         return Response({'status': 'progress updated'})
 
@@ -540,6 +579,7 @@ class TaskReportViewSet(viewsets.ReadOnlyModelViewSet):
         dean = self.request.query_params.get('dean')
         hod = self.request.query_params.get('hod')
         faculty = self.request.query_params.get('faculty')
+        action_performed = self.request.query_params.get('action')
         report_status = self.request.query_params.get('status')
         date_from = self.request.query_params.get('date_from')
         date_to = self.request.query_params.get('date_to')
@@ -552,12 +592,14 @@ class TaskReportViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(task__assigned_to_hod_id=hod)
         if faculty:
             queryset = queryset.filter(user_id=faculty, role='FACULTY')
+        if action_performed:
+            queryset = queryset.filter(action_performed=action_performed)
         if report_status:
             queryset = queryset.filter(status=report_status)
         if date_from:
-            queryset = queryset.filter(assigned_at__date__gte=date_from)
+            queryset = queryset.filter(action_at__date__gte=date_from)
         if date_to:
-            queryset = queryset.filter(assigned_at__date__lte=date_to)
+            queryset = queryset.filter(action_at__date__lte=date_to)
 
         return queryset
 

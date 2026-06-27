@@ -115,12 +115,14 @@ class TaskReport(models.Model):
     rejection_at = models.DateTimeField(null=True, blank=True)
     rejection_reason = models.TextField(blank=True)
     resubmission_at = models.DateTimeField(null=True, blank=True)
+    action_performed = models.CharField(max_length=120, blank=True)
+    action_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     objects = models.Manager()
 
     class Meta:
-        ordering = ['-assigned_at', '-updated_at']
+        ordering = ['-action_at', '-assigned_at', '-updated_at']
 
     def __str__(self):
         return f"{self.task.title} - {self.user} - {self.status}"
