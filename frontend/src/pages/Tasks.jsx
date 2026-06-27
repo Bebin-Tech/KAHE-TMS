@@ -86,7 +86,7 @@ const Tasks = () => {
     <DashboardLayout title="Task Management">
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
         <Box sx={{ textAlign: 'left' }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: '#212b36' }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: '#212b36', fontSize: { xs: '1.45rem', sm: '2.125rem' } }}>
             System Tasks
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -97,14 +97,14 @@ const Tasks = () => {
           variant="outlined"
           startIcon={<AddRounded />}
           onClick={() => setOpen(true)}
-          sx={{ alignSelf: { xs: 'flex-start', md: 'center' } }}
+          sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start', md: 'center' } }}
         >
           Create New Task
         </Button>
       </Box>
 
       <TableContainer component={Paper}>
-        <Table>
+        <Table sx={{ minWidth: 760 }}>
           <TableHead sx={{ bgcolor: '#f4f6f8' }}>
             <TableRow>
               <TableCell sx={{ fontWeight: 700, color: '#637381' }}>Task Details</TableCell>

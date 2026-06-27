@@ -134,12 +134,12 @@ const Reports = () => {
 
   return (
     <DashboardLayout title="Reports">
-      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Box sx={{ width: 56, height: 56, borderRadius: '14px', bgcolor: '#e9f3ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Box sx={{ mb: 4, display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+        <Box sx={{ width: 56, height: 56, flexShrink: 0, borderRadius: '14px', bgcolor: '#e9f3ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <AssessmentRounded sx={{ color: 'primary.main', fontSize: 32 }} />
         </Box>
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 900, color: '#212b36' }}>
+          <Typography variant="h4" sx={{ fontWeight: 900, color: '#212b36', fontSize: { xs: '1.45rem', sm: '2.125rem' } }}>
             Task Workflow Reports
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -148,7 +148,7 @@ const Reports = () => {
         </Box>
       </Box>
 
-      <Paper sx={{ p: 3, mb: 3, border: '1px solid #dde5f0', borderRadius: '12px' }}>
+      <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, border: '1px solid #dde5f0', borderRadius: '12px' }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={3}>
             <TextField
@@ -213,7 +213,7 @@ const Reports = () => {
             />
           </Grid>
           <Grid item xs={12} md={3}>
-            <Stack direction="row" spacing={1}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <Button fullWidth variant="contained" startIcon={<SearchRounded />} onClick={fetchReports}>
                 Apply
               </Button>

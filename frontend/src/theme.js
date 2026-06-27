@@ -155,7 +155,8 @@ const theme = createTheme({
         root: {
           border: '1px solid #dde5f0',
           borderRadius: 12,
-          overflow: 'hidden',
+          overflowX: 'auto',
+          WebkitOverflowScrolling: 'touch',
         },
       },
     },
