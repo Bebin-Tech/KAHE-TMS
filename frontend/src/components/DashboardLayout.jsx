@@ -321,9 +321,38 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 <MenuItem onClick={handleClose} sx={{ py: 1.5 }}>Profile</MenuItem>
                 <MenuItem onClick={handleClose} sx={{ py: 1.5 }}>Account Settings</MenuItem>
                 <Divider sx={{ my: 1 }} />
-                <MenuItem onClick={handleLogoutClick} sx={{ py: 1.5, color: 'error.main' }}>
-                  <ListItemIcon>
-                    <ExitToAppRounded fontSize="small" sx={{ color: 'error.main' }} />
+                <MenuItem
+                  onClick={handleLogoutClick}
+                  disableRipple
+                  sx={{
+                    mx: 1.5,
+                    my: 1.5,
+                    py: 1.25,
+                    px: 2,
+                    minHeight: 52,
+                    borderRadius: '14px',
+                    color: 'white',
+                    bgcolor: '#d90429',
+                    border: '2px solid #a80f24',
+                    boxShadow: 'inset 0 2px 0 rgba(255,255,255,0.28), 0 8px 18px rgba(217,4,41,0.28)',
+                    fontWeight: 900,
+                    fontSize: '1rem',
+                    letterSpacing: '0.02em',
+                    textTransform: 'uppercase',
+                    justifyContent: 'center',
+                    gap: 1.25,
+                    transition: 'transform 140ms ease, background-color 180ms ease, box-shadow 180ms ease',
+                    '&:hover': {
+                      bgcolor: '#ef233c',
+                      boxShadow: 'inset 0 2px 0 rgba(255,255,255,0.34), 0 10px 20px rgba(217,4,41,0.34)'
+                    },
+                    '&:active': {
+                      transform: 'scale(0.98)'
+                    }
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 0, color: 'white' }}>
+                    <ExitToAppRounded sx={{ color: 'white', fontSize: 30 }} />
                   </ListItemIcon>
                   Logout
                 </MenuItem>
