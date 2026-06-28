@@ -75,7 +75,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const loginLabel = user.full_name || roleLabel;
 
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#1E1E2C', color: 'white', px: 2.25 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#e8f5e9', color: '#1E1E2C', px: 2.25 }}>
       <Box sx={{ py: 3.25, px: 1.25, display: 'flex', alignItems: 'center', gap: 1.6 }}>
         <Box
           sx={{
@@ -87,8 +87,8 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             justifyContent: 'center',
             width: 52,
             height: 52,
-            border: '1px solid rgba(255,255,255,0.72)',
-            boxShadow: '0 18px 38px -18px rgba(255,255,255,0.72)'
+            border: '1px solid rgba(52,177,170,0.28)',
+            boxShadow: '0 18px 38px -22px rgba(31,127,121,0.35)'
           }}
         >
           <Box
@@ -103,7 +103,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           />
         </Box>
         <Box>
-          <Typography variant="h6" component="div" sx={{ fontWeight: 900, color: '#ffffff', letterSpacing: 0, lineHeight: 1.1 }}>
+          <Typography variant="h6" component="div" sx={{ fontWeight: 900, color: '#1E1E2C', letterSpacing: 0, lineHeight: 1.1 }}>
             KAHE TMS
           </Typography>
         </Box>
@@ -112,29 +112,29 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
       <Box sx={{ px: 0.5, mb: 3 }}>
         <Paper elevation={0} sx={{
           p: 2,
-          bgcolor: 'rgba(255,255,255,0.06)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          bgcolor: 'rgba(255,255,255,0.72)',
+          border: '1px solid rgba(52,177,170,0.22)',
           borderRadius: 2,
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,
-          color: 'white'
+          color: '#1E1E2C'
         }}>
-          <Avatar sx={{ width: 40, height: 40, bgcolor: '#3B8FF3', color: '#1E1E2C', fontWeight: 900 }}>
+          <Avatar sx={{ width: 40, height: 40, bgcolor: 'white', color: 'primary.dark', fontWeight: 900 }}>
             {(user.username?.[0] || 'U').toUpperCase()}
           </Avatar>
           <Box sx={{ overflow: 'hidden' }}>
-            <Typography variant="subtitle2" noWrap sx={{ fontWeight: 800, color: 'white' }}>
+            <Typography variant="subtitle2" noWrap sx={{ fontWeight: 800, color: '#1E1E2C' }}>
               {user.full_name || user.username || 'User'}
             </Typography>
-            <Typography variant="caption" sx={{ color: '#d7d4dc', fontWeight: 700 }}>
+            <Typography variant="caption" sx={{ color: '#1f7f79', fontWeight: 700 }}>
               {roleLabel}
             </Typography>
           </Box>
         </Paper>
       </Box>
 
-      <Typography variant="caption" sx={{ px: 1.5, mb: 1.25, color: '#aaa6b5', fontWeight: 900, letterSpacing: '0.08em' }}>
+      <Typography variant="caption" sx={{ px: 1.5, mb: 1.25, color: '#1f7f79', fontWeight: 900, letterSpacing: '0.08em' }}>
         WORKSPACE
       </Typography>
       <List sx={{ px: 0 }}>
@@ -150,12 +150,12 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   position: 'relative',
                   overflow: 'hidden',
                   borderRadius: '8px',
-                  bgcolor: isActive ? '#eaf3ff' : 'transparent',
-                  color: isActive ? '#1E1E2C' : '#d7d4dc',
-                  border: isActive ? '1px solid rgba(59, 143, 243, 0.85)' : '1px solid transparent',
+                  bgcolor: isActive ? '#ffffff' : 'transparent',
+                  color: '#1E1E2C',
+                  border: isActive ? '1px solid rgba(52,177,170,0.42)' : '1px solid transparent',
                   transform: isPressed ? 'scale(0.975)' : 'scale(1)',
                   transition: 'transform 140ms ease, background-color 220ms ease, border-color 220ms ease, color 220ms ease, box-shadow 220ms ease',
-                  boxShadow: isActive ? 'inset 0 0 0 1px rgba(59, 143, 243, 0.16)' : 'none',
+                  boxShadow: isActive ? '0 12px 26px -18px rgba(31,127,121,0.7)' : 'none',
                   '&::before': {
                     content: '""',
                     position: 'absolute',
@@ -164,7 +164,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                     width: 4,
                     height: isActive ? 28 : 0,
                     borderRadius: '0 999px 999px 0',
-                    bgcolor: '#3B8FF3',
+                    bgcolor: '#34B1AA',
                     transform: 'translateY(-50%)',
                     opacity: isActive ? 1 : 0,
                     transition: 'height 240ms ease, opacity 180ms ease'
@@ -180,9 +180,9 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                     pointerEvents: 'none'
                   },
                   '&:hover': {
-                    bgcolor: isActive ? '#eaf3ff' : 'rgba(59,143,243,0.12)',
+                    bgcolor: isActive ? '#ffffff' : 'rgba(255,255,255,0.52)',
                     transform: isPressed ? 'scale(0.975)' : 'translateX(4px)',
-                    borderColor: 'rgba(255,255,255,0.1)'
+                    borderColor: 'rgba(52,177,170,0.28)'
                   },
                   '&:active': {
                     transform: 'scale(0.975)'
@@ -191,7 +191,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 }}
               >
                 <ListItemIcon sx={{
-                  color: isActive ? '#3B8FF3' : '#aaa6b5',
+                  color: isActive ? '#1f7f79' : '#5f756f',
                   minWidth: '44px',
                   transition: 'color 220ms ease, transform 220ms ease',
                   transform: isActive ? 'scale(1.06)' : 'scale(1)',
@@ -228,7 +228,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
               boxSizing: 'border-box',
               width: drawerWidth,
               borderRight: 'none',
-              bgcolor: '#1E1E2C',
+              bgcolor: '#e8f5e9',
             },
           }}
         >
