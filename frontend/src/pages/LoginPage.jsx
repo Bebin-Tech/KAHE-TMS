@@ -92,7 +92,7 @@ const LoginPage = () => {
   };
 
   return (
-    <Box className="min-h-screen flex flex-col items-center justify-center bg-[#f4f7f9] p-4" sx={{ py: { xs: 3, sm: 4 } }}>
+    <Box className="min-h-screen flex flex-col items-center justify-center p-4" sx={{ bgcolor: '#ECEFF1', py: { xs: 3, sm: 4 } }}>
       <Paper
         elevation={0}
         className="w-full max-w-[400px] p-8 rounded-[20px] flex flex-col items-center shadow-sm bg-white"
