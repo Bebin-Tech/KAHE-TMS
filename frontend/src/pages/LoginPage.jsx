@@ -217,13 +217,11 @@ const LoginPage = () => {
           >
             {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
           </Button>
+          <Typography variant="caption" sx={{ display: 'block', textAlign: 'center', mt: 2, color: '#9aa3af', fontWeight: 700 }}>
+            Beta v2.5.1
+          </Typography>
         </form>
       </Paper>
-
-      {/* Footer */}
-      <Typography variant="caption" className="mt-8 text-gray-400 font-medium">
-        Beta V 2.5.1
-      </Typography>
     </Box>
   );
 };
