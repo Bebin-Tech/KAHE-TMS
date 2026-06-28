@@ -75,7 +75,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const loginLabel = user.full_name || roleLabel;
 
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#e8f5e9', color: '#1E1E2C', px: 2.25 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#fafafa', color: '#1E1E2C', px: 2.25 }}>
       <Box sx={{ py: 3.25, px: 1.25, display: 'flex', alignItems: 'center', gap: 1.6 }}>
         <Box
           sx={{
@@ -87,8 +87,8 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             justifyContent: 'center',
             width: 52,
             height: 52,
-            border: '1px solid rgba(52,177,170,0.28)',
-            boxShadow: '0 18px 38px -22px rgba(31,127,121,0.35)'
+            border: '1px solid #e5e2df',
+            boxShadow: '0 18px 38px -22px rgba(30,30,44,0.32)'
           }}
         >
           <Box
@@ -112,8 +112,9 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
       <Box sx={{ px: 0.5, mb: 3 }}>
         <Paper elevation={0} sx={{
           p: 2,
-          bgcolor: 'rgba(255,255,255,0.72)',
-          border: '1px solid rgba(52,177,170,0.22)',
+          bgcolor: '#ffffff',
+          border: '1px solid #e5e2df',
+          boxShadow: '0 16px 34px -28px rgba(30,30,44,0.42)',
           borderRadius: 2,
           display: 'flex',
           alignItems: 'center',
@@ -134,7 +135,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
         </Paper>
       </Box>
 
-      <Typography variant="caption" sx={{ px: 1.5, mb: 1.25, color: '#1f7f79', fontWeight: 900, letterSpacing: '0.08em' }}>
+      <Typography variant="caption" sx={{ px: 1.5, mb: 1.25, color: '#5f756f', fontWeight: 900, letterSpacing: '0.08em' }}>
         WORKSPACE
       </Typography>
       <List sx={{ px: 0 }}>
@@ -150,12 +151,12 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   position: 'relative',
                   overflow: 'hidden',
                   borderRadius: '8px',
-                  bgcolor: isActive ? '#ffffff' : 'transparent',
+                  bgcolor: isActive ? '#eaf3ff' : 'transparent',
                   color: '#1E1E2C',
-                  border: isActive ? '1px solid rgba(52,177,170,0.42)' : '1px solid transparent',
+                  border: isActive ? '1px solid rgba(59,143,243,0.42)' : '1px solid transparent',
                   transform: isPressed ? 'scale(0.975)' : 'scale(1)',
                   transition: 'transform 140ms ease, background-color 220ms ease, border-color 220ms ease, color 220ms ease, box-shadow 220ms ease',
-                  boxShadow: isActive ? '0 12px 26px -18px rgba(31,127,121,0.7)' : 'none',
+                  boxShadow: isActive ? '0 12px 26px -18px rgba(35,125,186,0.7)' : 'none',
                   '&::before': {
                     content: '""',
                     position: 'absolute',
@@ -164,7 +165,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                     width: 4,
                     height: isActive ? 28 : 0,
                     borderRadius: '0 999px 999px 0',
-                    bgcolor: '#34B1AA',
+                    bgcolor: '#3B8FF3',
                     transform: 'translateY(-50%)',
                     opacity: isActive ? 1 : 0,
                     transition: 'height 240ms ease, opacity 180ms ease'
@@ -180,9 +181,9 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                     pointerEvents: 'none'
                   },
                   '&:hover': {
-                    bgcolor: isActive ? '#ffffff' : 'rgba(255,255,255,0.52)',
+                    bgcolor: isActive ? '#eaf3ff' : '#ffffff',
                     transform: isPressed ? 'scale(0.975)' : 'translateX(4px)',
-                    borderColor: 'rgba(52,177,170,0.28)'
+                    borderColor: '#e5e2df'
                   },
                   '&:active': {
                     transform: 'scale(0.975)'
@@ -191,7 +192,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 }}
               >
                 <ListItemIcon sx={{
-                  color: isActive ? '#1f7f79' : '#5f756f',
+                  color: isActive ? '#237dba' : '#5f756f',
                   minWidth: '44px',
                   transition: 'color 220ms ease, transform 220ms ease',
                   transform: isActive ? 'scale(1.06)' : 'scale(1)',
@@ -227,8 +228,9 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: drawerWidth,
-              borderRight: 'none',
-              bgcolor: '#e8f5e9',
+              borderRight: '1px solid #d7dce3',
+              bgcolor: '#fafafa',
+              boxShadow: '10px 0 28px -24px rgba(30,30,44,0.55)',
             },
           }}
         >
