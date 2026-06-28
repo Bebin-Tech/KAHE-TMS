@@ -3,7 +3,7 @@ import {
   Box, Drawer, AppBar, Toolbar, List, Typography,
   IconButton, ListItem, ListItemButton,
   ListItemIcon, ListItemText, Avatar,
-  useTheme, useMediaQuery, Paper, Menu, MenuItem, Divider,
+  useTheme, useMediaQuery, Paper,
   Dialog, DialogTitle, DialogContent, DialogActions, Button
 } from '@mui/material';
 import {
@@ -15,8 +15,7 @@ import {
   BusinessOutlined,
   Menu as MenuIcon,
   ExitToAppRounded,
-  AssignmentTurnedInOutlined,
-  KeyboardArrowDownRounded
+  AssignmentTurnedInOutlined
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -26,7 +25,6 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [open, setOpen] = useState(!isMobile);
-  const [anchorEl, setAnchorEl] = useState(null);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [pressedPath, setPressedPath] = useState('');
   const navigate = useNavigate();
@@ -38,8 +36,6 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   }, [isMobile]);
 
   const handleDrawerToggle = () => setOpen(!open);
-  const handleMenu = (event) => setAnchorEl(event.currentTarget);
-  const handleClose = () => setAnchorEl(null);
   const handleNavigate = (path) => {
     setPressedPath(path);
     navigate(path);
@@ -47,7 +43,6 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     window.setTimeout(() => setPressedPath(''), 160);
   };
   const handleLogoutClick = () => {
-    handleClose();
     setLogoutDialogOpen(true);
   };
   const handleLogout = () => {
@@ -305,81 +300,28 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   Logged in: {loginLabel}
                 </Typography>
               </Paper>
-              <Box
-                onClick={handleMenu}
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<ExitToAppRounded />}
+                onClick={handleLogoutClick}
                 sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
-                  cursor: 'pointer',
+                  flexShrink: 0,
+                  minHeight: 42,
+                  px: { xs: 1.5, sm: 2.25 },
                   bgcolor: 'white',
-                  border: '1px solid #e5e2df',
-                  borderRadius: 2,
-                  p: 0.5,
-                  pl: 0.75,
-                  flexShrink: 0
+                  borderColor: '#d90429',
+                  color: '#d90429',
+                  fontWeight: 900,
+                  '&:hover': {
+                    bgcolor: '#fff1f2',
+                    borderColor: '#a80f24',
+                    color: '#a80f24'
+                  }
                 }}
               >
-                <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontWeight: 800 }}>
-                  {(user.username?.[0] || 'U').toUpperCase()}
-                </Avatar>
-                <KeyboardArrowDownRounded sx={{ color: 'text.secondary', display: { xs: 'none', sm: 'block' } }} />
-              </Box>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleClose}
-                PaperProps={{
-                  elevation: 0,
-                  sx: {
-                    filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.1))',
-                    mt: 1.5,
-                    borderRadius: '10px',
-                    width: 200,
-                  },
-                }}
-                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-              >
-                <MenuItem onClick={handleClose} sx={{ py: 1.5 }}>Profile</MenuItem>
-                <MenuItem onClick={handleClose} sx={{ py: 1.5 }}>Account Settings</MenuItem>
-                <Divider sx={{ my: 1 }} />
-                <MenuItem
-                  onClick={handleLogoutClick}
-                  disableRipple
-                  sx={{
-                    mx: 1.5,
-                    my: 1.5,
-                    py: 1.25,
-                    px: 2,
-                    minHeight: 52,
-                    borderRadius: '14px',
-                    color: 'white',
-                    bgcolor: '#d90429',
-                    border: '2px solid #a80f24',
-                    boxShadow: 'inset 0 2px 0 rgba(255,255,255,0.28), 0 8px 18px rgba(217,4,41,0.28)',
-                    fontWeight: 900,
-                    fontSize: '1rem',
-                    letterSpacing: '0.02em',
-                    textTransform: 'uppercase',
-                    justifyContent: 'center',
-                    gap: 1.25,
-                    transition: 'transform 140ms ease, background-color 180ms ease, box-shadow 180ms ease',
-                    '&:hover': {
-                      bgcolor: '#ef233c',
-                      boxShadow: 'inset 0 2px 0 rgba(255,255,255,0.34), 0 10px 20px rgba(217,4,41,0.34)'
-                    },
-                    '&:active': {
-                      transform: 'scale(0.98)'
-                    }
-                  }}
-                >
-                  <ListItemIcon sx={{ minWidth: 0, color: 'white' }}>
-                    <ExitToAppRounded sx={{ color: 'white', fontSize: 30 }} />
-                  </ListItemIcon>
-                  Logout
-                </MenuItem>
-              </Menu>
+                Logout
+              </Button>
             </Box>
           </Toolbar>
         </AppBar>
@@ -391,18 +333,30 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           fullWidth
           PaperProps={{ sx: { borderRadius: '16px' } }}
         >
-          <DialogTitle sx={{ fontWeight: 900 }}>Confirm Logout</DialogTitle>
+          <DialogTitle sx={{ fontWeight: 900, textAlign: 'center' }}>Logout</DialogTitle>
           <DialogContent>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" align="center">
               Are you sure you want to log out?
             </Typography>
           </DialogContent>
-          <DialogActions sx={{ px: 3, pb: 3 }}>
-            <Button onClick={() => setLogoutDialogOpen(false)} color="inherit" sx={{ fontWeight: 800 }}>
-              Cancel
-            </Button>
-            <Button onClick={handleLogout} variant="contained" color="error" sx={{ fontWeight: 800 }}>
+          <DialogActions sx={{ px: 3, pb: 3, gap: 1.5 }}>
+            <Button
+              onClick={handleLogout}
+              variant="outlined"
+              color="inherit"
+              fullWidth
+              sx={{ fontWeight: 900, minHeight: 48 }}
+            >
               Logout
+            </Button>
+            <Button
+              onClick={() => setLogoutDialogOpen(false)}
+              variant="contained"
+              color="error"
+              fullWidth
+              sx={{ fontWeight: 900, minHeight: 48 }}
+            >
+              Cancel
             </Button>
           </DialogActions>
         </Dialog>
