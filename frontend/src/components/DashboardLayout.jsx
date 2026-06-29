@@ -40,7 +40,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     setPressedPath(path);
     navigate(path);
     if (isMobile) setOpen(false);
-    window.setTimeout(() => setPressedPath(''), 160);
+    window.setTimeout(() => setPressedPath(''), 360);
   };
   const handleLogoutClick = () => {
     setLogoutDialogOpen(true);
@@ -152,39 +152,40 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   bgcolor: isActive ? '#eaf3ff' : 'transparent',
                   color: '#1E1E2C',
                   border: isActive ? '1px solid rgba(59,143,243,0.36)' : '1px solid transparent',
-                  transform: isPressed ? 'scale(0.975)' : 'scale(1)',
-                  transition: 'transform 140ms ease, background-color 220ms ease, border-color 220ms ease, color 220ms ease, box-shadow 220ms ease',
-                  boxShadow: isActive ? '0 14px 30px -22px rgba(35,125,186,0.7)' : 'none',
+                  transform: isPressed ? 'translateX(5px) scale(0.985)' : 'translateX(0) scale(1)',
+                  transition: 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1), background-color 260ms ease, border-color 260ms ease, color 260ms ease, box-shadow 260ms ease',
+                  boxShadow: isActive ? '0 16px 34px -24px rgba(35,125,186,0.72)' : 'none',
                   '&::before': {
                     content: '""',
                     position: 'absolute',
                     left: 0,
                     top: '50%',
-                    width: 3,
-                    height: isActive ? 24 : 0,
+                    width: isActive ? 4 : 0,
+                    height: isActive ? 28 : 0,
                     borderRadius: '0 999px 999px 0',
                     bgcolor: '#3B8FF3',
                     transform: 'translateY(-50%)',
                     opacity: isActive ? 1 : 0,
-                    transition: 'height 240ms ease, opacity 180ms ease'
+                    transition: 'width 260ms ease, height 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease'
                   },
                   '&::after': {
                     content: '""',
                     position: 'absolute',
                     inset: 0,
-                    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent)',
-                    transform: isPressed ? 'translateX(0)' : 'translateX(-115%)',
+                    background: 'linear-gradient(90deg, rgba(59,143,243,0), rgba(59,143,243,0.16), rgba(52,177,170,0.08), rgba(59,143,243,0))',
+                    transform: isPressed ? 'translateX(115%)' : 'translateX(-115%)',
                     opacity: isPressed ? 1 : 0,
-                    transition: 'transform 260ms ease, opacity 180ms ease',
+                    transition: 'transform 420ms cubic-bezier(0.16, 1, 0.3, 1), opacity 240ms ease',
                     pointerEvents: 'none'
                   },
                   '&:hover': {
                     bgcolor: isActive ? '#eaf3ff' : '#ffffff',
-                    transform: isPressed ? 'scale(0.975)' : 'translateX(3px)',
-                    borderColor: '#dfe5ec'
+                    transform: isPressed ? 'translateX(5px) scale(0.985)' : 'translateX(4px)',
+                    borderColor: isActive ? 'rgba(59,143,243,0.44)' : '#dfe5ec',
+                    boxShadow: '0 16px 34px -26px rgba(30,30,44,0.44)'
                   },
                   '&:active': {
-                    transform: 'scale(0.975)'
+                    transform: 'translateX(5px) scale(0.985)'
                   },
                   py: 1.25
                 }}
@@ -192,8 +193,8 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 <ListItemIcon sx={{
                   color: isActive ? '#237dba' : '#5f756f',
                   minWidth: '42px',
-                  transition: 'color 220ms ease, transform 220ms ease',
-                  transform: isActive ? 'scale(1.06)' : 'scale(1)',
+                  transition: 'color 260ms ease, transform 300ms cubic-bezier(0.22, 1, 0.36, 1)',
+                  transform: isPressed ? 'translateX(3px) scale(1.12)' : isActive ? 'scale(1.07)' : 'scale(1)',
                   '& svg': { fontSize: '1.35rem' }
                 }}>
                   {item.icon}

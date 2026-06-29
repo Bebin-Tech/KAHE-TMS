@@ -5,7 +5,7 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Chip, CircularProgress, Stack
 } from '@mui/material';
-import { AssessmentRounded, FilterAltOffRounded, SearchRounded } from '@mui/icons-material';
+import { AssessmentRounded, FilterAltOffRounded, RefreshRounded, SearchRounded } from '@mui/icons-material';
 import api from '../api/axios';
 
 const statusOptions = [
@@ -104,6 +104,13 @@ const Reports = () => {
     }
   };
 
+  const handleRefresh = async () => {
+    await Promise.all([
+      fetchUsers(),
+      fetchReports()
+    ]);
+  };
+
   useEffect(() => {
     fetchUsers();
     fetchReports();
@@ -138,7 +145,7 @@ const Reports = () => {
         <Box sx={{ width: 56, height: 56, flexShrink: 0, borderRadius: '14px', bgcolor: '#eaf3ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <AssessmentRounded sx={{ color: 'primary.main', fontSize: 32 }} />
         </Box>
-        <Box>
+        <Box sx={{ flex: 1 }}>
           <Typography variant="h4" sx={{ fontWeight: 900, color: '#212b36', fontSize: { xs: '1.45rem', sm: '2.125rem' } }}>
             Task Workflow Reports
           </Typography>
@@ -146,6 +153,26 @@ const Reports = () => {
             Track Dean, HOD, and Faculty progress from assignment through completion.
           </Typography>
         </Box>
+        <Button
+          variant="outlined"
+          startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <RefreshRounded />}
+          onClick={handleRefresh}
+          disabled={loading}
+          sx={{
+            width: { xs: '100%', sm: 'auto' },
+            alignSelf: { xs: 'stretch', sm: 'center' },
+            bgcolor: 'white',
+            borderColor: '#b7d5fb',
+            color: '#237dba',
+            boxShadow: '0 14px 30px -24px rgba(35,125,186,0.72)',
+            '&:hover': {
+              bgcolor: '#eaf3ff',
+              borderColor: '#3B8FF3'
+            }
+          }}
+        >
+          {loading ? 'Refreshing...' : 'Refresh'}
+        </Button>
       </Box>
 
       <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, border: '1px solid #e5e2df', borderRadius: '12px' }}>
