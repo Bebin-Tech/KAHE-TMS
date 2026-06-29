@@ -142,38 +142,48 @@ const AdminDashboard = () => {
             <Paper
               sx={{
                 p: { xs: 3, md: 4 },
-                minHeight: 290,
+                minHeight: { xs: 260, md: 290 },
                 borderRadius: 3,
-                border: '1px solid #dde5f0',
-                color: 'white',
-                bgcolor: '#1E1E2C',
+                border: '1px solid #b7d5fb',
+                color: '#122033',
+                bgcolor: '#eaf3ff',
+                background: 'linear-gradient(135deg, #eaf3ff 0%, #f8fbff 54%, #dbeeff 100%)',
                 position: 'relative',
                 overflow: 'hidden',
-                boxShadow: '0 22px 58px -38px rgba(30,30,44,0.72)'
+                boxShadow: '0 24px 62px -42px rgba(35,125,186,0.58), inset 0 1px 0 rgba(255,255,255,0.9)'
               }}
             >
-              <Box sx={{ position: 'relative', zIndex: 1, maxWidth: '100%', textAlign: 'center' }}>
+              <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 980, mx: 'auto', textAlign: 'center' }}>
                 <Typography
                   variant="h3"
-                  noWrap
-                  sx={{ mb: 1, fontSize: { xs: '1.15rem', sm: '1.7rem', md: '2.35rem' }, lineHeight: 1.08, fontWeight: 950 }}
+                  sx={{ mb: 1, fontSize: { xs: '1.55rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1.12, fontWeight: 950, color: '#102033' }}
                 >
                   Karpagam Academy of Higher Education - Workflow
                 </Typography>
-                <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.72)', fontWeight: 650 }}>
+                <Typography variant="body1" sx={{ color: '#42546b', fontWeight: 750 }}>
                   Real-time academic task coordination and reporting
                 </Typography>
                 <Stack direction="row" spacing={2.5} justifyContent="center" alignItems="center" sx={{ mt: 3, flexWrap: 'wrap' }}>
-                  <Button variant="outlined" startIcon={<AddTaskRounded />} onClick={() => navigate('/tasks')}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<AddTaskRounded />}
+                    onClick={() => navigate('/tasks')}
+                    sx={{ bgcolor: 'white', borderColor: '#237dba', boxShadow: '0 12px 28px -22px rgba(35,125,186,0.8)' }}
+                  >
                     Create Task
                   </Button>
-                  <Button variant="outlined" endIcon={<ArrowForwardRounded />} onClick={() => navigate('/reports')}>
+                  <Button
+                    variant="outlined"
+                    endIcon={<ArrowForwardRounded />}
+                    onClick={() => navigate('/reports')}
+                    sx={{ bgcolor: 'white', borderColor: '#237dba', boxShadow: '0 12px 28px -22px rgba(35,125,186,0.8)' }}
+                  >
                     View Reports
                   </Button>
                 </Stack>
               </Box>
-              <Box sx={{ position: 'absolute', right: -60, bottom: -80, width: 280, height: 280, border: '42px solid rgba(59,143,243,0.16)', borderRadius: '50%' }} />
-              <Box sx={{ position: 'absolute', right: 86, top: 38, width: 110, height: 110, border: '22px solid rgba(52,177,170,0.24)', borderRadius: '50%' }} />
+              <Box sx={{ position: 'absolute', right: -70, bottom: -90, width: 300, height: 300, border: '44px solid rgba(59,143,243,0.22)', borderRadius: '50%' }} />
+              <Box sx={{ position: 'absolute', right: 92, top: 36, width: 116, height: 116, border: '22px solid rgba(52,177,170,0.22)', borderRadius: '50%' }} />
             </Paper>
           </Grid>
         </Grid>
