@@ -143,12 +143,13 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def stats(self, request):
         """Dashboard statistics for admin."""
-        total = User.objects.count()
+        total = User.objects.filter(is_active=True).count()
         active = User.objects.filter(is_active=True).count()
         inactive = User.objects.filter(is_active=False).count()
-        role_counts = dict(User.objects.values_list('role').annotate(count=Count('id')).values_list('role', 'count'))
-        dept_count = Department.objects.count()
-        task_count = Task.objects.count()
+        role_counts = dict(User.objects.filter(is_active=True).values_list('role').annotate(count=Count('id')).values_list('role', 'count'))
+        dept_count = Department.objects.filter(is_active=True).count()
+        task_count = Task.objects.filter(is_active=True).count()
+        completed_task_count = Task.objects.filter(is_active=True, status__in=['COMPLETED', 'DEAN_APPROVED']).count()
         return Response({
             'total_users': total,
             'active_users': active,
@@ -156,6 +157,7 @@ class UserViewSet(viewsets.ModelViewSet):
             'role_counts': role_counts,
             'departments': dept_count,
             'total_tasks': task_count,
+            'completed_tasks': completed_task_count,
         })
 
 
