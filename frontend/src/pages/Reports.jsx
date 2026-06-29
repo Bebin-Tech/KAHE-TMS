@@ -105,10 +105,19 @@ const Reports = () => {
   };
 
   const handleRefresh = async () => {
-    await Promise.all([
-      fetchUsers(),
-      fetchReports()
-    ]);
+    setLoading(true);
+    try {
+      const [usersResponse, refreshResponse] = await Promise.all([
+        api.get('users/'),
+        api.post('reports/refresh/', null, { params: buildParams() })
+      ]);
+      setUsers(usersResponse.data);
+      setReports(refreshResponse.data.results || []);
+    } catch (err) {
+      console.error('Error refreshing reports:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
