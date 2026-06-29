@@ -135,7 +135,7 @@ const AdminDashboard = () => {
   const recentTasks = tasks.slice(0, 5);
 
   return (
-    <DashboardLayout title="Karpagam Academy of Higher Education – Workflow">
+    <DashboardLayout title="Karpagam Academy of Higher Education - Workflow">
       <Box sx={{ mb: 3 }}>
         <Grid container spacing={3} alignItems="stretch">
           <Grid item xs={12}>
@@ -143,21 +143,25 @@ const AdminDashboard = () => {
               sx={{
                 p: { xs: 3, md: 4 },
                 minHeight: 290,
-                borderRadius: 2,
+                borderRadius: 3,
                 border: '1px solid #dde5f0',
                 color: 'white',
                 bgcolor: '#1E1E2C',
                 position: 'relative',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                boxShadow: '0 22px 58px -38px rgba(30,30,44,0.72)'
               }}
             >
               <Box sx={{ position: 'relative', zIndex: 1, maxWidth: '100%', textAlign: 'center' }}>
                 <Typography
                   variant="h3"
                   noWrap
-                  sx={{ mb: 1, fontSize: { xs: '1.15rem', sm: '1.7rem', md: '2.35rem' }, lineHeight: 1.08 }}
+                  sx={{ mb: 1, fontSize: { xs: '1.15rem', sm: '1.7rem', md: '2.35rem' }, lineHeight: 1.08, fontWeight: 950 }}
                 >
-                  Karpagam Academy of Higher Education – Workflow
+                  Karpagam Academy of Higher Education - Workflow
+                </Typography>
+                <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.72)', fontWeight: 650 }}>
+                  Real-time academic task coordination and reporting
                 </Typography>
                 <Stack direction="row" spacing={2.5} justifyContent="center" alignItems="center" sx={{ mt: 3, flexWrap: 'wrap' }}>
                   <Button variant="outlined" startIcon={<AddTaskRounded />} onClick={() => navigate('/tasks')}>
@@ -178,15 +182,26 @@ const AdminDashboard = () => {
       <Grid container spacing={2.5} sx={{ mb: 3 }}>
         {summaryCards.map((card) => (
           <Grid item xs={12} sm={6} lg={3} key={card.title}>
-            <Card sx={{ p: 2.5, height: '100%', borderRadius: 2 }}>
+            <Card
+              sx={{
+                p: 2.5,
+                height: '100%',
+                borderRadius: 3,
+                transition: 'transform 180ms ease, box-shadow 180ms ease',
+                '&:hover': {
+                  transform: 'translateY(-3px)',
+                  boxShadow: '0 20px 52px -36px rgba(30,30,44,0.62)'
+                }
+              }}
+            >
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
                 <Avatar sx={{ bgcolor: card.bg, color: card.color, width: 48, height: 48 }}>
                   {card.icon}
                 </Avatar>
                 <TrendingUpRounded sx={{ color: '#98a2b3', fontSize: 20 }} />
               </Box>
-              <Typography variant="h4" sx={{ mb: 0.5 }}>{card.value}</Typography>
-              <Typography variant="subtitle2" sx={{ fontWeight: 900, color: 'text.primary' }}>{card.title}</Typography>
+              <Typography variant="h4" sx={{ mb: 0.5, fontWeight: 950 }}>{card.value}</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 950, color: 'text.primary' }}>{card.title}</Typography>
               <Typography variant="body2" color="text.secondary">{card.helper}</Typography>
             </Card>
           </Grid>
@@ -195,10 +210,10 @@ const AdminDashboard = () => {
 
       <Grid container spacing={3}>
         <Grid item xs={12} lg={7}>
-          <Paper sx={{ borderRadius: 2, border: '1px solid #dde5f0', overflow: 'hidden' }}>
+          <Paper sx={{ borderRadius: 3, border: '1px solid #dde5f0', overflow: 'hidden' }}>
             <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e7edf5' }}>
               <Box>
-                <Typography variant="h6">Recent Task Flow</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 900 }}>Recent Task Flow</Typography>
                 <Typography variant="body2" color="text.secondary">Latest assignments moving through the institution.</Typography>
               </Box>
               <Button size="small" endIcon={<ArrowForwardRounded />} onClick={() => navigate('/tasks')}>All tasks</Button>
@@ -227,10 +242,10 @@ const AdminDashboard = () => {
         </Grid>
 
         <Grid item xs={12} lg={5}>
-          <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid #dde5f0', height: '100%' }}>
+          <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #dde5f0', height: '100%' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
               <Box>
-                <Typography variant="h6">Department Workload</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 900 }}>Department Workload</Typography>
                 <Typography variant="body2" color="text.secondary">Relative distribution across active units.</Typography>
               </Box>
               <BusinessOutlined sx={{ color: 'text.secondary' }} />

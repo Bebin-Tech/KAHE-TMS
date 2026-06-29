@@ -70,8 +70,8 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const loginLabel = user.full_name || roleLabel;
 
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#fafafa', color: '#1E1E2C', px: 2.25 }}>
-      <Box sx={{ py: 3.25, px: 1.25, display: 'flex', alignItems: 'center', gap: 1.6 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#fafafa', color: '#1E1E2C', px: 2 }}>
+      <Box sx={{ py: 3, px: 1, display: 'flex', alignItems: 'center', gap: 1.4 }}>
         <Box
           sx={{
             bgcolor: 'white',
@@ -80,10 +80,10 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: 52,
-            height: 52,
+            width: 50,
+            height: 50,
             border: '1px solid #e5e2df',
-            boxShadow: '0 18px 38px -22px rgba(30,30,44,0.32)'
+            boxShadow: '0 18px 38px -24px rgba(30,30,44,0.34)'
           }}
         >
           <Box
@@ -97,26 +97,29 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             }}
           />
         </Box>
-        <Box>
-          <Typography variant="h6" component="div" sx={{ fontWeight: 900, color: '#1E1E2C', letterSpacing: 0, lineHeight: 1.1 }}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="h6" component="div" sx={{ fontWeight: 950, color: '#1E1E2C', letterSpacing: 0, lineHeight: 1.05 }}>
             KAHE TMS
+          </Typography>
+          <Typography variant="caption" noWrap sx={{ display: 'block', color: '#667085', fontWeight: 700 }}>
+            Task Management
           </Typography>
         </Box>
       </Box>
 
       <Box sx={{ px: 0.5, mb: 3 }}>
         <Paper elevation={0} sx={{
-          p: 2,
+          p: 1.75,
           bgcolor: '#ffffff',
           border: '1px solid #e5e2df',
-          boxShadow: '0 16px 34px -28px rgba(30,30,44,0.42)',
-          borderRadius: 2,
+          boxShadow: '0 16px 38px -30px rgba(30,30,44,0.45)',
+          borderRadius: '14px',
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,
           color: '#1E1E2C'
         }}>
-          <Avatar sx={{ width: 40, height: 40, bgcolor: 'white', color: 'primary.dark', fontWeight: 900 }}>
+          <Avatar sx={{ width: 40, height: 40, bgcolor: '#eaf3ff', color: '#237dba', fontWeight: 950 }}>
             {(user.username?.[0] || 'U').toUpperCase()}
           </Avatar>
           <Box sx={{ overflow: 'hidden' }}>
@@ -130,7 +133,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
         </Paper>
       </Box>
 
-      <Typography variant="caption" sx={{ px: 1.5, mb: 1.25, color: '#5f756f', fontWeight: 900, letterSpacing: '0.08em' }}>
+      <Typography variant="caption" sx={{ px: 1.5, mb: 1.25, color: '#667085', fontWeight: 950, letterSpacing: '0.08em' }}>
         WORKSPACE
       </Typography>
       <List sx={{ px: 0 }}>
@@ -145,20 +148,20 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 sx={{
                   position: 'relative',
                   overflow: 'hidden',
-                  borderRadius: '8px',
+                  borderRadius: '12px',
                   bgcolor: isActive ? '#eaf3ff' : 'transparent',
                   color: '#1E1E2C',
-                  border: isActive ? '1px solid rgba(59,143,243,0.42)' : '1px solid transparent',
+                  border: isActive ? '1px solid rgba(59,143,243,0.36)' : '1px solid transparent',
                   transform: isPressed ? 'scale(0.975)' : 'scale(1)',
                   transition: 'transform 140ms ease, background-color 220ms ease, border-color 220ms ease, color 220ms ease, box-shadow 220ms ease',
-                  boxShadow: isActive ? '0 12px 26px -18px rgba(35,125,186,0.7)' : 'none',
+                  boxShadow: isActive ? '0 14px 30px -22px rgba(35,125,186,0.7)' : 'none',
                   '&::before': {
                     content: '""',
                     position: 'absolute',
                     left: 0,
                     top: '50%',
-                    width: 4,
-                    height: isActive ? 28 : 0,
+                    width: 3,
+                    height: isActive ? 24 : 0,
                     borderRadius: '0 999px 999px 0',
                     bgcolor: '#3B8FF3',
                     transform: 'translateY(-50%)',
@@ -177,18 +180,18 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   },
                   '&:hover': {
                     bgcolor: isActive ? '#eaf3ff' : '#ffffff',
-                    transform: isPressed ? 'scale(0.975)' : 'translateX(4px)',
-                    borderColor: '#e5e2df'
+                    transform: isPressed ? 'scale(0.975)' : 'translateX(3px)',
+                    borderColor: '#dfe5ec'
                   },
                   '&:active': {
                     transform: 'scale(0.975)'
                   },
-                  py: 1.35
+                  py: 1.25
                 }}
               >
                 <ListItemIcon sx={{
                   color: isActive ? '#237dba' : '#5f756f',
-                  minWidth: '44px',
+                  minWidth: '42px',
                   transition: 'color 220ms ease, transform 220ms ease',
                   transform: isActive ? 'scale(1.06)' : 'scale(1)',
                   '& svg': { fontSize: '1.35rem' }
@@ -199,7 +202,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   primary={item.text}
                   primaryTypographyProps={{
                     fontSize: '0.875rem',
-                    fontWeight: isActive ? 800 : 600,
+                    fontWeight: isActive ? 900 : 700,
                   }}
                 />
               </ListItemButton>
@@ -239,10 +242,11 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           position="sticky"
           elevation={0}
           sx={{
-            bgcolor: 'rgba(246, 246, 247, 0.94)',
+            bgcolor: 'rgba(250, 250, 250, 0.94)',
             backdropFilter: 'blur(14px)',
             borderBottom: '1px solid #e5e2df',
             color: 'text.primary',
+            boxShadow: '0 14px 34px -32px rgba(30,30,44,0.5)'
           }}
         >
           <Toolbar
@@ -263,13 +267,13 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 </IconButton>
               )}
               <Box sx={{ minWidth: 0 }}>
-                <Typography variant="caption" noWrap sx={{ color: 'text.secondary', fontWeight: 800, display: 'block' }}>
+                <Typography variant="caption" noWrap sx={{ color: 'text.secondary', fontWeight: 850, display: 'block' }}>
                   Task Management System
                 </Typography>
                 <Typography
                   variant="h6"
                   noWrap
-                  sx={{ fontWeight: 900, color: 'text.primary', lineHeight: 1.2, fontSize: { xs: '1rem', sm: '1.25rem' } }}
+                  sx={{ fontWeight: 950, color: 'text.primary', lineHeight: 1.2, fontSize: { xs: '1rem', sm: '1.25rem' } }}
                 >
                   {title || 'Dashboard'}
                 </Typography>

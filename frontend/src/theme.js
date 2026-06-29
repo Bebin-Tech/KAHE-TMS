@@ -1,9 +1,9 @@
 import { createTheme } from '@mui/material/styles';
 
 const academicFontFamily = [
+  'Inter',
   'Aptos',
   'Segoe UI',
-  'Inter',
   'Roboto',
   'Helvetica Neue',
   'Arial',
@@ -52,12 +52,14 @@ const theme = createTheme({
       letterSpacing: 0,
     },
     h3: {
-      fontWeight: 800,
+      fontWeight: 850,
       letterSpacing: 0,
+      lineHeight: 1.12,
     },
     h4: {
-      fontWeight: 800,
+      fontWeight: 850,
       letterSpacing: 0,
+      lineHeight: 1.18,
     },
     h5: {
       fontWeight: 700,
@@ -69,7 +71,7 @@ const theme = createTheme({
       fontWeight: 600,
     },
     subtitle2: {
-      fontWeight: 600,
+      fontWeight: 700,
     },
     body1: {
       lineHeight: 1.6,
@@ -79,7 +81,7 @@ const theme = createTheme({
     },
     button: {
       textTransform: 'none',
-      fontWeight: 600,
+      fontWeight: 750,
       letterSpacing: 0,
     },
   },
@@ -104,7 +106,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           padding: '10px 20px',
-          borderRadius: 8,
+          borderRadius: 10,
           lineHeight: 1.35,
         },
         outlinedPrimary: {
@@ -136,8 +138,8 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           border: '1px solid #e5e2df',
-          borderRadius: 12,
-          boxShadow: '0 18px 44px -34px rgba(30, 30, 44, 0.38)',
+          borderRadius: 14,
+          boxShadow: '0 18px 48px -34px rgba(30, 30, 44, 0.32)',
         },
       },
     },
@@ -145,8 +147,8 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
-          borderRadius: 12,
-          boxShadow: '0 18px 44px -34px rgba(30, 30, 44, 0.38)',
+          borderRadius: 14,
+          boxShadow: '0 18px 48px -34px rgba(30, 30, 44, 0.32)',
         },
       },
     },
