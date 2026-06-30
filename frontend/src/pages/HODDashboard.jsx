@@ -9,7 +9,8 @@ import {
   TableHead, TableRow, Chip, IconButton,
   Card, CardContent, LinearProgress, Avatar,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField,
-  CircularProgress
+  CircularProgress,
+  Tooltip
 } from '@mui/material';
 import {
   AssignmentRounded,
@@ -90,9 +91,17 @@ const HODDashboard = () => {
       fetchData();
     } catch (err) {
       console.error('Error submitting task to Dean:', err);
+      alert(err.response?.data?.error || 'Failed to submit task to Dean.');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const getTaskSubtasks = (taskId) => subtasks.filter((subtask) => subtask.task === taskId);
+
+  const canSubmitToDean = (task) => {
+    const taskSubtasks = getTaskSubtasks(task.id);
+    return taskSubtasks.length === 0 || taskSubtasks.every((subtask) => ['APPROVED_HOD', 'COMPLETED'].includes(subtask.status));
   };
 
   const StatCard = ({ title, value, icon, color }) => (
@@ -181,17 +190,21 @@ const HODDashboard = () => {
                         >
                           Add Sub-Task
                         </Button>
-                        <Button
-                          size="small"
-                          variant="contained"
-                          disabled={task.status === 'SUBMITTED_DEAN' || task.status === 'COMPLETED'}
-                          onClick={() => {
-                            setSubmitTask(task);
-                            setSubmissionContent('');
-                          }}
-                        >
-                          Submit to Dean
-                        </Button>
+                        <Tooltip title={!canSubmitToDean(task) ? 'Approve all faculty sub-tasks before submitting to Dean.' : ''}>
+                          <span>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              disabled={task.status === 'SUBMITTED_DEAN' || task.status === 'COMPLETED' || !canSubmitToDean(task)}
+                              onClick={() => {
+                                setSubmitTask(task);
+                                setSubmissionContent('');
+                              }}
+                            >
+                              Submit to Dean
+                            </Button>
+                          </span>
+                        </Tooltip>
                         </Box>
                       </TableCell>
                     </TableRow>

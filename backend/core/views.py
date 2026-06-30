@@ -76,7 +76,10 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def hods(self, request):
-        hods = User.objects.filter(role='HOD')
+        hods = User.objects.filter(role='HOD', is_active=True)
+        department = request.query_params.get('department')
+        if department:
+            hods = hods.filter(department_id=department)
         serializer = self.get_serializer(hods, many=True)
         return Response(serializer.data)
 
@@ -174,7 +177,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         elif user.role == 'DEAN':
             return base_queryset.filter(created_by=user)
         elif user.role == 'HOD':
-            return base_queryset.filter(assigned_to_hod=user)
+            return base_queryset.filter(Q(created_by=user) | Q(assigned_to_hod=user)).distinct()
         elif user.role == 'FACULTY':
             return base_queryset.filter(subtasks__assigned_to=user).distinct()
         return base_queryset
@@ -188,11 +191,11 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         task_status = 'ASSIGNED' if serializer.validated_data.get('assigned_to_hod') else 'ONGOING'
-        task = serializer.save(status=task_status)
+        task = serializer.save(created_by=self.request.user, status=task_status)
         record_task_activity(
             task=task,
             user=task.created_by,
-            role='DEAN',
+            role=task.created_by.role,
             status=task_status,
             action_performed='Created task',
             assigned_by=task.created_by,
@@ -210,10 +213,11 @@ class TaskViewSet(viewsets.ModelViewSet):
             )
             Notification.objects.create(
                 user=task.assigned_to_hod,
-                message=f"Task '{task.title}' has been assigned to you by the Dean."
+                message=f"Task '{task.title}' has been assigned to you by {task.created_by.get_full_name() or task.created_by.username}."
             )
 
     def perform_update(self, serializer):
+        previous_assignee = self.get_object().assigned_to_hod
         task = serializer.save()
         now = timezone.now()
         record_task_activity(
@@ -226,6 +230,21 @@ class TaskViewSet(viewsets.ModelViewSet):
             assigned_at=task.created_at,
             work_completed_at=now if task.status == 'COMPLETED' else None
         )
+        if task.assigned_to_hod and task.assigned_to_hod != previous_assignee:
+            record_task_activity(
+                task=task,
+                user=task.assigned_to_hod,
+                role='HOD',
+                status='ASSIGNED',
+                action_performed='Assigned task to HOD',
+                assigned_by=self.request.user,
+                assigned_at=now,
+                action_at=now
+            )
+            Notification.objects.create(
+                user=task.assigned_to_hod,
+                message=f"Task '{task.title}' has been assigned to you by {self.request.user.get_full_name() or self.request.user.username}."
+            )
 
     @action(detail=True, methods=['post'])
     def submit_to_dean(self, request, pk=None):
@@ -233,6 +252,12 @@ class TaskViewSet(viewsets.ModelViewSet):
         task = self.get_object()
         if request.user != task.assigned_to_hod and request.user.role not in ['ADMIN']:
             return Response({'error': 'Only the assigned HOD can submit this task.'}, status=status.HTTP_403_FORBIDDEN)
+
+        unfinished_subtasks = task.subtasks.filter(is_active=True).exclude(status__in=['APPROVED_HOD', 'COMPLETED'])
+        if unfinished_subtasks.exists():
+            return Response({
+                'error': 'Approve or complete all faculty sub-tasks before submitting this task to the Dean.'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         content = request.data.get('content')
         if not content:
@@ -397,6 +422,10 @@ class SubTaskViewSet(viewsets.ModelViewSet):
             action_performed='Assigned sub-task to Faculty',
             assigned_by=self.request.user,
             assigned_at=timezone.now()
+        )
+        Notification.objects.create(
+            user=subtask.assigned_to,
+            message=f"Sub-task '{subtask.title}' has been assigned to you by {self.request.user.get_full_name() or self.request.user.username}."
         )
 
     @action(detail=True, methods=['post'])

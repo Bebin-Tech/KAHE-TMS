@@ -7,6 +7,7 @@ import api from '../api/axios';
 
 const CreateSubTaskDialog = ({ open, onClose, taskId, taskDepartmentId, onTaskCreated }) => {
   const [faculty, setFaculty] = useState([]);
+  const [showingAllFaculty, setShowingAllFaculty] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [formData, setFormData] = useState({
@@ -25,14 +26,27 @@ const CreateSubTaskDialog = ({ open, onClose, taskId, taskDepartmentId, onTaskCr
   const fetchFaculty = async () => {
     if (!taskDepartmentId) {
       setFaculty([]);
+      setShowingAllFaculty(false);
       return;
     }
     setFetching(true);
     try {
       const response = await api.get(`users/?department=${taskDepartmentId}`);
-      setFaculty(response.data.filter(u => u.role === 'FACULTY'));
+      const departmentFaculty = response.data.filter(u => u.role === 'FACULTY');
+      if (departmentFaculty.length > 0) {
+        setFaculty(departmentFaculty);
+        setShowingAllFaculty(false);
+        return;
+      }
+
+      const fallbackResponse = await api.get('users/');
+      const allFaculty = fallbackResponse.data.filter(u => u.role === 'FACULTY');
+      setFaculty(allFaculty);
+      setShowingAllFaculty(allFaculty.length > 0);
     } catch (err) {
       console.error('Error fetching Faculty:', err);
+      setFaculty([]);
+      setShowingAllFaculty(false);
     } finally {
       setFetching(false);
     }
@@ -50,6 +64,7 @@ const CreateSubTaskDialog = ({ open, onClose, taskId, taskDepartmentId, onTaskCr
       onTaskCreated();
       onClose();
       setFormData({ title: '', description: '', assigned_to: '', deadline: '' });
+      setShowingAllFaculty(false);
     } catch (err) {
       console.error('Error creating subtask:', err);
     } finally {
@@ -83,7 +98,15 @@ const CreateSubTaskDialog = ({ open, onClose, taskId, taskDepartmentId, onTaskCr
                 value={formData.assigned_to}
                 onChange={(e) => setFormData({...formData, assigned_to: e.target.value})}
                 disabled={fetching || !taskDepartmentId}
-                helperText={!taskDepartmentId ? 'Choose a main task with a department before assigning faculty.' : 'Choose any available faculty member in this department.'}
+                helperText={
+                  !taskDepartmentId
+                    ? 'Choose a main task with a department before assigning faculty.'
+                    : faculty.length === 0 && !fetching
+                      ? 'No active faculty found. Add an active faculty user first.'
+                      : showingAllFaculty
+                        ? 'No faculty is linked to this department, so all active faculty are shown.'
+                        : 'Choose any available faculty member in this department.'
+                }
               >
                 {faculty.map((f) => (
                   <MenuItem key={f.id} value={f.id}>

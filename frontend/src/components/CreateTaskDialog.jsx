@@ -9,6 +9,7 @@ import api from '../api/axios';
 const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
   const [departments, setDepartments] = useState([]);
   const [users, setUsers] = useState([]);
+  const [showingAllHods, setShowingAllHods] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(false);
   const [error, setError] = useState('');
@@ -65,10 +66,20 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
   const fetchUsersByDepartment = async (deptId) => {
     setFetchingData(true);
     try {
-      const response = await api.get(`users/?department=${deptId}`);
-      setUsers(response.data.filter((user) => user.role === 'HOD'));
+      const response = await api.get(`users/hods/?department=${deptId}`);
+      if (response.data.length > 0) {
+        setUsers(response.data);
+        setShowingAllHods(false);
+        return;
+      }
+
+      const fallbackResponse = await api.get('users/hods/');
+      setUsers(fallbackResponse.data);
+      setShowingAllHods(fallbackResponse.data.length > 0);
     } catch (err) {
-      setError('Failed to fetch users for this department.');
+      setUsers([]);
+      setShowingAllHods(false);
+      setError('Failed to fetch HODs for this department.');
     } finally {
       setFetchingData(false);
     }
@@ -133,6 +144,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
       priority: 'MEDIUM'
     });
     setUsers([]);
+    setShowingAllHods(false);
   };
 
   return (
@@ -182,7 +194,13 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
                 value={formData.assigned_to_hod}
                 onChange={(e) => setFormData({...formData, assigned_to_hod: e.target.value})}
                 disabled={!formData.department || fetchingData}
-                helperText="Select the department HOD who will own this task"
+                helperText={
+                  formData.department && !fetchingData && users.length === 0
+                    ? 'No active HOD found. Add an active HOD user first.'
+                    : showingAllHods
+                      ? 'No HOD is linked to this department, so all active HODs are shown.'
+                      : 'Select the department HOD who will own this task'
+                }
               >
                 {users.map((user) => (
                   <MenuItem key={user.id} value={user.id}>
