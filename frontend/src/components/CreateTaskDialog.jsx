@@ -5,6 +5,7 @@ import {
   CircularProgress, Alert, FormControlLabel, Checkbox
 } from '@mui/material';
 import api from '../api/axios';
+import { getCurrentSession } from '../utils/session';
 
 const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
   const [departments, setDepartments] = useState([]);
@@ -107,10 +108,10 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
         const response = await api.patch(`tasks/${task.id}/`, submitData);
         savedTask = response.data;
       } else {
-        const currentUser = JSON.parse(localStorage.getItem('user'));
+        const currentUser = getCurrentSession()?.session?.user;
         const response = await api.post('tasks/', {
           ...submitData,
-          created_by: currentUser.id
+          created_by: currentUser?.id
         });
         savedTask = response.data;
       }

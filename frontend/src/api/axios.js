@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { clearRoleSession, getCurrentSession, getStoredSession, updateRoleAccessToken } from '../utils/session';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/';
 
@@ -7,9 +8,10 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const current = getCurrentSession();
+  if (current?.session?.access) {
+    config.headers.Authorization = `Bearer ${current.session.access}`;
+    config._sessionRole = current.role;
   }
   return config;
 });
@@ -23,7 +25,10 @@ api.interceptors.response.use(
     // OR if the error code is 'token_not_valid'
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      const refreshToken = localStorage.getItem('refresh_token');
+      const current = originalRequest._sessionRole
+        ? { role: originalRequest._sessionRole, session: getStoredSession(originalRequest._sessionRole) }
+        : getCurrentSession();
+      const refreshToken = current?.session?.refresh;
 
       if (refreshToken) {
         try {
@@ -34,7 +39,7 @@ api.interceptors.response.use(
 
           if (response.status === 200) {
             const newAccessToken = response.data.access;
-            localStorage.setItem('access_token', newAccessToken);
+            updateRoleAccessToken(current.role, newAccessToken);
 
             // Update the original request with the new token
             originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
@@ -43,12 +48,12 @@ api.interceptors.response.use(
         } catch (refreshError) {
           // If refresh fails, log out the user
           console.error('Refresh token expired or invalid', refreshError);
-          localStorage.clear();
+          clearRoleSession(current.role);
           window.location.href = '/login';
           return Promise.reject(refreshError);
         }
       } else {
-        localStorage.clear();
+        if (current?.role) clearRoleSession(current.role);
         window.location.href = '/login';
       }
     }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Paper, Typography, TextField, Button, Alert, CircularProgress } from '@mui/material';
 import api from '../api/axios';
+import { getCurrentSession, redirectPathForUser, updateRoleUser } from '../utils/session';
 
 const ChangePassword = () => {
   const [oldPassword, setOldPassword] = useState('');
@@ -29,19 +30,15 @@ const ChangePassword = () => {
 
       console.log('Password update successful:', response.data.message);
 
-      // Update stored user info
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      user.must_change_password = false;
-      localStorage.setItem('user', JSON.stringify(user));
+      // Update stored user info for only the active role session.
+      const current = getCurrentSession();
+      const user = updateRoleUser(current?.role, (storedUser) => ({
+        ...storedUser,
+        must_change_password: false,
+      })) || {};
 
       // Redirect based on role
-      const routes = {
-        'ADMIN': '/admin-dashboard',
-        'DEAN': '/dean-dashboard',
-        'HOD': '/hod-dashboard',
-        'FACULTY': '/faculty-dashboard'
-      };
-      navigate(routes[user.role] || '/login');
+      navigate(redirectPathForUser(user));
     } catch (err) {
       console.error('Password Update Error:', err);
       if (!err.response) {

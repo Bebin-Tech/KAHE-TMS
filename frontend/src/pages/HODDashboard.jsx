@@ -10,7 +10,8 @@ import {
   Card, CardContent, LinearProgress, Avatar,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField,
   CircularProgress,
-  Tooltip
+  Tooltip,
+  Stack
 } from '@mui/material';
 import {
   AssignmentRounded,
@@ -104,11 +105,13 @@ const HODDashboard = () => {
     return taskSubtasks.length === 0 || taskSubtasks.every((subtask) => ['APPROVED_HOD', 'COMPLETED'].includes(subtask.status));
   };
 
+  const activeSubtasks = subtasks.filter((subtask) => !['APPROVED_HOD', 'COMPLETED'].includes(subtask.status)).length;
+
   const StatCard = ({ title, value, icon, color }) => (
-    <Card sx={{ borderRadius: '16px', overflow: 'hidden' }}>
-      <CardContent sx={{ p: 3, display: 'flex', alignItems: 'center' }}>
+    <Card sx={{ borderRadius: 2, overflow: 'hidden', height: '100%', boxShadow: '0 16px 38px -32px rgba(30,30,44,0.5)' }}>
+      <CardContent sx={{ p: 2.5, display: 'flex', alignItems: 'center' }}>
         <Box sx={{
-          p: 2, borderRadius: '12px',
+          p: 1.5, borderRadius: 2,
           bgcolor: `${color}15`, color: color, mr: 2
         }}>
           {icon}
@@ -127,17 +130,27 @@ const HODDashboard = () => {
 
   return (
     <DashboardLayout title="Department Overview">
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ mb: 1, fontSize: { xs: '1.45rem', sm: '2.125rem' } }}>Department Management</Typography>
-        <Typography variant="body1" color="text.secondary">Monitor and assign tasks to your faculty members.</Typography>
-      </Box>
+      <Paper elevation={0} sx={{ mb: 3, p: { xs: 2.5, md: 3 }, borderRadius: 2, border: '1px solid #dbe5ef', bgcolor: '#ffffff' }}>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems={{ xs: 'stretch', md: 'center' }} justifyContent="space-between">
+          <Box>
+            <Typography variant="overline" sx={{ color: '#1f7f79', fontWeight: 900 }}>HOD command center</Typography>
+            <Typography variant="h4" sx={{ mb: 1, fontWeight: 900, fontSize: { xs: '1.5rem', sm: '2rem' } }}>
+              Department task control
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Assign faculty work, validate submissions, and prepare completed tasks for Dean review.
+            </Typography>
+          </Box>
+          <Chip label={`${stats.pendingReview} pending reviews`} sx={{ alignSelf: { xs: 'flex-start', md: 'center' }, bgcolor: '#fff8d9', color: '#8a6f00', fontWeight: 900 }} />
+        </Stack>
+      </Paper>
 
-      <Grid container spacing={3} sx={{ mb: 5 }} justifyContent="center">
+      <Grid container spacing={2.5} sx={{ mb: 3 }}>
         <Grid item xs={12} md={4}>
           <StatCard title="Assigned Tasks" value={stats.assigned} icon={<AssignmentRounded />} color="#3B8FF3" />
         </Grid>
         <Grid item xs={12} md={4}>
-          <StatCard title="Sub-Tasks Active" value={14} icon={<GroupWorkRounded />} color="#1E1E2C" />
+          <StatCard title="Sub-Tasks Active" value={activeSubtasks} icon={<GroupWorkRounded />} color="#1E1E2C" />
         </Grid>
         <Grid item xs={12} md={4}>
           <StatCard title="Pending Review" value={stats.pendingReview} icon={<FactCheckRounded />} color="#34B1AA" />
@@ -146,9 +159,12 @@ const HODDashboard = () => {
 
       <Grid container spacing={3} justifyContent="center">
         <Grid item xs={12} lg={12} sx={{ mb: 3 }}>
-          <Paper sx={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
+          <Paper sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
             <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
-              <Typography variant="h6">Main Tasks from Dean</Typography>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 900 }}>Dean Assignments</Typography>
+                <Typography variant="body2" color="text.secondary">Primary tasks routed to this department.</Typography>
+              </Box>
             </Box>
             <TableContainer>
               <Table>
@@ -216,9 +232,12 @@ const HODDashboard = () => {
         </Grid>
 
         <Grid item xs={12} lg={8}>
-          <Paper sx={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
+          <Paper sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
             <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
-              <Typography variant="h6">My Assigned Tasks</Typography>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 900 }}>Faculty Work Queue</Typography>
+                <Typography variant="body2" color="text.secondary">Sub-tasks assigned and returned by faculty.</Typography>
+              </Box>
               <Button size="small" variant="outlined" sx={{ borderRadius: '8px' }}>View All</Button>
             </Box>
             <TableContainer>
@@ -279,8 +298,8 @@ const HODDashboard = () => {
         </Grid>
 
         <Grid item xs={12} lg={4}>
-          <Paper sx={{ borderRadius: '20px', p: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
-            <Typography variant="h6" sx={{ mb: 3 }}>Department Activity</Typography>
+          <Paper sx={{ borderRadius: 2, p: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
+            <Typography variant="h6" sx={{ mb: 3, fontWeight: 900 }}>Department Activity</Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               {[1, 2, 3].map((i) => (
                 <Box key={i} sx={{ display: 'flex', gap: 2 }}>

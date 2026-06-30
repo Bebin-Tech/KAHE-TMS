@@ -18,6 +18,7 @@ import {
   AssignmentTurnedInOutlined
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { clearRoleSession, getCurrentSession } from '../utils/session';
 
 const drawerWidth = 292;
 
@@ -29,7 +30,8 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const [pressedPath, setPressedPath] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const currentSession = getCurrentSession();
+  const user = currentSession?.session?.user || {};
 
   useEffect(() => {
     setOpen(!isMobile);
@@ -46,9 +48,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     setLogoutDialogOpen(true);
   };
   const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
+    clearRoleSession(user.role || currentSession?.role);
     navigate('/login');
   };
 

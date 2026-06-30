@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { CloudUploadRounded, CloseRounded, InsertDriveFileRounded } from '@mui/icons-material';
 import api from '../api/axios';
+import { getCurrentSession } from '../utils/session';
 
 const SubmitWorkDialog = ({ open, onClose, subtaskId, onSubmitted }) => {
   const [loading, setLoading] = useState(false);
@@ -27,9 +28,8 @@ const SubmitWorkDialog = ({ open, onClose, subtaskId, onSubmitted }) => {
     formData.append('content', content);
     if (file) formData.append('attachment', file);
 
-    // Get user id from localStorage
-    const user = JSON.parse(localStorage.getItem('user'));
-    formData.append('submitted_by', user.id);
+    const user = getCurrentSession()?.session?.user;
+    formData.append('submitted_by', user?.id);
 
     try {
       await api.post('submissions/', formData, {

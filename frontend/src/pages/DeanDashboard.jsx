@@ -8,7 +8,7 @@ import {
   Grid, Paper, Typography, Box, Button,
   Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Chip, IconButton,
-  InputBase, Card, CardContent, LinearProgress, Tooltip, Avatar
+  InputBase, Card, CardContent, LinearProgress, Tooltip, Avatar, Stack
 } from '@mui/material';
 import {
   AddRounded,
@@ -61,13 +61,21 @@ const DeanDashboard = () => {
     setReviewOpen(true);
   };
 
+  const filteredTasks = tasks.filter((task) => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return true;
+    return [task.title, task.assigned_to_hod_name, task.department_name, task.status]
+      .filter(Boolean)
+      .some((value) => value.toLowerCase().includes(query));
+  });
+
   const StatCard = ({ title, value, icon, color, trend }) => (
-    <Card sx={{ height: '100%', borderRadius: '16px', overflow: 'hidden', position: 'relative' }}>
-      <CardContent sx={{ p: 3 }}>
+    <Card sx={{ height: '100%', borderRadius: 2, overflow: 'hidden', position: 'relative', boxShadow: '0 16px 38px -32px rgba(30,30,44,0.5)' }}>
+      <CardContent sx={{ p: 2.5 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
           <Box sx={{
             p: 1.5,
-            borderRadius: '12px',
+            borderRadius: 2,
             bgcolor: `${color}15`,
             color: color
           }}>
@@ -119,24 +127,30 @@ const DeanDashboard = () => {
   };
 
   return (
-    <DashboardLayout title="Overview">
-      <Box sx={{ mb: 5, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 800, fontSize: { xs: '1.45rem', sm: '2.125rem' } }}>
-          Welcome back, Dean
-        </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          Here is what's happening in the system today.
-        </Typography>
-        <Button
-          variant="outlined"
-          startIcon={<AddRounded />}
-          onClick={() => setDialogOpen(true)}
-        >
-          Create New Task
-        </Button>
-      </Box>
+    <DashboardLayout title="Dean Workspace">
+      <Paper elevation={0} sx={{ mb: 3, p: { xs: 2.5, md: 3 }, borderRadius: 2, border: '1px solid #dbe5ef', bgcolor: '#ffffff' }}>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems={{ xs: 'stretch', md: 'center' }} justifyContent="space-between">
+          <Box>
+            <Typography variant="overline" sx={{ color: '#237dba', fontWeight: 900 }}>Dean oversight</Typography>
+            <Typography variant="h4" sx={{ mb: 1, fontWeight: 900, fontSize: { xs: '1.5rem', sm: '2rem' } }}>
+              Institutional task review
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Track HOD submissions, final approvals, and deadline risk across departments.
+            </Typography>
+          </Box>
+          <Button
+            variant="contained"
+            startIcon={<AddRounded />}
+            onClick={() => setDialogOpen(true)}
+            sx={{ alignSelf: { xs: 'stretch', md: 'center' }, minWidth: 180 }}
+          >
+            Create Task
+          </Button>
+        </Stack>
+      </Paper>
 
-        <Grid container spacing={3} justifyContent="center">
+        <Grid container spacing={2.5} sx={{ mb: 3 }}>
           <Grid item xs={12} sm={6} md={3}>
             <StatCard title="Total Tasks" value={stats.total} icon={<AssignmentRounded />} color="#3B8FF3" trend="+12%" />
           </Grid>
@@ -151,16 +165,19 @@ const DeanDashboard = () => {
           </Grid>
         </Grid>
 
-      <Paper sx={{ borderRadius: '20px', overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
+      <Paper sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
         <Box sx={{ p: { xs: 2, md: 3 }, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, gap: 2, flexDirection: { xs: 'column', md: 'row' }, borderBottom: '1px solid', borderColor: 'divider' }}>
-          <Typography variant="h6">Recent Task Assignments</Typography>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 900 }}>Review Queue</Typography>
+            <Typography variant="body2" color="text.secondary">Recent assignments and HOD submissions awaiting action.</Typography>
+          </Box>
           <Box sx={{ display: 'flex', gap: 1.5, width: { xs: '100%', md: 'auto' } }}>
             <Box sx={{
               display: 'flex',
               alignItems: 'center',
               bgcolor: 'background.default',
               px: 2, py: 1,
-              borderRadius: '10px',
+              borderRadius: 2,
               border: '1px solid',
               borderColor: 'divider',
               width: { xs: '100%', sm: '250px' },
@@ -174,7 +191,7 @@ const DeanDashboard = () => {
                 sx={{ fontSize: '0.9rem', width: '100%' }}
               />
             </Box>
-            <IconButton sx={{ bgcolor: 'background.default', borderRadius: '10px', border: '1px solid', borderColor: 'divider' }}>
+            <IconButton sx={{ bgcolor: 'background.default', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
               <FilterListRounded />
             </IconButton>
           </Box>
@@ -193,7 +210,7 @@ const DeanDashboard = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {tasks.length > 0 ? tasks.map((task) => (
+              {filteredTasks.length > 0 ? filteredTasks.map((task) => (
                 <TableRow key={task.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>

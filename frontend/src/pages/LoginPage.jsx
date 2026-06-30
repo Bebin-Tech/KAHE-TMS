@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { redirectPathForUser, saveRoleSession } from '../utils/session';
 import {
   Box,
   Button,
@@ -26,26 +27,8 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Redirect if already logged in
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (localStorage.getItem('access_token') && user.role) {
-      redirectByRole(user);
-    }
-  }, []);
-
   const redirectByRole = (user) => {
-    if (user.must_change_password) {
-      navigate('/change-password');
-      return;
-    }
-    const routes = {
-      'DEAN': '/dean-dashboard',
-      'HOD': '/hod-dashboard',
-      'FACULTY': '/faculty-dashboard',
-      'ADMIN': '/admin-dashboard'
-    };
-    navigate(routes[user.role] || '/login');
+    navigate(redirectPathForUser(user));
   };
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
@@ -68,9 +51,7 @@ const LoginPage = () => {
 
       const { access, refresh, user } = response.data;
 
-      localStorage.setItem('access_token', access);
-      localStorage.setItem('refresh_token', refresh);
-      localStorage.setItem('user', JSON.stringify(user));
+      saveRoleSession({ access, refresh, user });
 
       console.log('Login successful:', user.username);
       redirectByRole(user);
