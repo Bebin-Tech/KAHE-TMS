@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
-from .models import User, Department, Task, SubTask, Submission, TaskReport, Notification
+from .models import User, Department, Task, SubTask, Submission, TaskReport, Notification, UserModulePermission
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
@@ -115,3 +115,18 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = '__all__'
+
+class UserModulePermissionSerializer(serializers.ModelSerializer):
+    module_label = serializers.CharField(source='get_module_display', read_only=True)
+    user_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserModulePermission
+        fields = (
+            'id', 'user', 'user_name', 'module', 'module_label',
+            'can_view', 'can_edit', 'can_delete', 'can_access', 'updated_at'
+        )
+        read_only_fields = ('updated_at',)
+
+    def get_user_name(self, obj):
+        return obj.user.get_full_name() or obj.user.username

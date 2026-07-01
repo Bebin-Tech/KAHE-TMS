@@ -4,10 +4,11 @@ from rest_framework.decorators import action
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.db.models import Count, Q
 from django.utils import timezone
-from .models import User, Department, Task, SubTask, Submission, TaskReport, Notification
+from .models import User, Department, Task, SubTask, Submission, TaskReport, Notification, UserModulePermission
 from .serializers import (
     UserSerializer, CreateUserSerializer, DepartmentSerializer, TaskSerializer, 
     SubTaskSerializer, SubmissionSerializer, TaskReportSerializer, NotificationSerializer,
+    UserModulePermissionSerializer,
     MyTokenObtainPairSerializer
 )
 
@@ -667,3 +668,69 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Notification.objects.filter(user=self.request.user)
+
+
+class UserModulePermissionViewSet(viewsets.ModelViewSet):
+    queryset = UserModulePermission.objects.select_related('user')
+    serializer_class = UserModulePermissionSerializer
+    permission_classes = [permissions.IsAuthenticated, IsAdminRole]
+
+    def get_permissions(self):
+        if self.action in ['mine']:
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAuthenticated(), IsAdminRole()]
+
+    def get_queryset(self):
+        queryset = self.queryset
+        user_id = self.request.query_params.get('user')
+        if user_id:
+            queryset = queryset.filter(user_id=user_id)
+        return queryset
+
+    @action(detail=False, methods=['get'], url_path='modules')
+    def modules(self, request):
+        return Response([
+            {'key': key, 'label': label}
+            for key, label in UserModulePermission.MODULE_CHOICES
+        ])
+
+    @action(detail=False, methods=['get'], url_path='mine')
+    def mine(self, request):
+        queryset = self.queryset.filter(user=request.user)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'], url_path='bulk_save')
+    def bulk_save(self, request):
+        user_id = request.data.get('user')
+        permissions_data = request.data.get('permissions', [])
+
+        if not user_id:
+            return Response({'error': 'User is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = User.objects.filter(id=user_id, is_active=True).first()
+        if not user:
+            return Response({'error': 'Selected user was not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        valid_modules = {key for key, _ in UserModulePermission.MODULE_CHOICES}
+        saved_permissions = []
+
+        for item in permissions_data:
+            module = item.get('module')
+            if module not in valid_modules:
+                continue
+
+            permission, _ = UserModulePermission.objects.update_or_create(
+                user=user,
+                module=module,
+                defaults={
+                    'can_view': bool(item.get('can_view', False)),
+                    'can_edit': bool(item.get('can_edit', False)),
+                    'can_delete': bool(item.get('can_delete', False)),
+                    'can_access': bool(item.get('can_access', False)),
+                }
+            )
+            saved_permissions.append(permission)
+
+        serializer = self.get_serializer(saved_permissions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

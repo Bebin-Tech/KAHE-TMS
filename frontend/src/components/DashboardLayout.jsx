@@ -19,6 +19,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { clearRoleSession, getCurrentSession } from '../utils/session';
+import api from '../api/axios';
 
 const drawerWidth = 292;
 
@@ -28,6 +29,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const [open, setOpen] = useState(!isMobile);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [pressedPath, setPressedPath] = useState('');
+  const [modulePermissions, setModulePermissions] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
   const currentSession = getCurrentSession();
@@ -36,6 +38,26 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   useEffect(() => {
     setOpen(!isMobile);
   }, [isMobile]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchModulePermissions = async () => {
+      if (!user.id) return;
+
+      try {
+        const response = await api.get('user-module-permissions/mine/');
+        if (isMounted) setModulePermissions(response.data || []);
+      } catch (err) {
+        if (isMounted) setModulePermissions([]);
+      }
+    };
+
+    fetchModulePermissions();
+    return () => {
+      isMounted = false;
+    };
+  }, [user.id]);
 
   const handleDrawerToggle = () => setOpen(!open);
   const handleNavigate = (path) => {
@@ -53,18 +75,22 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   };
 
   const menuItems = [
-    { text: 'Dashboard', icon: <DashboardOutlined />, path: `/${user.role?.toLowerCase()}-dashboard` },
+    { text: 'Dashboard', icon: <DashboardOutlined />, path: `/${user.role?.toLowerCase()}-dashboard`, module: 'dashboard' },
     ...(user.role === 'ADMIN' ? [
-      { text: 'Department', icon: <BusinessOutlined />, path: '/department-management' }
+      { text: 'Department', icon: <BusinessOutlined />, path: '/department-management', module: 'department_management' }
     ] : []),
-    { text: 'Task', icon: <AssignmentOutlined />, path: '/tasks' },
-    { text: 'Completed Task', icon: <AssignmentTurnedInOutlined />, path: '/completed-tasks' },
-    { text: 'Report', icon: <AssessmentOutlined />, path: '/reports' },
+    { text: 'Task', icon: <AssignmentOutlined />, path: '/tasks', module: 'tasks' },
+    { text: 'Completed Task', icon: <AssignmentTurnedInOutlined />, path: '/completed-tasks', module: 'completed_tasks' },
+    { text: 'Report', icon: <AssessmentOutlined />, path: '/reports', module: 'reports' },
     ...(user.role === 'ADMIN' ? [
-      { text: 'User', icon: <PeopleOutlined />, path: '/user-management' }
+      { text: 'User', icon: <PeopleOutlined />, path: '/user-management', module: 'user_management' }
     ] : []),
-    { text: 'Settings', icon: <SettingsOutlined />, path: '/settings' },
-  ];
+    { text: 'Settings', icon: <SettingsOutlined />, path: '/settings', module: 'settings' },
+  ].filter((item) => {
+    if (modulePermissions.length === 0) return true;
+    const permission = modulePermissions.find((row) => row.module === item.module);
+    return !permission || permission.can_access;
+  });
 
   const roleLabel = user.role ? user.role.replace('_', ' ') : 'Member';
   const loginLabel = user.full_name || roleLabel;

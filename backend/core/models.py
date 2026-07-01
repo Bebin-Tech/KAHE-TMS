@@ -127,6 +127,33 @@ class TaskReport(models.Model):
     def __str__(self):
         return f"{self.task.title} - {self.user} - {self.status}"
 
+class UserModulePermission(models.Model):
+    MODULE_CHOICES = (
+        ('dashboard', 'Dashboard'),
+        ('tasks', 'Tasks'),
+        ('completed_tasks', 'Completed Tasks'),
+        ('reports', 'Reports'),
+        ('settings', 'Settings'),
+        ('user_management', 'User Management'),
+        ('department_management', 'Department Management'),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='module_permissions')
+    module = models.CharField(max_length=40, choices=MODULE_CHOICES)
+    can_view = models.BooleanField(default=False)
+    can_edit = models.BooleanField(default=False)
+    can_delete = models.BooleanField(default=False)
+    can_access = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+    objects = models.Manager()
+
+    class Meta:
+        unique_together = ('user', 'module')
+        ordering = ['user__username', 'module']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.module}"
+
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     message = models.TextField()

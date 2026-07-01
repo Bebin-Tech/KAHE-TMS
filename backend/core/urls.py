@@ -2,7 +2,8 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     UserViewSet, TaskViewSet, SubTaskViewSet, 
-    SubmissionViewSet, TaskReportViewSet, DepartmentViewSet, NotificationViewSet
+    SubmissionViewSet, TaskReportViewSet, DepartmentViewSet, NotificationViewSet,
+    UserModulePermissionViewSet
 )
 
 router = DefaultRouter()
@@ -13,6 +14,7 @@ router.register(r'submissions', SubmissionViewSet)
 router.register(r'reports', TaskReportViewSet)
 router.register(r'departments', DepartmentViewSet)
 router.register(r'notifications', NotificationViewSet)
+router.register(r'user-module-permissions', UserModulePermissionViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
