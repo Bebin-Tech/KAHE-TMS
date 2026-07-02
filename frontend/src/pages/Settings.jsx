@@ -25,6 +25,7 @@ import {
 } from '@mui/material';
 import {
   AdminPanelSettingsRounded,
+  CheckCircleRounded,
   LockPersonRounded,
   SaveRounded,
   SecurityRounded,
@@ -62,6 +63,25 @@ const createPermissionRow = (module) => ({
 const getUserLabel = (user) => {
   const name = `${user.first_name || ''} ${user.last_name || ''}`.trim();
   return name || user.username;
+};
+
+const checkedThumbIcon = encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#237dba" d="M9.55 17.2 4.9 12.55l1.4-1.4 3.25 3.25 8.15-8.15 1.4 1.4z"/></svg>'
+);
+
+const permissionSwitchSx = {
+  '& .MuiSwitch-thumb': {
+    position: 'relative',
+  },
+  '& .MuiSwitch-switchBase.Mui-checked .MuiSwitch-thumb::before': {
+    content: '""',
+    position: 'absolute',
+    inset: 3,
+    backgroundImage: `url("data:image/svg+xml,${checkedThumbIcon}")`,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center',
+    backgroundSize: '16px 16px',
+  },
 };
 
 const Settings = () => {
@@ -294,8 +314,8 @@ const Settings = () => {
                     <TableRow key={row.module} hover>
                       <TableCell>
                         <Stack direction="row" spacing={1.5} alignItems="center">
-                          <Avatar sx={{ width: 34, height: 34, bgcolor: '#ececf1', color: '#1E1E2C' }}>
-                            <AdminPanelSettingsRounded fontSize="small" />
+                          <Avatar sx={{ width: 34, height: 34, bgcolor: row.can_access ? '#e8f7f6' : '#ececf1', color: row.can_access ? '#1f7f79' : '#1E1E2C' }}>
+                            {row.can_access ? <CheckCircleRounded fontSize="small" /> : <AdminPanelSettingsRounded fontSize="small" />}
                           </Avatar>
                           <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{row.module_label}</Typography>
                         </Stack>
@@ -307,6 +327,7 @@ const Settings = () => {
                             onChange={(event) => handlePermissionChange(row.module, field.key, event.target.checked)}
                             color={field.key === 'can_delete' ? 'error' : 'primary'}
                             inputProps={{ 'aria-label': `${field.label} ${row.module_label}` }}
+                            sx={permissionSwitchSx}
                           />
                         </TableCell>
                       ))}
