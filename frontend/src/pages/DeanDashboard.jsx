@@ -104,7 +104,7 @@ const DeanDashboard = () => {
     const configs = {
       'ASSIGNED': { color: '#237dba', bg: '#eaf3ff', label: 'Assigned' },
       'IN_PROGRESS': { color: '#8a6f00', bg: '#fff8d9', label: 'In Progress' },
-      'SUBMITTED_HOD': { color: '#1E1E2C', bg: '#ececf1', label: 'HOD Review' },
+      'SUBMITTED_HOD': { color: '#0f172a', bg: '#f1f5f9', label: 'HOD Review' },
       'HOD_APPROVED': { color: '#1f7f79', bg: '#e8f7f6', label: 'HOD Approved' },
       'SUBMITTED_DEAN': { color: '#237dba', bg: '#eaf3ff', label: 'Dean Review' },
       'DEAN_APPROVED': { color: '#1f7f79', bg: '#e8f7f6', label: 'Completed' },
@@ -152,10 +152,10 @@ const DeanDashboard = () => {
 
         <Grid container spacing={2.5} sx={{ mb: 3 }}>
           <Grid item xs={12} sm={6} md={3}>
-            <StatCard title="Total Tasks" value={stats.total} icon={<AssignmentRounded />} color="#3B8FF3" trend="+12%" />
+            <StatCard title="Total Tasks" value={stats.total} icon={<AssignmentRounded />} color="#2563eb" trend="+12%" />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <StatCard title="Pending Review" value={stats.pending} icon={<PendingActionsRounded />} color="#1E1E2C" trend="+3 today" />
+            <StatCard title="Pending Review" value={stats.pending} icon={<PendingActionsRounded />} color="#0f172a" trend="+3 today" />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <StatCard title="Completed" value={stats.completed} icon={<CheckCircleRounded />} color="#34B1AA" />

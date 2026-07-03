@@ -184,7 +184,7 @@ const DepartmentManagement = () => {
             <Button
               type="submit"
               variant="contained"
-              sx={{ bgcolor: '#3B8FF3', color: '#1E1E2C', '&:hover': { bgcolor: '#237dba', color: 'white' }, borderRadius: 1.5, px: 3, fontWeight: 700, textTransform: 'none' }}
+              sx={{ bgcolor: '#2563eb', color: 'white', '&:hover': { bgcolor: '#1d4ed8' }, borderRadius: 1.5, px: 3, fontWeight: 720, textTransform: 'none' }}
             >
               {editingDept ? 'Save Changes' : 'Create Department'}
             </Button>

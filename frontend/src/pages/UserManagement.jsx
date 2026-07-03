@@ -159,7 +159,7 @@ const UserManagement = () => {
 
   const getRoleColor = (role) => {
     switch (role) {
-      case 'ADMIN': return { bg: '#ececf1', color: '#1E1E2C' };
+      case 'ADMIN': return { bg: '#f1f5f9', color: '#0f172a' };
       case 'DEAN': return { bg: '#eaf3ff', color: '#237dba' };
       case 'HOD': return { bg: '#fff8d9', color: '#8a6f00' };
       case 'FACULTY': return { bg: '#e8f7f6', color: '#1f7f79' };
@@ -188,7 +188,7 @@ const UserManagement = () => {
             boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
             '&:focus-within': {
               bgcolor: 'white',
-              border: '1.5px solid #3B8FF3',
+              border: '1.5px solid #2563eb',
               boxShadow: '0 0 0 4px rgba(0, 102, 178, 0.1)'
             },
             transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
@@ -387,7 +387,7 @@ const UserManagement = () => {
             <Button
               type="submit"
               variant="contained"
-              sx={{ bgcolor: '#3B8FF3', color: '#1E1E2C', '&:hover': { bgcolor: '#237dba', color: 'white' }, borderRadius: 1.5, px: 3, fontWeight: 700, textTransform: 'none' }}
+              sx={{ bgcolor: '#2563eb', color: 'white', '&:hover': { bgcolor: '#1d4ed8' }, borderRadius: 1.5, px: 3, fontWeight: 720, textTransform: 'none' }}
             >
               {editingUser ? 'Update Account' : 'Create Account'}
             </Button>

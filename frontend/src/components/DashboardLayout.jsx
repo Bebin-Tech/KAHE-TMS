@@ -126,20 +126,20 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const loginLabel = user.full_name || roleLabel;
 
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#fafafa', color: '#1E1E2C', px: 2 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#ffffff', color: '#0f172a', px: 2 }}>
       <Box sx={{ py: 3, px: 1, display: 'flex', alignItems: 'center', gap: 1.4 }}>
         <Box
           sx={{
-            bgcolor: 'white',
+            bgcolor: '#f8fafc',
             p: 0.55,
-            borderRadius: '10px',
+            borderRadius: 2,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             width: 50,
             height: 50,
-            border: '1px solid #e5e2df',
-            boxShadow: '0 18px 38px -24px rgba(30,30,44,0.34)'
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 16px 34px -26px rgba(15,23,42,0.35)'
           }}
         >
           <Box
@@ -154,10 +154,10 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           />
         </Box>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h6" component="div" sx={{ fontWeight: 950, color: '#1E1E2C', letterSpacing: 0, lineHeight: 1.05 }}>
+          <Typography variant="h6" component="div" sx={{ fontWeight: 800, color: '#0f172a', letterSpacing: 0, lineHeight: 1.05 }}>
             KAHE TMS
           </Typography>
-          <Typography variant="caption" noWrap sx={{ display: 'block', color: '#667085', fontWeight: 700 }}>
+          <Typography variant="caption" noWrap sx={{ display: 'block', color: '#64748b', fontWeight: 680 }}>
             Task Management
           </Typography>
         </Box>
@@ -167,29 +167,29 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
         <Paper elevation={0} sx={{
           p: 1.75,
           bgcolor: '#ffffff',
-          border: '1px solid #e5e2df',
-          boxShadow: '0 16px 38px -30px rgba(30,30,44,0.45)',
-          borderRadius: '14px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 16px 34px -30px rgba(15,23,42,0.45)',
+          borderRadius: 2,
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,
-          color: '#1E1E2C'
+          color: '#0f172a'
         }}>
-          <Avatar sx={{ width: 40, height: 40, bgcolor: '#eaf3ff', color: '#237dba', fontWeight: 950 }}>
+          <Avatar sx={{ width: 40, height: 40, bgcolor: '#dbeafe', color: '#1d4ed8', fontWeight: 800 }}>
             {(user.username?.[0] || 'U').toUpperCase()}
           </Avatar>
           <Box sx={{ overflow: 'hidden' }}>
-            <Typography variant="subtitle2" noWrap sx={{ fontWeight: 800, color: '#1E1E2C' }}>
+            <Typography variant="subtitle2" noWrap sx={{ fontWeight: 760, color: '#0f172a' }}>
               {user.full_name || user.username || 'User'}
             </Typography>
-            <Typography variant="caption" sx={{ color: '#1f7f79', fontWeight: 700 }}>
+            <Typography variant="caption" sx={{ color: '#0f766e', fontWeight: 720 }}>
               {roleLabel}
             </Typography>
           </Box>
         </Paper>
       </Box>
 
-      <Typography variant="caption" sx={{ px: 1.5, mb: 1.25, color: '#667085', fontWeight: 950, letterSpacing: '0.08em' }}>
+      <Typography variant="caption" sx={{ px: 1.5, mb: 1.25, color: '#64748b', fontWeight: 800, letterSpacing: '0.08em' }}>
         WORKSPACE
       </Typography>
       <List sx={{ px: 0 }}>
@@ -209,13 +209,13 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 sx={{
                   position: 'relative',
                   overflow: 'hidden',
-                  borderRadius: '12px',
-                  bgcolor: isActive ? '#eaf3ff' : 'transparent',
-                  color: '#1E1E2C',
-                  border: isActive ? '1px solid rgba(59,143,243,0.36)' : '1px solid transparent',
+                  borderRadius: 2,
+                  bgcolor: isActive ? '#eff6ff' : 'transparent',
+                  color: '#0f172a',
+                  border: isActive ? '1px solid rgba(37,99,235,0.22)' : '1px solid transparent',
                   transform: isPressed ? 'translateX(5px) scale(0.985)' : 'translateX(0) scale(1)',
                   transition: 'transform 280ms cubic-bezier(0.22, 1, 0.36, 1), background-color 260ms ease, border-color 260ms ease, color 260ms ease, box-shadow 260ms ease',
-                  boxShadow: isActive ? '0 16px 34px -24px rgba(35,125,186,0.72)' : 'none',
+                  boxShadow: isActive ? '0 14px 28px -24px rgba(37,99,235,0.7)' : 'none',
                   '&::before': {
                     content: '""',
                     position: 'absolute',
@@ -224,7 +224,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                     width: isActive ? 4 : 0,
                     height: isActive ? 28 : 0,
                     borderRadius: '0 999px 999px 0',
-                    bgcolor: '#3B8FF3',
+                    bgcolor: '#2563eb',
                     transform: 'translateY(-50%)',
                     opacity: isActive ? 1 : 0,
                     transition: 'width 260ms ease, height 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease'
@@ -233,17 +233,17 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                     content: '""',
                     position: 'absolute',
                     inset: 0,
-                    background: 'linear-gradient(90deg, rgba(59,143,243,0), rgba(59,143,243,0.16), rgba(52,177,170,0.08), rgba(59,143,243,0))',
+                    background: 'linear-gradient(90deg, rgba(37,99,235,0), rgba(37,99,235,0.14), rgba(15,118,110,0.08), rgba(37,99,235,0))',
                     transform: isPressed ? 'translateX(115%)' : 'translateX(-115%)',
                     opacity: isPressed ? 1 : 0,
                     transition: 'transform 420ms cubic-bezier(0.16, 1, 0.3, 1), opacity 240ms ease',
                     pointerEvents: 'none'
                   },
                   '&:hover': {
-                    bgcolor: isActive ? '#eaf3ff' : '#ffffff',
+                    bgcolor: isActive ? '#eff6ff' : '#f8fafc',
                     transform: isPressed ? 'translateX(5px) scale(0.985)' : 'translateX(4px)',
-                    borderColor: isActive ? 'rgba(59,143,243,0.44)' : '#dfe5ec',
-                    boxShadow: '0 16px 34px -26px rgba(30,30,44,0.44)'
+                    borderColor: isActive ? 'rgba(37,99,235,0.35)' : '#dbe4ef',
+                    boxShadow: '0 16px 34px -28px rgba(15,23,42,0.42)'
                   },
                   '&:active': {
                     transform: 'translateX(5px) scale(0.985)'
@@ -252,7 +252,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 }}
               >
                 <ListItemIcon sx={{
-                  color: isActive ? '#237dba' : '#5f756f',
+                  color: isActive ? '#2563eb' : '#64748b',
                   minWidth: '42px',
                   transition: 'color 260ms ease, transform 300ms cubic-bezier(0.22, 1, 0.36, 1)',
                   transform: isPressed ? 'translateX(3px) scale(1.12)' : isActive ? 'scale(1.07)' : 'scale(1)',
@@ -264,7 +264,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   primary={item.text}
                   primaryTypographyProps={{
                     fontSize: '0.875rem',
-                    fontWeight: isActive ? 900 : 700,
+                    fontWeight: isActive ? 760 : 680,
                   }}
                 />
               </ListItemButton>
@@ -288,9 +288,9 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: drawerWidth,
-              borderRight: '1px solid #d7dce3',
-              bgcolor: '#fafafa',
-              boxShadow: '10px 0 28px -24px rgba(30,30,44,0.55)',
+              borderRight: '1px solid #e2e8f0',
+              bgcolor: '#ffffff',
+              boxShadow: '10px 0 30px -28px rgba(15,23,42,0.45)',
             },
           }}
         >
@@ -304,11 +304,11 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           position="sticky"
           elevation={0}
           sx={{
-            bgcolor: 'rgba(250, 250, 250, 0.94)',
+            bgcolor: 'rgba(255, 255, 255, 0.88)',
             backdropFilter: 'blur(14px)',
-            borderBottom: '1px solid #e5e2df',
+            borderBottom: '1px solid #e2e8f0',
             color: 'text.primary',
-            boxShadow: '0 14px 34px -32px rgba(30,30,44,0.5)'
+            boxShadow: '0 14px 34px -32px rgba(15,23,42,0.42)'
           }}
         >
           <Toolbar
@@ -335,7 +335,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 <Typography
                   variant="h6"
                   noWrap
-                  sx={{ fontWeight: 950, color: 'text.primary', lineHeight: 1.2, fontSize: { xs: '1rem', sm: '1.25rem' } }}
+                  sx={{ fontWeight: 800, color: 'text.primary', lineHeight: 1.2, fontSize: { xs: '1rem', sm: '1.25rem' } }}
                 >
                   {title || 'Dashboard'}
                 </Typography>
@@ -348,9 +348,9 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 sx={{
                   px: { xs: 1.25, sm: 1.75 },
                   py: 0.9,
-                  border: '1px solid #c9ece8',
+                  border: '1px solid #ccfbf1',
                   borderRadius: 2,
-                  bgcolor: '#e8f7f6',
+                  bgcolor: '#f0fdfa',
                   display: 'flex',
                   alignItems: 'center',
                   minHeight: 42,
@@ -361,7 +361,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 <Typography
                   variant="body2"
                   noWrap
-                  sx={{ color: '#1f7f79', fontWeight: 800, maxWidth: { xs: '100%', sm: 240 } }}
+                  sx={{ color: '#0f766e', fontWeight: 760, maxWidth: { xs: '100%', sm: 240 } }}
                 >
                   Logged in: {loginLabel}
                 </Typography>

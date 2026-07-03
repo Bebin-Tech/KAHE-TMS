@@ -53,9 +53,29 @@ const ChangePassword = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f6f6f7', p: 2 }}>
-      <Paper elevation={0} sx={{ p: { xs: 4, md: 6 }, width: '100%', maxWidth: 450, borderRadius: '40px', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)' }}>
-        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1, color: '#1e293b' }}>Security Update</Typography>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        bgcolor: '#f4f7fb',
+        background: 'linear-gradient(135deg, #f8fafc 0%, #eef6ff 48%, #f4f7fb 100%)',
+        p: 2
+      }}
+    >
+      <Paper
+        elevation={0}
+        sx={{
+          p: { xs: 3, md: 5 },
+          width: '100%',
+          maxWidth: 460,
+          borderRadius: 3,
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 26px 70px -48px rgba(15,23,42,0.55)'
+        }}
+      >
+        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1, color: '#0f172a' }}>Security Update</Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 4, lineHeight: 1.5 }}>
           For your security, you must change your password before continuing.
         </Typography>
@@ -66,7 +86,7 @@ const ChangePassword = () => {
             variant="filled"
             sx={{
               mb: 4,
-              borderRadius: '12px',
+              borderRadius: 2,
               bgcolor: '#fff1f2',
               color: '#991b1b',
               border: '1px solid #fecaca',
@@ -82,32 +102,25 @@ const ChangePassword = () => {
             fullWidth label="Current Password" type="password" required
             variant="outlined"
             value={oldPassword} onChange={(e) => setOldPassword(e.target.value)}
-            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
           />
           <TextField
             fullWidth label="New Password" type="password" required
             variant="outlined"
             value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
-            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
           />
           <TextField
             fullWidth label="Confirm New Password" type="password" required
             variant="outlined"
             value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
           />
           <Button
             type="submit" variant="contained" size="large"
             disabled={loading}
             sx={{
               mt: 2,
-              py: 2,
+              py: 1.5,
               fontWeight: 800,
-              borderRadius: '12px',
-              bgcolor: '#3B8FF3',
-              color: '#1E1E2C',
-              '&:hover': { bgcolor: '#237dba', color: 'white' },
-              textTransform: 'none',
+              color: '#ffffff',
               fontSize: '1.1rem'
             }}
           >

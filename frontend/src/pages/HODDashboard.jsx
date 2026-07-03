@@ -147,10 +147,10 @@ const HODDashboard = () => {
 
       <Grid container spacing={2.5} sx={{ mb: 3 }}>
         <Grid item xs={12} md={4}>
-          <StatCard title="Assigned Tasks" value={stats.assigned} icon={<AssignmentRounded />} color="#3B8FF3" />
+          <StatCard title="Assigned Tasks" value={stats.assigned} icon={<AssignmentRounded />} color="#2563eb" />
         </Grid>
         <Grid item xs={12} md={4}>
-          <StatCard title="Sub-Tasks Active" value={activeSubtasks} icon={<GroupWorkRounded />} color="#1E1E2C" />
+          <StatCard title="Sub-Tasks Active" value={activeSubtasks} icon={<GroupWorkRounded />} color="#0f172a" />
         </Grid>
         <Grid item xs={12} md={4}>
           <StatCard title="Pending Review" value={stats.pendingReview} icon={<FactCheckRounded />} color="#34B1AA" />

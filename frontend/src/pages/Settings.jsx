@@ -314,7 +314,7 @@ const Settings = () => {
                     <TableRow key={row.module} hover>
                       <TableCell>
                         <Stack direction="row" spacing={1.5} alignItems="center">
-                          <Avatar sx={{ width: 34, height: 34, bgcolor: row.can_access ? '#e8f7f6' : '#ececf1', color: row.can_access ? '#1f7f79' : '#1E1E2C' }}>
+                          <Avatar sx={{ width: 34, height: 34, bgcolor: row.can_access ? '#ccfbf1' : '#f1f5f9', color: row.can_access ? '#0f766e' : '#0f172a' }}>
                             {row.can_access ? <CheckCircleRounded fontSize="small" /> : <AdminPanelSettingsRounded fontSize="small" />}
                           </Avatar>
                           <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{row.module_label}</Typography>

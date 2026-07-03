@@ -32,7 +32,7 @@ const statusConfig = {
   DEAN_APPROVED: { label: 'Approved', color: '#1f7f79', bg: '#e8f7f6' },
   ASSIGNED: { label: 'Assigned', color: '#237dba', bg: '#eaf3ff' },
   IN_PROGRESS: { label: 'In Progress', color: '#8a6f00', bg: '#fff8d9' },
-  SUBMITTED_HOD: { label: 'HOD Review', color: '#1E1E2C', bg: '#ececf1' },
+  SUBMITTED_HOD: { label: 'HOD Review', color: '#0f172a', bg: '#f1f5f9' },
   SUBMITTED_DEAN: { label: 'Dean Review', color: '#237dba', bg: '#eaf3ff' },
   REJECTED_DEAN: { label: 'Rejected', color: '#c2413b', bg: '#fff0ef' },
   CANCELLED: { label: 'Cancelled', color: '#c2413b', bg: '#fff0ef' }
@@ -111,7 +111,7 @@ const AdminDashboard = () => {
       value: taskTotals.completed,
       helper: `${taskTotals.completionRate}% completion rate`,
       icon: <AssignmentTurnedInOutlined />,
-      color: '#1E1E2C',
+      color: '#0f172a',
       bg: '#ececf1'
     },
     {
@@ -156,7 +156,7 @@ const AdminDashboard = () => {
               <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 980, mx: 'auto', textAlign: 'center' }}>
                 <Typography
                   variant="h3"
-                  sx={{ mb: 1, fontSize: { xs: '1.55rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1.12, fontWeight: 950, color: '#102033' }}
+                  sx={{ mb: 1, fontSize: { xs: '1.55rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1.12, fontWeight: 800, color: '#0f172a' }}
                 >
                   Karpagam Academy of Higher Education - Workflow
                 </Typography>
@@ -210,8 +210,8 @@ const AdminDashboard = () => {
                 </Avatar>
                 <TrendingUpRounded sx={{ color: '#98a2b3', fontSize: 20 }} />
               </Box>
-              <Typography variant="h4" sx={{ mb: 0.5, fontWeight: 950 }}>{card.value}</Typography>
-              <Typography variant="subtitle2" sx={{ fontWeight: 950, color: 'text.primary' }}>{card.title}</Typography>
+              <Typography variant="h4" sx={{ mb: 0.5, fontWeight: 800 }}>{card.value}</Typography>
+              <Typography variant="subtitle2" sx={{ fontWeight: 760, color: 'text.primary' }}>{card.title}</Typography>
               <Typography variant="body2" color="text.secondary">{card.helper}</Typography>
             </Card>
           </Grid>

@@ -72,7 +72,7 @@ const CompletedTasks = () => {
                 </TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <VerifiedUserRounded sx={{ color: '#3B8FF3', fontSize: '1rem' }} />
+                    <VerifiedUserRounded sx={{ color: '#2563eb', fontSize: '1rem' }} />
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>{task.created_by_name} (Dean)</Typography>
                   </Box>
                 </TableCell>

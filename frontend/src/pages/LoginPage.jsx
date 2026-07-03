@@ -73,11 +73,24 @@ const LoginPage = () => {
   };
 
   return (
-    <Box className="min-h-screen flex flex-col items-center justify-center p-4" sx={{ bgcolor: '#ECEFF1', py: { xs: 3, sm: 4 } }}>
+    <Box
+      className="min-h-screen flex flex-col items-center justify-center p-4"
+      sx={{
+        bgcolor: '#f4f7fb',
+        py: { xs: 3, sm: 4 },
+        background: 'linear-gradient(135deg, #f8fafc 0%, #eef6ff 48%, #f4f7fb 100%)'
+      }}
+    >
       <Paper
         elevation={0}
-        className="w-full max-w-[400px] p-8 rounded-[20px] flex flex-col items-center shadow-sm bg-white"
-        sx={{ p: { xs: 3, sm: 4 }, mx: 'auto' }}
+        className="w-full max-w-[400px] flex flex-col items-center bg-white"
+        sx={{
+          p: { xs: 3, sm: 4 },
+          mx: 'auto',
+          borderRadius: 3,
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 26px 70px -48px rgba(15,23,42,0.55)'
+        }}
       >
         {/* Logo */}
         <div className="mb-6 flex flex-col items-center text-center">
@@ -92,10 +105,10 @@ const LoginPage = () => {
               objectFit: 'contain'
             }}
           />
-          <Typography variant="h5" sx={{ fontWeight: 800, color: '#1E1E2C', mb: 1, letterSpacing: '0.5px' }}>
+          <Typography variant="h5" sx={{ fontWeight: 800, color: '#0f172a', mb: 0.75 }}>
             KAHE TMS
           </Typography>
-          <Typography variant="body2" className="text-gray-500 mt-1">
+          <Typography variant="body2" sx={{ color: '#64748b' }}>
             Sign in to your account
           </Typography>
         </div>
@@ -106,11 +119,10 @@ const LoginPage = () => {
             className="w-full mb-6 py-2 px-4 rounded-md text-center border animate-pulse"
             sx={{
               backgroundColor: '#fff1f2',
-              color: '#f43f5e',
+              color: '#b91c1c',
               borderColor: '#fee2e2',
               fontSize: '0.875rem',
-              fontWeight: '700',
-              letterSpacing: '0.05em'
+              fontWeight: 720
             }}
           >
             {error}
@@ -129,17 +141,10 @@ const LoginPage = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <PersonOutline sx={{ color: '#3B8FF3', fontSize: 20 }} />
+                  <PersonOutline sx={{ color: '#2563eb', fontSize: 20 }} />
                 </InputAdornment>
               ),
-              className: "rounded-[10px] bg-white"
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                '& fieldset': { borderColor: '#e2e8f0' },
-                '&:hover fieldset': { borderColor: '#3B8FF3' },
-                '&.Mui-focused fieldset': { borderColor: '#3B8FF3' },
-              }
+              className: "bg-white"
             }}
           />
 
@@ -154,7 +159,7 @@ const LoginPage = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <LockOutlined sx={{ color: '#3B8FF3', fontSize: 20 }} />
+                  <LockOutlined sx={{ color: '#2563eb', fontSize: 20 }} />
                 </InputAdornment>
               ),
               endAdornment: (
@@ -169,14 +174,7 @@ const LoginPage = () => {
                   </IconButton>
                 </InputAdornment>
               ),
-              className: "rounded-[10px] bg-[#eaf3ff]"
-            }}
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                '& fieldset': { borderColor: '#e2e8f0' },
-                '&:hover fieldset': { borderColor: '#3B8FF3' },
-                '&.Mui-focused fieldset': { borderColor: '#3B8FF3' },
-              }
+              className: "bg-white"
             }}
           />
 
@@ -186,13 +184,10 @@ const LoginPage = () => {
             size="large"
             type="submit"
             disabled={loading}
-            className="text-white py-3 rounded-lg normal-case font-bold text-lg mt-4 shadow-none"
+            className="text-white py-3 normal-case font-bold text-lg mt-4"
             sx={{
               mt: 2,
-              textTransform: 'none',
-              backgroundColor: '#3B8FF3',
-              color: '#1E1E2C',
-              '&:hover': { backgroundColor: '#237dba', color: 'white' },
+              color: '#ffffff',
               height: '52px'
             }}
           >

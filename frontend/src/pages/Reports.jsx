@@ -176,7 +176,7 @@ const Reports = () => {
             boxShadow: '0 14px 30px -24px rgba(35,125,186,0.72)',
             '&:hover': {
               bgcolor: '#eaf3ff',
-              borderColor: '#3B8FF3'
+              borderColor: '#2563eb'
             }
           }}
         >

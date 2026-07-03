@@ -3,20 +3,32 @@
 @tailwind utilities;
 
 :root {
-  font-family: Aptos, 'Segoe UI', Inter, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: Aptos, Inter, 'Segoe UI Variable', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #0f172a;
+  background-color: #f4f7fb;
 }
 
 body {
   margin: 0;
-  font-family: Aptos, 'Segoe UI', Inter, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: Aptos, Inter, 'Segoe UI Variable', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f6f6f7;
+  background-color: #f4f7fb;
   overflow-x: hidden;
+  text-rendering: optimizeLegibility;
 }
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
 button,
@@ -24,6 +36,10 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
 }
 
 img,
@@ -37,6 +53,11 @@ canvas {
   max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+.MuiPaper-root,
+.MuiCard-root {
+  background-clip: padding-box;
 }
 
 @media (max-width: 600px) {
