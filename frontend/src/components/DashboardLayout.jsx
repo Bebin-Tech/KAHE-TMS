@@ -22,6 +22,29 @@ import { clearRoleSession, getCurrentSession } from '../utils/session';
 import api from '../api/axios';
 
 const drawerWidth = 292;
+const permissionCachePrefix = 'tms_module_permissions';
+
+const getPermissionCacheKey = (user) => (
+  user?.id && user?.role ? `${permissionCachePrefix}:${user.id}:${user.role}` : ''
+);
+
+const readCachedPermissions = (user) => {
+  const key = getPermissionCacheKey(user);
+  if (!key) return null;
+
+  try {
+    const cached = sessionStorage.getItem(key);
+    return cached ? JSON.parse(cached) : null;
+  } catch (err) {
+    return null;
+  }
+};
+
+const writeCachedPermissions = (user, permissions) => {
+  const key = getPermissionCacheKey(user);
+  if (!key) return;
+  sessionStorage.setItem(key, JSON.stringify(permissions));
+};
 
 const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const theme = useTheme();
@@ -29,11 +52,11 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const [open, setOpen] = useState(!isMobile);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [pressedPath, setPressedPath] = useState('');
-  const [modulePermissions, setModulePermissions] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
   const currentSession = getCurrentSession();
   const user = currentSession?.session?.user || {};
+  const [modulePermissions, setModulePermissions] = useState(() => readCachedPermissions(user));
 
   useEffect(() => {
     setOpen(!isMobile);
@@ -45,9 +68,14 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     const fetchModulePermissions = async () => {
       if (!user.id) return;
 
+      const cachedPermissions = readCachedPermissions(user);
+      setModulePermissions(cachedPermissions);
+
       try {
         const response = await api.get('user-module-permissions/mine/');
-        if (isMounted) setModulePermissions(response.data || []);
+        const permissions = response.data || [];
+        writeCachedPermissions(user, permissions);
+        if (isMounted) setModulePermissions(permissions);
       } catch (err) {
         if (isMounted) setModulePermissions([]);
       }
@@ -57,7 +85,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     return () => {
       isMounted = false;
     };
-  }, [user.id]);
+  }, [user.id, user.role]);
 
   const handleDrawerToggle = () => setOpen(!open);
   const handleNavigate = (path) => {
@@ -74,7 +102,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     navigate('/login');
   };
 
-  const menuItems = [
+  const baseMenuItems = [
     { text: 'Dashboard', icon: <DashboardOutlined />, path: `/${user.role?.toLowerCase()}-dashboard`, module: 'dashboard' },
     ...(user.role === 'ADMIN' ? [
       { text: 'Department', icon: <BusinessOutlined />, path: '/department-management', module: 'department_management' }
@@ -86,7 +114,9 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
       { text: 'User', icon: <PeopleOutlined />, path: '/user-management', module: 'user_management' }
     ] : []),
     { text: 'Settings', icon: <SettingsOutlined />, path: '/settings', module: 'settings' },
-  ].filter((item) => {
+  ];
+
+  const menuItems = modulePermissions === null ? [] : baseMenuItems.filter((item) => {
     if (modulePermissions.length === 0) return true;
     const permission = modulePermissions.find((row) => row.module === item.module);
     return !permission || permission.can_access;
@@ -163,6 +193,11 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
         WORKSPACE
       </Typography>
       <List sx={{ px: 0 }}>
+        {modulePermissions === null && (
+          <Typography variant="caption" sx={{ display: 'block', px: 1.5, py: 1, color: '#667085', fontWeight: 700 }}>
+            Loading access...
+          </Typography>
+        )}
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
           const isPressed = pressedPath === item.path;
