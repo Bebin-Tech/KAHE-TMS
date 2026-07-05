@@ -637,13 +637,10 @@ class TaskReportViewSet(viewsets.ReadOnlyModelViewSet):
 
     @action(detail=False, methods=['post'])
     def refresh(self, request):
-        """Clear only report-module data for the current report scope."""
+        """Return the latest report-module data for the current report scope."""
         queryset = self.filter_queryset(self.get_queryset())
-        deleted_count, _ = queryset.delete()
-        refreshed_queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(refreshed_queryset, many=True)
+        serializer = self.get_serializer(queryset, many=True)
         return Response({
-            'deleted_count': deleted_count,
             'results': serializer.data
         }, status=status.HTTP_200_OK)
 
