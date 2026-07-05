@@ -7,6 +7,7 @@ import {
   Button,
   Card,
   Chip,
+  CircularProgress,
   Grid,
   LinearProgress,
   Paper,
@@ -22,6 +23,7 @@ import {
   BusinessOutlined,
   PeopleOutlined,
   PriorityHighRounded,
+  RefreshRounded,
   TrendingUpRounded
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -54,13 +56,23 @@ const AdminDashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const fetchDashboard = useCallback(async ({ forceRefresh = false } = {}) => {
+    const requestConfig = forceRefresh
+      ? {
+          params: { refresh: Date.now() },
+          headers: {
+            'Cache-Control': 'no-cache',
+            Pragma: 'no-cache',
+          },
+        }
+      : undefined;
 
-  const fetchDashboard = useCallback(async () => {
     try {
       const [statsRes, taskRes, deptRes] = await Promise.allSettled([
-        api.get('users/stats/'),
-        api.get('tasks/'),
-        api.get('departments/')
+        api.get('users/stats/', requestConfig),
+        api.get('tasks/', requestConfig),
+        api.get('departments/', requestConfig)
       ]);
 
       if (statsRes.status === 'fulfilled') setStats(statsRes.value.data);
@@ -78,6 +90,15 @@ const AdminDashboard = () => {
   }, [fetchDashboard]);
 
   useAutoRefresh(fetchDashboard, 5000);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await fetchDashboard({ forceRefresh: true });
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const taskTotals = useMemo(() => {
     const completed = tasks.filter((task) => ['COMPLETED', 'DEAN_APPROVED'].includes(task.status)).length || stats.completed_tasks || 0;
@@ -179,6 +200,15 @@ const AdminDashboard = () => {
                     sx={{ bgcolor: 'white', borderColor: '#237dba', boxShadow: '0 12px 28px -22px rgba(35,125,186,0.8)' }}
                   >
                     View Reports
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={refreshing ? <CircularProgress size={18} color="inherit" /> : <RefreshRounded />}
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    sx={{ minWidth: 150, boxShadow: '0 12px 28px -22px rgba(37,99,235,0.9)' }}
+                  >
+                    {refreshing ? 'Refreshing' : 'Refresh'}
                   </Button>
                 </Stack>
               </Box>
