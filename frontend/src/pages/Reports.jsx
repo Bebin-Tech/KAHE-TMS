@@ -26,6 +26,8 @@ const actionOptions = [
   'Started task work',
   'Worked on sub-task',
   'Submitted work to HOD',
+  'Faculty work approved by HOD',
+  'Faculty work rejected by HOD',
   'Reviewed and approved faculty submission',
   'Reviewed and rejected faculty submission',
   'Submitted task to Dean',

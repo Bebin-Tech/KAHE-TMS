@@ -4,7 +4,8 @@ import {
   IconButton, ListItem, ListItemButton,
   ListItemIcon, ListItemText, Avatar,
   useTheme, useMediaQuery, Paper,
-  Dialog, DialogTitle, DialogContent, DialogActions, Button
+  Dialog, DialogTitle, DialogContent, DialogActions, Button,
+  Collapse
 } from '@mui/material';
 import {
   DashboardOutlined,
@@ -15,7 +16,10 @@ import {
   BusinessOutlined,
   Menu as MenuIcon,
   ExitToAppRounded,
-  AssignmentTurnedInOutlined
+  AssignmentTurnedInOutlined,
+  HomeOutlined,
+  ExpandLessRounded,
+  ExpandMoreRounded
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { clearRoleSession, getCurrentSession } from '../utils/session';
@@ -50,6 +54,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [open, setOpen] = useState(!isMobile);
+  const [homeOpen, setHomeOpen] = useState(true);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [pressedPath, setPressedPath] = useState('');
   const navigate = useNavigate();
@@ -88,6 +93,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   }, [user.id, user.role]);
 
   const handleDrawerToggle = () => setOpen(!open);
+  const handleHomeToggle = () => setHomeOpen((current) => !current);
   const handleNavigate = (path) => {
     setPressedPath(path);
     navigate(path);
@@ -124,6 +130,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
 
   const roleLabel = user.role ? user.role.replace('_', ' ') : 'Member';
   const loginLabel = user.full_name || roleLabel;
+  const isHomeActive = menuItems.some((item) => location.pathname === item.path);
 
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#ffffff', color: '#0f172a', px: 2 }}>
@@ -198,11 +205,66 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             Loading access...
           </Typography>
         )}
+        {modulePermissions !== null && (
+          <ListItem disablePadding sx={{ mb: 0.75 }}>
+            <ListItemButton
+              disableRipple
+              onClick={handleHomeToggle}
+              sx={{
+                position: 'relative',
+                overflow: 'hidden',
+                borderRadius: 2,
+                bgcolor: isHomeActive ? '#eff6ff' : 'transparent',
+                color: '#0f172a',
+                border: isHomeActive ? '1px solid rgba(37,99,235,0.22)' : '1px solid transparent',
+                transition: 'background-color 260ms ease, border-color 260ms ease, box-shadow 260ms ease',
+                boxShadow: isHomeActive ? '0 14px 28px -24px rgba(37,99,235,0.7)' : 'none',
+                '&::before': {
+                  content: '""',
+                  position: 'absolute',
+                  left: 0,
+                  top: '50%',
+                  width: isHomeActive ? 4 : 0,
+                  height: isHomeActive ? 28 : 0,
+                  borderRadius: '0 999px 999px 0',
+                  bgcolor: '#2563eb',
+                  transform: 'translateY(-50%)',
+                  opacity: isHomeActive ? 1 : 0,
+                  transition: 'width 260ms ease, height 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease'
+                },
+                '&:hover': {
+                  bgcolor: isHomeActive ? '#eff6ff' : '#f8fafc',
+                  borderColor: isHomeActive ? 'rgba(37,99,235,0.35)' : '#dbe4ef',
+                  boxShadow: '0 16px 34px -28px rgba(15,23,42,0.42)'
+                },
+                py: 1.25
+              }}
+            >
+              <ListItemIcon sx={{
+                color: isHomeActive ? '#2563eb' : '#64748b',
+                minWidth: '42px',
+                '& svg': { fontSize: '1.35rem' }
+              }}>
+                <HomeOutlined />
+              </ListItemIcon>
+              <ListItemText
+                primary="Home"
+                primaryTypographyProps={{
+                  fontSize: '0.875rem',
+                  fontWeight: isHomeActive ? 760 : 680,
+                }}
+              />
+              {homeOpen ? <ExpandLessRounded sx={{ color: '#64748b' }} /> : <ExpandMoreRounded sx={{ color: '#64748b' }} />}
+            </ListItemButton>
+          </ListItem>
+        )}
+        <Collapse in={homeOpen && modulePermissions !== null} timeout="auto" unmountOnExit>
+          <List disablePadding sx={{ pl: 1.5, ml: 1, borderLeft: '1px solid #e2e8f0' }}>
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
           const isPressed = pressedPath === item.path;
           return (
-            <ListItem key={item.text} disablePadding sx={{ mb: 0.75 }}>
+            <ListItem key={item.text} disablePadding sx={{ mb: 0.6 }}>
               <ListItemButton
                 disableRipple
                 onClick={() => handleNavigate(item.path)}
@@ -241,19 +303,20 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   },
                   '&:hover': {
                     bgcolor: isActive ? '#eff6ff' : '#f8fafc',
-                    transform: isPressed ? 'translateX(5px) scale(0.985)' : 'translateX(4px)',
+                    transform: isPressed ? 'translateX(4px) scale(0.985)' : 'translateX(3px)',
                     borderColor: isActive ? 'rgba(37,99,235,0.35)' : '#dbe4ef',
                     boxShadow: '0 16px 34px -28px rgba(15,23,42,0.42)'
                   },
                   '&:active': {
                     transform: 'translateX(5px) scale(0.985)'
                   },
-                  py: 1.25
+                  py: 1.05,
+                  pl: 1.25
                 }}
               >
                 <ListItemIcon sx={{
                   color: isActive ? '#2563eb' : '#64748b',
-                  minWidth: '42px',
+                  minWidth: '38px',
                   transition: 'color 260ms ease, transform 300ms cubic-bezier(0.22, 1, 0.36, 1)',
                   transform: isPressed ? 'translateX(3px) scale(1.12)' : isActive ? 'scale(1.07)' : 'scale(1)',
                   '& svg': { fontSize: '1.35rem' }
@@ -263,7 +326,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 <ListItemText
                   primary={item.text}
                   primaryTypographyProps={{
-                    fontSize: '0.875rem',
+                    fontSize: '0.835rem',
                     fontWeight: isActive ? 760 : 680,
                   }}
                 />
@@ -271,6 +334,8 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             </ListItem>
           );
         })}
+          </List>
+        </Collapse>
       </List>
     </Box>
   );

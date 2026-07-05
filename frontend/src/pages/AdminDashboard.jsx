@@ -145,13 +145,15 @@ const AdminDashboard = () => {
     }
   ];
 
-  const departmentLoad = (departments.length ? departments : [{ id: 'general', name: 'General Administration', block_name: 'Central Operations' }])
-    .slice(0, 5)
-    .map((department, index) => {
+  const departmentLoad = departments
+    .map((department) => {
       const deptTasks = tasks.filter((task) => task.department_name === department.name).length;
-      const load = tasks.length ? Math.max(12, Math.round((deptTasks / Math.max(tasks.length, 1)) * 100)) : [84, 72, 61, 48, 36][index] || 30;
-      return { ...department, load, taskCount: deptTasks || Math.max(1, Math.round(load / 12)) };
-    });
+      const load = tasks.length ? Math.round((deptTasks / Math.max(tasks.length, 1)) * 100) : 0;
+      return { ...department, load, taskCount: deptTasks };
+    })
+    .filter((department) => department.taskCount > 0)
+    .sort((a, b) => b.taskCount - a.taskCount)
+    .slice(0, 5);
 
   const recentTasks = tasks.slice(0, 5);
 
@@ -290,20 +292,30 @@ const AdminDashboard = () => {
               </Box>
               <BusinessOutlined sx={{ color: 'text.secondary' }} />
             </Box>
-            <Stack spacing={2.5}>
-              {departmentLoad.map((department) => (
-                <Box key={department.id || department.name}>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.75 }}>
-                    <Box>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{department.name}</Typography>
-                      <Typography variant="caption" color="text.secondary">{department.block_name || 'Campus block not assigned'}</Typography>
+            {departmentLoad.length > 0 ? (
+              <Stack spacing={2.5}>
+                {departmentLoad.map((department) => (
+                  <Box key={department.id || department.name}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.75 }}>
+                      <Box>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{department.name}</Typography>
+                        <Typography variant="caption" color="text.secondary">{department.block_name || 'Campus block not assigned'}</Typography>
+                      </Box>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{department.taskCount} tasks</Typography>
                     </Box>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{department.taskCount} tasks</Typography>
+                    <LinearProgress variant="determinate" value={department.load} sx={{ height: 8, borderRadius: 5, bgcolor: '#e7edf5' }} />
                   </Box>
-                  <LinearProgress variant="determinate" value={department.load} sx={{ height: 8, borderRadius: 5, bgcolor: '#e7edf5' }} />
-                </Box>
-              ))}
-            </Stack>
+                ))}
+              </Stack>
+            ) : (
+              <Box sx={{ py: 6, textAlign: 'center', borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                <BusinessOutlined sx={{ color: 'text.secondary', fontSize: 42, mb: 1 }} />
+                <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>No workload data available</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Department workload will appear when active tasks are assigned.
+                </Typography>
+              </Box>
+            )}
           </Paper>
         </Grid>
 
