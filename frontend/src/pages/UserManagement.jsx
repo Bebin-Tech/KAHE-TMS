@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import {
-  Paper, Typography, Box, Button, Grid,
+  Typography, Box, Button, Grid,
   Chip, IconButton, Dialog, DialogTitle, DialogContent,
   DialogActions, TextField, MenuItem, Switch, FormControlLabel,
-  Card, Avatar, Divider, Tooltip, Pagination, PaginationItem
+  Card, Avatar, Divider, Tooltip, Pagination, PaginationItem,
+  Snackbar, Alert
 } from '@mui/material';
 import {
   EditRounded,
@@ -17,12 +18,16 @@ import {
   SearchRounded
 } from '@mui/icons-material';
 import api from '../api/axios';
+import { formatApiError } from '../utils/errors';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [open, setOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [resetUserId, setResetUserId] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
@@ -31,6 +36,10 @@ const UserManagement = () => {
   });
 
   const roles = ['FACULTY', 'HOD', 'DEAN', 'ADMIN'];
+
+  const showMessage = (message, severity = 'success') => {
+    setNotification({ open: true, severity, message });
+  };
 
   const fetchData = async () => {
     try {
@@ -101,25 +110,8 @@ const UserManagement = () => {
       fetchData();
     } catch (err) {
       console.error('Error saving user:', err);
-      const errorData = err.response?.data;
-
-      // Handle session expiration specifically
       if (err.response?.status === 401) return;
-
-      let errorMessage = 'Failed to save user account.';
-      if (errorData) {
-        if (typeof errorData === 'object') {
-          errorMessage = Object.entries(errorData)
-            .map(([key, value]) => {
-              const val = Array.isArray(value) ? value.join(', ') : (typeof value === 'object' ? JSON.stringify(value) : value);
-              return `${key}: ${val}`;
-            })
-            .join('\n');
-        } else {
-          errorMessage = errorData;
-        }
-      }
-      alert(errorMessage);
+      showMessage(formatApiError(err, 'Failed to save user account.'), 'error');
     }
   };
 
@@ -130,21 +122,29 @@ const UserManagement = () => {
         fetchData();
       } catch (err) {
         console.error('Error deleting user:', err);
-        alert('Failed to delete user.');
+        showMessage('Failed to delete user.', 'error');
       }
     }
   };
 
-  const handleResetPassword = async (id) => {
-    const newPass = prompt("Enter new temporary password (min 6 characters):");
-    if (!newPass) return;
-    if (newPass.length < 6) return alert("Password too short.");
+  const openResetPasswordDialog = (id) => {
+    setResetUserId(id);
+    setNewPassword('');
+  };
+
+  const handleResetPassword = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      showMessage('Temporary password must be at least 6 characters.', 'error');
+      return;
+    }
 
     try {
-      await api.post(`users/${id}/reset_password/`, { new_password: newPass });
-      alert("Password reset successfully.");
+      await api.post(`users/${resetUserId}/reset_password/`, { new_password: newPassword });
+      setResetUserId(null);
+      setNewPassword('');
+      showMessage('Password reset successfully.');
     } catch (err) {
-      alert("Failed to reset password.");
+      showMessage(formatApiError(err, 'Failed to reset password.'), 'error');
     }
   };
 
@@ -320,7 +320,7 @@ const UserManagement = () => {
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Reset Password">
-                      <IconButton onClick={() => handleResetPassword(user.id)} size="small" sx={{ color: '#f59e0b' }}>
+                      <IconButton onClick={() => openResetPasswordDialog(user.id)} size="small" sx={{ color: '#f59e0b' }}>
                         <LockResetRounded fontSize="small" />
                       </IconButton>
                     </Tooltip>
@@ -394,6 +394,44 @@ const UserManagement = () => {
           </DialogActions>
         </form>
       </Dialog>
+
+      <Dialog open={Boolean(resetUserId)} onClose={() => setResetUserId(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
+        <DialogTitle sx={{ fontWeight: 800 }}>Reset Password</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Enter a temporary password. The user can change it after signing in.
+          </Typography>
+          <TextField
+            autoFocus
+            fullWidth
+            label="Temporary Password"
+            type="password"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            helperText="Minimum 6 characters"
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setResetUserId(null)} color="inherit">Cancel</Button>
+          <Button variant="contained" onClick={handleResetPassword}>Reset Password</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={4000}
+        onClose={() => setNotification((current) => ({ ...current, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          severity={notification.severity}
+          variant="filled"
+          onClose={() => setNotification((current) => ({ ...current, open: false }))}
+          sx={{ whiteSpace: 'pre-line' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </DashboardLayout>
   );
 };

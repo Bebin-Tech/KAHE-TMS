@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import CreateSubTaskDialog from '../components/CreateSubTaskDialog';
 import ReviewSubmissionDialog from '../components/ReviewSubmissionDialog';
@@ -7,16 +7,17 @@ import {
   Grid, Paper, Typography, Box, Button,
   Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Chip, IconButton,
-  Card, CardContent, LinearProgress, Avatar,
+  Card, CardContent, Avatar,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField,
   CircularProgress,
   Tooltip,
-  Stack
+  Stack,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import {
   AssignmentRounded,
   AddRounded,
-  MoreVertRounded,
   VisibilityRounded,
   GroupWorkRounded,
   TimerRounded,
@@ -24,6 +25,7 @@ import {
   RateReviewRounded
 } from '@mui/icons-material';
 import api from '../api/axios';
+import { formatApiError } from '../utils/errors';
 
 const HODDashboard = () => {
   const [tasks, setTasks] = useState([]);
@@ -36,6 +38,7 @@ const HODDashboard = () => {
   const [submitTask, setSubmitTask] = useState(null);
   const [submissionContent, setSubmissionContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
 
   const fetchData = useCallback(async () => {
     try {
@@ -92,7 +95,11 @@ const HODDashboard = () => {
       fetchData();
     } catch (err) {
       console.error('Error submitting task to Dean:', err);
-      alert(err.response?.data?.error || 'Failed to submit task to Dean.');
+      setNotification({
+        open: true,
+        severity: 'error',
+        message: formatApiError(err, 'Failed to submit task to Dean.'),
+      });
     } finally {
       setSubmitting(false);
     }
@@ -106,6 +113,17 @@ const HODDashboard = () => {
   };
 
   const activeSubtasks = subtasks.filter((subtask) => !['APPROVED_HOD', 'COMPLETED'].includes(subtask.status)).length;
+  const recentActivity = useMemo(() => (
+    [...subtasks]
+      .sort((first, second) => second.id - first.id)
+      .slice(0, 3)
+      .map((subtask) => ({
+        id: subtask.id,
+        title: subtask.title,
+        faculty: subtask.assigned_to_name || 'Faculty',
+        status: subtask.status?.replaceAll('_', ' ') || 'Assigned',
+      }))
+  ), [subtasks]);
 
   const StatCard = ({ title, value, icon, color }) => (
     <Card sx={{ borderRadius: 2, overflow: 'hidden', height: '100%', boxShadow: '0 16px 38px -32px rgba(30,30,44,0.5)' }}>
@@ -301,19 +319,23 @@ const HODDashboard = () => {
           <Paper sx={{ borderRadius: 2, p: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
             <Typography variant="h6" sx={{ mb: 3, fontWeight: 900 }}>Department Activity</Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {[1, 2, 3].map((i) => (
-                <Box key={i} sx={{ display: 'flex', gap: 2 }}>
-                  <Avatar sx={{ bgcolor: 'secondary.light' }}>F</Avatar>
+              {recentActivity.length > 0 ? recentActivity.map((activity) => (
+                <Box key={activity.id} sx={{ display: 'flex', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: 'secondary.light' }}>{activity.faculty[0]}</Avatar>
                   <Box>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>Faculty {i} updated progress</Typography>
-                    <Typography variant="caption" color="text.secondary">"Finalizing the report for CS Dept Task"</Typography>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{activity.faculty}</Typography>
+                    <Typography variant="caption" color="text.secondary">{activity.title}</Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5, color: 'text.secondary' }}>
                       <TimerRounded sx={{ fontSize: '0.9rem', mr: 0.5 }} />
-                      <Typography variant="caption">2 hours ago</Typography>
+                      <Typography variant="caption">{activity.status}</Typography>
                     </Box>
                   </Box>
                 </Box>
-              ))}
+              )) : (
+                <Typography variant="body2" color="text.secondary">
+                  No faculty activity recorded yet.
+                </Typography>
+              )}
             </Box>
             <Button fullWidth variant="text" sx={{ mt: 4 }}>See All Activity</Button>
           </Paper>
@@ -370,6 +392,21 @@ const HODDashboard = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={4000}
+        onClose={() => setNotification((current) => ({ ...current, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          severity={notification.severity}
+          variant="filled"
+          onClose={() => setNotification((current) => ({ ...current, open: false }))}
+          sx={{ whiteSpace: 'pre-line' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </DashboardLayout>
   );
 };

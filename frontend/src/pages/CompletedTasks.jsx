@@ -5,47 +5,78 @@ import {
   Box,
   Chip,
   CircularProgress,
+  IconButton,
   Paper,
+  Snackbar,
+  Alert,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography
 } from '@mui/material';
 import {
   AssignmentTurnedInOutlined,
   CheckCircleRounded,
+  DeleteRounded,
   FactCheckRounded,
   VerifiedUserRounded
 } from '@mui/icons-material';
 import api from '../api/axios';
+import { getCurrentSession } from '../utils/session';
+import { formatApiError } from '../utils/errors';
 
 const CompletedTasks = () => {
   const [completedMainTasks, setCompletedMainTasks] = useState([]);
   const [approvedFacultyTasks, setApprovedFacultyTasks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
+
+  const session = getCurrentSession();
+  const userRole = session?.role;
+  const isManagement = ['ADMIN', 'DEAN', 'HOD'].includes(userRole);
+
+  const fetchCompletedTasks = async () => {
+    setLoading(true);
+    try {
+      const [taskRes, subtaskRes] = await Promise.all([
+        api.get('tasks/'),
+        api.get('subtasks/')
+      ]);
+
+      setCompletedMainTasks(taskRes.data.filter((task) => ['COMPLETED', 'DEAN_APPROVED'].includes(task.status)));
+      setApprovedFacultyTasks(subtaskRes.data.filter((task) => ['APPROVED_HOD', 'COMPLETED'].includes(task.status)));
+    } catch (err) {
+      console.error('Error fetching completed tasks:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchCompletedTasks = async () => {
-      setLoading(true);
-      try {
-        const [taskRes, subtaskRes] = await Promise.all([
-          api.get('tasks/'),
-          api.get('subtasks/')
-        ]);
-
-        setCompletedMainTasks(taskRes.data.filter((task) => ['COMPLETED', 'DEAN_APPROVED'].includes(task.status)));
-        setApprovedFacultyTasks(subtaskRes.data.filter((task) => ['APPROVED_HOD', 'COMPLETED'].includes(task.status)));
-      } catch (err) {
-        console.error('Error fetching completed tasks:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchCompletedTasks();
   }, []);
+
+  const handleDelete = async (id, type) => {
+    const taskId = id.split('-')[1];
+    if (!window.confirm(`Are you sure you want to delete this ${type.toLowerCase()} from your view?`)) return;
+
+    try {
+      const endpoint = type === 'Main Task' ? `tasks/${taskId}/` : `subtasks/${taskId}/`;
+      await api.delete(endpoint);
+      await fetchCompletedTasks();
+    } catch (err) {
+      console.error('Error deleting task:', err);
+      setNotification({
+        open: true,
+        severity: 'error',
+        message: formatApiError(err, 'Failed to delete record from view.'),
+      });
+    }
+  };
 
   const archiveRows = useMemo(() => [
     ...completedMainTasks.map((task) => ({
@@ -90,12 +121,13 @@ const CompletedTasks = () => {
               <TableCell>Completed By</TableCell>
               <TableCell>Approved By</TableCell>
               <TableCell>Status</TableCell>
+              {isManagement && <TableCell align="right">Actions</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                <TableCell colSpan={isManagement ? 6 : 5} align="center" sx={{ py: 8 }}>
                   <CircularProgress />
                 </TableCell>
               </TableRow>
@@ -137,10 +169,23 @@ const CompletedTasks = () => {
                     sx={{ bgcolor: '#ccfbf1', color: '#0f766e', fontWeight: 800, borderRadius: 1 }}
                   />
                 </TableCell>
+                {isManagement && (
+                  <TableCell align="right">
+                    <Tooltip title="Delete from view">
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDelete(task.id, task.type)}
+                      >
+                        <DeleteRounded fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                )}
               </TableRow>
             )) : (
               <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 10 }}>
+                <TableCell colSpan={isManagement ? 6 : 5} align="center" sx={{ py: 10 }}>
                   <Typography variant="body1" color="text.secondary">No completed tasks archived yet.</Typography>
                 </TableCell>
               </TableRow>
@@ -148,6 +193,21 @@ const CompletedTasks = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={4000}
+        onClose={() => setNotification((current) => ({ ...current, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          severity={notification.severity}
+          variant="filled"
+          onClose={() => setNotification((current) => ({ ...current, open: false }))}
+          sx={{ whiteSpace: 'pre-line' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </DashboardLayout>
   );
 };

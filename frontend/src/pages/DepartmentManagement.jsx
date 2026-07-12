@@ -4,10 +4,11 @@ import {
   Paper, Typography, Box, Button, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow,
   IconButton, Dialog, DialogTitle, DialogContent,
-  DialogActions, TextField, Grid, Avatar
+  DialogActions, TextField, Grid, Avatar, Snackbar, Alert
 } from '@mui/material';
 import { AddRounded, EditRounded, DeleteRounded, BusinessRounded } from '@mui/icons-material';
 import api from '../api/axios';
+import { formatApiError } from '../utils/errors';
 
 const DepartmentManagement = () => {
   const [departments, setDepartments] = useState([]);
@@ -17,6 +18,11 @@ const DepartmentManagement = () => {
     name: '',
     block_name: ''
   });
+  const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
+
+  const showMessage = (message, severity = 'success') => {
+    setNotification({ open: true, severity, message });
+  };
 
   const fetchData = async () => {
     try {
@@ -60,25 +66,8 @@ const DepartmentManagement = () => {
       fetchData();
     } catch (err) {
       console.error('Error saving department:', err);
-      const errorData = err.response?.data;
-
-      // Handle session expiration specifically
       if (err.response?.status === 401) return;
-
-      let errorMessage = 'Failed to save department.';
-      if (errorData) {
-        if (typeof errorData === 'object') {
-          errorMessage = Object.entries(errorData)
-            .map(([key, value]) => {
-              const val = Array.isArray(value) ? value.join(', ') : (typeof value === 'object' ? JSON.stringify(value) : value);
-              return `${key}: ${val}`;
-            })
-            .join('\n');
-        } else {
-          errorMessage = errorData;
-        }
-      }
-      alert(errorMessage);
+      showMessage(formatApiError(err, 'Failed to save department.'), 'error');
     }
   };
 
@@ -89,6 +78,7 @@ const DepartmentManagement = () => {
         fetchData();
       } catch (err) {
         console.error('Error deleting department:', err);
+        showMessage(formatApiError(err, 'Failed to delete department.'), 'error');
       }
     }
   };
@@ -191,6 +181,22 @@ const DepartmentManagement = () => {
           </DialogActions>
         </form>
       </Dialog>
+
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={4000}
+        onClose={() => setNotification((current) => ({ ...current, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          severity={notification.severity}
+          variant="filled"
+          onClose={() => setNotification((current) => ({ ...current, open: false }))}
+          sx={{ whiteSpace: 'pre-line' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </DashboardLayout>
   );
 };

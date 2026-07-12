@@ -2,16 +2,18 @@ import React, { useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, Box, Typography, CircularProgress,
-  IconButton, Paper
+  IconButton, Paper, Alert
 } from '@mui/material';
-import { CloudUploadRounded, CloseRounded, InsertDriveFileRounded } from '@mui/icons-material';
+import { CloudUploadRounded, CloseRounded } from '@mui/icons-material';
 import api from '../api/axios';
 import { getCurrentSession } from '../utils/session';
+import { formatApiError } from '../utils/errors';
 
 const SubmitWorkDialog = ({ open, onClose, subtaskId, onSubmitted }) => {
   const [loading, setLoading] = useState(false);
   const [content, setContent] = useState('');
   const [file, setFile] = useState(null);
+  const [error, setError] = useState('');
 
   const handleFileChange = (e) => {
     if (e.target.files[0]) {
@@ -22,6 +24,7 @@ const SubmitWorkDialog = ({ open, onClose, subtaskId, onSubmitted }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
 
     const formData = new FormData();
     formData.append('subtask', subtaskId);
@@ -45,7 +48,7 @@ const SubmitWorkDialog = ({ open, onClose, subtaskId, onSubmitted }) => {
       setFile(null);
     } catch (err) {
       console.error('Submission error:', err);
-      alert('Failed to submit work. Please try again.');
+      setError(formatApiError(err, 'Failed to submit work. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -62,6 +65,11 @@ const SubmitWorkDialog = ({ open, onClose, subtaskId, onSubmitted }) => {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             Upload your final reports or documents and add a summary of the work completed.
           </Typography>
+          {error && (
+            <Alert severity="error" variant="outlined" sx={{ mb: 3, borderRadius: 2 }}>
+              {error}
+            </Alert>
+          )}
 
           <TextField
             fullWidth label="Submission Comments" multiline rows={4} required

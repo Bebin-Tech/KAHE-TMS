@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, MenuItem, Grid, CircularProgress
@@ -17,13 +17,7 @@ const CreateSubTaskDialog = ({ open, onClose, taskId, taskDepartmentId, onTaskCr
     deadline: '',
   });
 
-  useEffect(() => {
-    if (open) {
-      fetchFaculty();
-    }
-  }, [open, taskDepartmentId]);
-
-  const fetchFaculty = async () => {
+  const fetchFaculty = useCallback(async () => {
     if (!taskDepartmentId) {
       setFaculty([]);
       setShowingAllFaculty(false);
@@ -50,7 +44,13 @@ const CreateSubTaskDialog = ({ open, onClose, taskId, taskDepartmentId, onTaskCr
     } finally {
       setFetching(false);
     }
-  };
+  }, [taskDepartmentId]);
+
+  useEffect(() => {
+    if (open) {
+      fetchFaculty();
+    }
+  }, [fetchFaculty, open]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

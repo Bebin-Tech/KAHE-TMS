@@ -22,7 +22,6 @@ import {
   AssignmentOutlined,
   AssignmentRounded,
   AssignmentTurnedInOutlined,
-  CheckCircleRounded,
   ErrorOutlineRounded,
   PendingActionsRounded,
   PriorityHighRounded,

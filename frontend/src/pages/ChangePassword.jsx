@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Paper, Typography, TextField, Button, Alert, CircularProgress } from '@mui/material';
 import api from '../api/axios';
 import { getCurrentSession, redirectPathForUser, updateRoleUser } from '../utils/session';
+import { formatApiError } from '../utils/errors';
 
 const ChangePassword = () => {
   const [oldPassword, setOldPassword] = useState('');
@@ -23,12 +24,10 @@ const ChangePassword = () => {
     setError('');
 
     try {
-      const response = await api.post('users/change_password/', {
+      await api.post('users/change_password/', {
         old_password: oldPassword,
         new_password: newPassword
       });
-
-      console.log('Password update successful:', response.data.message);
 
       // Update stored user info for only the active role session.
       const current = getCurrentSession();
@@ -41,12 +40,7 @@ const ChangePassword = () => {
       navigate(redirectPathForUser(user));
     } catch (err) {
       console.error('Password Update Error:', err);
-      if (!err.response) {
-        setError('Network error: Could not reach the server. Please ensure the backend is running.');
-      } else {
-        const msg = err.response?.data?.error || err.response?.data?.detail || `Error ${err.response?.status}: Failed to update password.`;
-        setError(msg);
-      }
+      setError(formatApiError(err, 'Failed to update password.'));
     } finally {
       setLoading(false);
     }

@@ -60,6 +60,8 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const location = useLocation();
   const currentSession = getCurrentSession();
   const user = currentSession?.session?.user || {};
+  const userId = user.id;
+  const userRole = user.role;
   const [modulePermissions, setModulePermissions] = useState(() => readCachedPermissions(user));
 
   useEffect(() => {
@@ -70,15 +72,16 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     let isMounted = true;
 
     const fetchModulePermissions = async () => {
-      if (!user.id) return;
+      if (!userId) return;
 
-      const cachedPermissions = readCachedPermissions(user);
+      const cacheUser = { id: userId, role: userRole };
+      const cachedPermissions = readCachedPermissions(cacheUser);
       if (cachedPermissions) setModulePermissions(cachedPermissions);
 
       try {
         const response = await api.get('user-module-permissions/mine/');
         const permissions = response.data || [];
-        writeCachedPermissions(user, permissions);
+        writeCachedPermissions(cacheUser, permissions);
         if (isMounted) setModulePermissions(permissions);
       } catch (err) {
         if (isMounted) setModulePermissions([]);
@@ -89,7 +92,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     return () => {
       isMounted = false;
     };
-  }, [user.id, user.role]);
+  }, [userId, userRole]);
 
   const handleDrawerToggle = () => setOpen(!open);
   const handleHomeToggle = () => setHomeOpen((current) => !current);

@@ -5,7 +5,7 @@ import TaskSuccessDialog from '../components/TaskSuccessDialog';
 import {
   Paper, Typography, Box, Button, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow,
-  Chip, IconButton, Tooltip, Avatar, Grid
+  Chip, IconButton, Tooltip, Avatar, Snackbar, Alert
 } from '@mui/material';
 import {
   AddRounded,
@@ -18,13 +18,18 @@ import {
   CancelRounded
 } from '@mui/icons-material';
 import api from '../api/axios';
+import { formatApiError } from '../utils/errors';
 
 const Tasks = () => {
   const [tasks, setTasks] = useState([]);
   const [open, setOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [successTask, setSuccessTask] = useState(null);
+  const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
+
+  const showMessage = (message, severity = 'success') => {
+    setNotification({ open: true, severity, message });
+  };
 
   const fetchData = async () => {
     try {
@@ -32,8 +37,6 @@ const Tasks = () => {
       setTasks(res.data);
     } catch (err) {
       console.error('Error fetching tasks:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -53,7 +56,7 @@ const Tasks = () => {
         fetchData();
       } catch (err) {
         console.error('Error deleting task:', err);
-        alert('Failed to delete task.');
+        showMessage(formatApiError(err, 'Failed to delete task.'), 'error');
       }
     }
   };
@@ -193,6 +196,21 @@ const Tasks = () => {
         onClose={() => setSuccessTask(null)}
         taskTitle={successTask?.title}
       />
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={4000}
+        onClose={() => setNotification((current) => ({ ...current, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          severity={notification.severity}
+          variant="filled"
+          onClose={() => setNotification((current) => ({ ...current, open: false }))}
+          sx={{ whiteSpace: 'pre-line' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </DashboardLayout>
   );
 };

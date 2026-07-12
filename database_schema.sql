@@ -1,3 +1,4 @@
+-- Active: 1779794660115@@127.0.0.1@3306@mysql
 -- Database Schema for KAHE Task Management System
 
 CREATE DATABASE IF NOT EXISTS tms_db;

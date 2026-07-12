@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import {
   Typography, Box, Paper, Grid, TextField, MenuItem, Button,
@@ -77,15 +77,15 @@ const Reports = () => {
   const hodUsers = useMemo(() => users.filter((user) => user.role === 'HOD'), [users]);
   const facultyUsers = useMemo(() => users.filter((user) => user.role === 'FACULTY'), [users]);
 
-  const buildParams = () => {
+  const buildParams = useCallback(() => {
     const params = {};
     Object.entries(filters).forEach(([key, value]) => {
       if (value) params[key] = value;
     });
     return params;
-  };
+  }, [filters]);
 
-  const fetchReports = async () => {
+  const fetchReports = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.get('reports/', { params: buildParams() });
@@ -95,7 +95,7 @@ const Reports = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [buildParams]);
 
   const fetchUsers = async () => {
     try {
@@ -125,7 +125,7 @@ const Reports = () => {
   useEffect(() => {
     fetchUsers();
     fetchReports();
-  }, []);
+  }, [fetchReports]);
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));

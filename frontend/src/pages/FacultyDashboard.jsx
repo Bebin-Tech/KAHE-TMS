@@ -4,7 +4,7 @@ import SubmitWorkDialog from '../components/SubmitWorkDialog';
 import useAutoRefresh from '../hooks/useAutoRefresh';
 import {
   Grid, Paper, Typography, Box, Button,
-  Chip, LinearProgress, CircularProgress, Alert, Stack, Avatar
+  Chip, LinearProgress, CircularProgress, Alert, Stack, Avatar, Snackbar
 } from '@mui/material';
 import {
   CloudUploadRounded,
@@ -14,12 +14,14 @@ import {
   PendingActionsRounded
 } from '@mui/icons-material';
 import api from '../api/axios';
+import { formatApiError } from '../utils/errors';
 
 const FacultyDashboard = () => {
   const [subtasks, setSubtasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
 
   const fetchData = useCallback(async () => {
     try {
@@ -49,7 +51,11 @@ const FacultyDashboard = () => {
       await api.post(`subtasks/${id}/update_progress/`, { progress: next });
       fetchData();
     } catch (err) {
-      alert("Failed to update progress");
+      setNotification({
+        open: true,
+        severity: 'error',
+        message: formatApiError(err, 'Failed to update progress.'),
+      });
     }
   };
 
@@ -160,6 +166,20 @@ const FacultyDashboard = () => {
         subtaskId={selectedTask?.id}
         onSubmitted={fetchData}
       />
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={4000}
+        onClose={() => setNotification((current) => ({ ...current, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          severity={notification.severity}
+          variant="filled"
+          onClose={() => setNotification((current) => ({ ...current, open: false }))}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </DashboardLayout>
   );
 };

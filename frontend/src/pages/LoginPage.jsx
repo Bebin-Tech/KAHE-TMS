@@ -52,8 +52,6 @@ const LoginPage = () => {
       const { access, refresh, user } = response.data;
 
       saveRoleSession({ access, refresh, user });
-
-      console.log('Login successful:', user.username);
       redirectByRole(user);
 
     } catch (err) {

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, Box, Typography, Divider,
-  Link, CircularProgress
+  CircularProgress
 } from '@mui/material';
 import { GetAppRounded } from '@mui/icons-material';
 import api from '../api/axios';
@@ -13,13 +13,7 @@ const ReviewSubmissionDialog = ({ open, onClose, task, onProcessed }) => {
   const [feedback, setFeedback] = useState('');
   const [processing, setProcessing] = useState(false);
 
-  useEffect(() => {
-    if (open && task) {
-      fetchSubmission();
-    }
-  }, [open, task]);
-
-  const fetchSubmission = async () => {
+  const fetchSubmission = useCallback(async () => {
     setLoading(true);
     try {
       // Fetch latest submission for this subtask or task
@@ -33,7 +27,13 @@ const ReviewSubmissionDialog = ({ open, onClose, task, onProcessed }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [task]);
+
+  useEffect(() => {
+    if (open && task) {
+      fetchSubmission();
+    }
+  }, [fetchSubmission, open, task]);
 
   const handleAction = async (action) => {
     setProcessing(true);

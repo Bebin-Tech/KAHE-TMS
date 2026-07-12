@@ -166,12 +166,16 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.filter(is_active=True)
     serializer_class = TaskSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
+        if user.role == 'FACULTY':
+            # Faculty see tasks assigned to them even if soft-deleted for management roles
+            return Task.objects.all().filter(subtasks__assigned_to=user).distinct()
+
+        # Admin, Dean, and HOD only see active tasks
         base_queryset = Task.objects.filter(is_active=True)
         if user.role == 'ADMIN':
             return base_queryset
@@ -179,8 +183,6 @@ class TaskViewSet(viewsets.ModelViewSet):
             return base_queryset.filter(created_by=user)
         elif user.role == 'HOD':
             return base_queryset.filter(Q(created_by=user) | Q(assigned_to_hod=user)).distinct()
-        elif user.role == 'FACULTY':
-            return base_queryset.filter(subtasks__assigned_to=user).distinct()
         return base_queryset
 
     def destroy(self, request, *args, **kwargs):
@@ -388,12 +390,15 @@ class TaskViewSet(viewsets.ModelViewSet):
 
 
 class SubTaskViewSet(viewsets.ModelViewSet):
-    queryset = SubTask.objects.filter(is_active=True)
     serializer_class = SubTaskSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
+        if user.role == 'FACULTY':
+            # Faculty sees their subtasks even if soft-deleted for management
+            return SubTask.objects.all().filter(assigned_to=user)
+
         base_queryset = SubTask.objects.filter(is_active=True)
         if user.role == 'ADMIN':
             return base_queryset
@@ -401,8 +406,6 @@ class SubTaskViewSet(viewsets.ModelViewSet):
             return base_queryset.filter(task__created_by=user)
         if user.role == 'HOD':
             return base_queryset.filter(Q(created_by=user) | Q(task__assigned_to_hod=user)).distinct()
-        if user.role == 'FACULTY':
-            return base_queryset.filter(assigned_to=user)
         return base_queryset.none()
 
     def destroy(self, request, *args, **kwargs):
