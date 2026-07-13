@@ -2,30 +2,48 @@ import React, { useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import {
   Avatar,
+  Alert,
   Box,
+  Button,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
   Paper,
+  Snackbar,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
+  Tooltip,
   Typography
 } from '@mui/material';
 import {
   AssignmentTurnedInOutlined,
   CheckCircleRounded,
+  DeleteRounded,
   FactCheckRounded,
   VerifiedUserRounded
 } from '@mui/icons-material';
 import api from '../api/axios';
+import { getCurrentSession } from '../utils/session';
+import { formatApiError } from '../utils/errors';
 
 const CompletedTasks = () => {
   const [completedMainTasks, setCompletedMainTasks] = useState([]);
   const [approvedFacultyTasks, setApprovedFacultyTasks] = useState([]);
+  const [modulePermission, setModulePermission] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
+
+  const currentRole = getCurrentSession()?.role;
+  const canDelete = currentRole === 'ADMIN' || Boolean(modulePermission?.can_access && modulePermission?.can_delete);
 
   const fetchCompletedTasks = async () => {
     setLoading(true);
@@ -44,9 +62,46 @@ const CompletedTasks = () => {
     }
   };
 
+  const fetchModulePermission = async () => {
+    try {
+      const response = await api.get('user-module-permissions/mine/');
+      const permission = response.data.find((row) => row.module === 'completed_tasks');
+      setModulePermission(permission || null);
+    } catch (err) {
+      console.error('Error fetching completed task permissions:', err);
+      setModulePermission(null);
+    }
+  };
+
   useEffect(() => {
     fetchCompletedTasks();
+    fetchModulePermission();
   }, []);
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+
+    const recordId = deleteTarget.id.split('-')[1];
+
+    try {
+      const endpoint = deleteTarget.type === 'Main Task' ? `tasks/${recordId}/` : `subtasks/${recordId}/`;
+      await api.delete(endpoint);
+      setNotification({
+        open: true,
+        severity: 'success',
+        message: `${deleteTarget.type} deleted successfully.`,
+      });
+      setDeleteTarget(null);
+      await fetchCompletedTasks();
+    } catch (err) {
+      console.error('Error deleting completed task:', err);
+      setNotification({
+        open: true,
+        severity: 'error',
+        message: formatApiError(err, 'Failed to delete completed task.'),
+      });
+    }
+  };
 
   const archiveRows = useMemo(() => [
     ...completedMainTasks.map((task) => ({
@@ -91,12 +146,13 @@ const CompletedTasks = () => {
               <TableCell>Completed By</TableCell>
               <TableCell>Approved By</TableCell>
               <TableCell>Status</TableCell>
+              {canDelete && <TableCell align="right">Actions</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                <TableCell colSpan={canDelete ? 6 : 5} align="center" sx={{ py: 8 }}>
                   <CircularProgress />
                 </TableCell>
               </TableRow>
@@ -138,10 +194,23 @@ const CompletedTasks = () => {
                     sx={{ bgcolor: '#ccfbf1', color: '#0f766e', fontWeight: 800, borderRadius: 1 }}
                   />
                 </TableCell>
+                {canDelete && (
+                  <TableCell align="right">
+                    <Tooltip title="Delete completed task">
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => setDeleteTarget(task)}
+                      >
+                        <DeleteRounded fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                )}
               </TableRow>
             )) : (
               <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 10 }}>
+                <TableCell colSpan={canDelete ? 6 : 5} align="center" sx={{ py: 10 }}>
                   <Typography variant="body1" color="text.secondary">No completed tasks archived yet.</Typography>
                 </TableCell>
               </TableRow>
@@ -149,6 +218,43 @@ const CompletedTasks = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 2 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 900 }}>Delete Completed Task</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            {`This will remove "${deleteTarget?.title || 'this task'}" from Completed Tasks.`}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, gap: 1 }}>
+          <Button onClick={() => setDeleteTarget(null)} color="inherit">
+            Cancel
+          </Button>
+          <Button onClick={handleDelete} color="error" variant="contained">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={4000}
+        onClose={() => setNotification((current) => ({ ...current, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          severity={notification.severity}
+          variant="filled"
+          onClose={() => setNotification((current) => ({ ...current, open: false }))}
+          sx={{ whiteSpace: 'pre-line' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </DashboardLayout>
   );
 };

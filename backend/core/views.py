@@ -604,7 +604,7 @@ class TaskReportViewSet(viewsets.ReadOnlyModelViewSet):
         queryset = self.queryset
 
         if user.role == 'DEAN':
-            queryset = queryset.filter(task__created_by=user)
+            queryset = queryset.filter(task__created_by=user, role__in=['HOD', 'FACULTY'])
         elif user.role == 'HOD':
             queryset = queryset.filter(task__assigned_to_hod=user)
         elif user.role == 'FACULTY':
