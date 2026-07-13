@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import { AssessmentRounded, FilterAltOffRounded, RefreshRounded, SearchRounded } from '@mui/icons-material';
 import api from '../api/axios';
+import { getCurrentSession } from '../utils/session';
 
 const statusOptions = [
   'ASSIGNED',
@@ -62,6 +63,8 @@ const Reports = () => {
   const [reports, setReports] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const currentRole = getCurrentSession()?.role;
+  const isDean = currentRole === 'DEAN';
   const [filters, setFilters] = useState({
     task_name: '',
     dean: '',
@@ -76,6 +79,10 @@ const Reports = () => {
   const deanUsers = useMemo(() => users.filter((user) => user.role === 'DEAN'), [users]);
   const hodUsers = useMemo(() => users.filter((user) => user.role === 'HOD'), [users]);
   const facultyUsers = useMemo(() => users.filter((user) => user.role === 'FACULTY'), [users]);
+
+  const visibleReports = useMemo(() => (
+    isDean ? reports.filter((report) => ['HOD', 'FACULTY'].includes(report.role)) : reports
+  ), [isDean, reports]);
 
   const buildParams = useCallback(() => {
     const params = {};
@@ -186,82 +193,84 @@ const Reports = () => {
         </Button>
       </Box>
 
-      <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, border: '1px solid #e5e2df', borderRadius: '12px' }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={3}>
-            <TextField
-              fullWidth
-              label="Task Name"
-              value={filters.task_name}
-              onChange={(e) => handleFilterChange('task_name', e.target.value)}
-            />
+      {!isDean && (
+        <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, border: '1px solid #e5e2df', borderRadius: '12px' }}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} md={3}>
+              <TextField
+                fullWidth
+                label="Task Name"
+                value={filters.task_name}
+                onChange={(e) => handleFilterChange('task_name', e.target.value)}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <TextField select fullWidth label="Dean" value={filters.dean} onChange={(e) => handleFilterChange('dean', e.target.value)}>
+                <MenuItem value="">All Deans</MenuItem>
+                {deanUsers.map(renderUserOption)}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <TextField select fullWidth label="HOD" value={filters.hod} onChange={(e) => handleFilterChange('hod', e.target.value)}>
+                <MenuItem value="">All HODs</MenuItem>
+                {hodUsers.map(renderUserOption)}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <TextField select fullWidth label="Faculty" value={filters.faculty} onChange={(e) => handleFilterChange('faculty', e.target.value)}>
+                <MenuItem value="">All Faculty</MenuItem>
+                {facultyUsers.map(renderUserOption)}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <TextField select fullWidth label="Status" value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)}>
+                <MenuItem value="">All Statuses</MenuItem>
+                {statusOptions.map((status) => (
+                  <MenuItem key={status} value={status}>{statusLabel(status)}</MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <TextField select fullWidth label="Action" value={filters.action} onChange={(e) => handleFilterChange('action', e.target.value)}>
+                <MenuItem value="">All Actions</MenuItem>
+                {actionOptions.map((action) => (
+                  <MenuItem key={action} value={action}>{action}</MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <TextField
+                fullWidth
+                label="Activity From"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                value={filters.date_from}
+                onChange={(e) => handleFilterChange('date_from', e.target.value)}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <TextField
+                fullWidth
+                label="Activity To"
+                type="date"
+                InputLabelProps={{ shrink: true }}
+                value={filters.date_to}
+                onChange={(e) => handleFilterChange('date_to', e.target.value)}
+              />
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                <Button fullWidth variant="contained" startIcon={<SearchRounded />} onClick={fetchReports}>
+                  Apply
+                </Button>
+                <Button fullWidth variant="outlined" startIcon={<FilterAltOffRounded />} onClick={clearFilters}>
+                  Clear
+                </Button>
+              </Stack>
+            </Grid>
           </Grid>
-          <Grid item xs={12} md={3}>
-            <TextField select fullWidth label="Dean" value={filters.dean} onChange={(e) => handleFilterChange('dean', e.target.value)}>
-              <MenuItem value="">All Deans</MenuItem>
-              {deanUsers.map(renderUserOption)}
-            </TextField>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <TextField select fullWidth label="HOD" value={filters.hod} onChange={(e) => handleFilterChange('hod', e.target.value)}>
-              <MenuItem value="">All HODs</MenuItem>
-              {hodUsers.map(renderUserOption)}
-            </TextField>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <TextField select fullWidth label="Faculty" value={filters.faculty} onChange={(e) => handleFilterChange('faculty', e.target.value)}>
-              <MenuItem value="">All Faculty</MenuItem>
-              {facultyUsers.map(renderUserOption)}
-            </TextField>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <TextField select fullWidth label="Status" value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)}>
-              <MenuItem value="">All Statuses</MenuItem>
-              {statusOptions.map((status) => (
-                <MenuItem key={status} value={status}>{statusLabel(status)}</MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <TextField select fullWidth label="Action" value={filters.action} onChange={(e) => handleFilterChange('action', e.target.value)}>
-              <MenuItem value="">All Actions</MenuItem>
-              {actionOptions.map((action) => (
-                <MenuItem key={action} value={action}>{action}</MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <TextField
-              fullWidth
-              label="Activity From"
-              type="date"
-              InputLabelProps={{ shrink: true }}
-              value={filters.date_from}
-              onChange={(e) => handleFilterChange('date_from', e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <TextField
-              fullWidth
-              label="Activity To"
-              type="date"
-              InputLabelProps={{ shrink: true }}
-              value={filters.date_to}
-              onChange={(e) => handleFilterChange('date_to', e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-              <Button fullWidth variant="contained" startIcon={<SearchRounded />} onClick={fetchReports}>
-                Apply
-              </Button>
-              <Button fullWidth variant="outlined" startIcon={<FilterAltOffRounded />} onClick={clearFilters}>
-                Clear
-              </Button>
-            </Stack>
-          </Grid>
-        </Grid>
-      </Paper>
+        </Paper>
+      )}
 
       <TableContainer component={Paper} sx={{ border: '1px solid #e5e2df', borderRadius: '12px' }}>
         <Table sx={{ minWidth: 1350 }}>
@@ -286,7 +295,7 @@ const Reports = () => {
                   <CircularProgress />
                 </TableCell>
               </TableRow>
-            ) : reports.length > 0 ? reports.map((report) => {
+            ) : visibleReports.length > 0 ? visibleReports.map((report) => {
               const color = getStatusColor(report.status);
               return (
                 <TableRow key={report.id} hover>
