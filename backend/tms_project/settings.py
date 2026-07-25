@@ -67,12 +67,30 @@ except ImportError:
 
 WSGI_APPLICATION = 'tms_project.wsgi.application'
 
+DB_ENGINE = os.environ.get('DB_ENGINE', '').lower()
+
 if dj_database_url and os.environ.get('DATABASE_URL'):
+    ssl_required = os.environ.get('DATABASE_SSL', 'True') == 'True'
     DATABASES = {
         'default': dj_database_url.config(
             conn_max_age=600,
-            ssl_require=True
+            ssl_require=ssl_required
         )
+    }
+elif DB_ENGINE == 'mysql' or os.environ.get('MYSQL_DATABASE'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('MYSQL_DATABASE', 'tms_db'),
+            'USER': os.environ.get('MYSQL_USER', 'root'),
+            'PASSWORD': os.environ.get('MYSQL_PASSWORD', ''),
+            'HOST': os.environ.get('MYSQL_HOST', '127.0.0.1'),
+            'PORT': os.environ.get('MYSQL_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }
     }
 else:
     DATABASES = {

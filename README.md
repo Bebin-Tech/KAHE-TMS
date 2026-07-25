@@ -202,8 +202,27 @@ DATABASE_URL=postgresql://user:password@host:port/database
 Notes:
 
 - If `DATABASE_URL` is not provided, the project uses local SQLite.
+- To use MySQL without `DATABASE_URL`, set the MySQL variables below.
 - For production, set `DEBUG=False`.
 - For production, replace wildcard hosts and open CORS settings with the exact frontend and backend domains.
+
+MySQL configuration:
+
+```env
+DB_ENGINE=mysql
+MYSQL_DATABASE=tms_db
+MYSQL_USER=root
+MYSQL_PASSWORD=your_mysql_password
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+```
+
+After configuring MySQL, run:
+
+```powershell
+cd backend
+python manage.py migrate
+```
 
 ### Frontend Environment Variables
 
