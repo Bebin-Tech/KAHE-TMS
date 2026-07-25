@@ -219,19 +219,6 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 border: isHomeActive ? '1px solid rgba(37,99,235,0.22)' : '1px solid transparent',
                 transition: 'background-color 260ms ease, border-color 260ms ease, box-shadow 260ms ease',
                 boxShadow: isHomeActive ? '0 14px 28px -24px rgba(37,99,235,0.7)' : 'none',
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  left: 0,
-                  top: '50%',
-                  width: isHomeActive ? 4 : 0,
-                  height: isHomeActive ? 28 : 0,
-                  borderRadius: '0 999px 999px 0',
-                  bgcolor: '#2563eb',
-                  transform: 'translateY(-50%)',
-                  opacity: isHomeActive ? 1 : 0,
-                  transition: 'width 260ms ease, height 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease'
-                },
                 '&:hover': {
                   bgcolor: isHomeActive ? '#eff6ff' : '#f8fafc',
                   borderColor: isHomeActive ? 'rgba(37,99,235,0.35)' : '#dbe4ef',
@@ -276,19 +263,6 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   border: isActive ? '1px solid rgba(37,99,235,0.22)' : '1px solid transparent',
                   transition: 'background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease',
                   boxShadow: isActive ? '0 14px 28px -24px rgba(37,99,235,0.7)' : 'none',
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    left: 0,
-                    top: '50%',
-                    width: isActive ? 4 : 0,
-                    height: isActive ? 28 : 0,
-                    borderRadius: '0 999px 999px 0',
-                    bgcolor: '#2563eb',
-                    transform: 'translateY(-50%)',
-                    opacity: isActive ? 1 : 0,
-                    transition: 'width 260ms ease, height 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease'
-                  },
                   '&:hover': {
                     bgcolor: isActive ? '#eff6ff' : '#f8fafc',
                     borderColor: isActive ? 'rgba(37,99,235,0.35)' : '#dbe4ef',
