@@ -1,36 +1,65 @@
--- Active: 1779794660115@@127.0.0.1@3306@tms_db
--- Database Schema for KAHE Task Management System
+-- KAHE Task Management System - MySQL helper script
+--
+-- Django owns the application schema through migrations.
+-- Use this file only to create/select the MySQL database and optionally seed
+-- departments after migrations have created the tables.
 
-CREATE DATABASE IF NOT EXISTS tms_db;
+CREATE DATABASE IF NOT EXISTS tms_db
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
 USE tms_db;
 
--- Core tables are managed by Django Migrations, but here is a representation
+-- Required Django setup after creating the database:
+--
+--   cd backend
+--   set DB_ENGINE=mysql
+--   set MYSQL_DATABASE=tms_db
+--   set MYSQL_USER=root
+--   set MYSQL_PASSWORD=your_mysql_password
+--   set MYSQL_HOST=127.0.0.1
+--   set MYSQL_PORT=3306
+--   python manage.py migrate
+--
+-- Run this script again after migrations if you want the optional seed data.
 
--- Users table
--- id, username, password, email, role, department_id, ...
+SET @core_department_exists = (
+  SELECT COUNT(*)
+  FROM information_schema.tables
+  WHERE table_schema = DATABASE()
+    AND table_name = 'core_department'
+);
 
--- Roles: ADMIN, DEAN, HOD, FACULTY
+SET @seed_computer_science_sql = IF(
+  @core_department_exists > 0,
+  "INSERT INTO core_department (name, block_name, description, is_active)
+   SELECT 'Computer Science', 'S-Block', 'Dept of CS', 1
+   WHERE NOT EXISTS (
+     SELECT 1 FROM core_department WHERE name = 'Computer Science'
+   )",
+  "SELECT 'core_department table does not exist yet. Run Django migrations first, then rerun this script for seed data.' AS message"
+);
 
--- Departments
--- id, name, description
+PREPARE seed_computer_science_stmt FROM @seed_computer_science_sql;
+EXECUTE seed_computer_science_stmt;
+DEALLOCATE PREPARE seed_computer_science_stmt;
 
--- Tasks (Created by Dean)
--- id, title, description, created_by_id, assigned_to_hod_id, deadline, priority, status, created_at, updated_at
+SET @seed_information_technology_sql = IF(
+  @core_department_exists > 0,
+  "INSERT INTO core_department (name, block_name, description, is_active)
+   SELECT 'Information Technology', 'S-Block', 'Dept of IT', 1
+   WHERE NOT EXISTS (
+     SELECT 1 FROM core_department WHERE name = 'Information Technology'
+   )",
+  "SELECT 'Seed skipped until migrations are complete.' AS message"
+);
 
--- SubTasks (Created by HOD)
--- id, task_id, title, description, assigned_to_id, status, progress, deadline
+PREPARE seed_information_technology_stmt FROM @seed_information_technology_sql;
+EXECUTE seed_information_technology_stmt;
+DEALLOCATE PREPARE seed_information_technology_stmt;
 
--- Submissions
--- id, task_id, subtask_id, submitted_by_id, content, attachment, submitted_at, feedback, is_approved
-
--- Notifications
--- id, user_id, message, is_read, created_at
-
--- Seed Initial Data (Conceptual)
-INSERT INTO core_department (name, description) VALUES ('Computer Science', 'Dept of CS');
-INSERT INTO core_department (name, description) VALUES ('Information Technology', 'Dept of IT');
-
--- Note: Passwords must be hashed using Django's PBKDF2
--- Dean: dean@kahe.edu / admin123
--- HOD: hod@kahe.edu / admin123
--- Faculty: faculty@kahe.edu / admin123
+-- Passwords must be created through Django so they are hashed correctly:
+--
+--   python manage.py createsuperuser
+--
+-- Or create users from the Admin User Management screen.
