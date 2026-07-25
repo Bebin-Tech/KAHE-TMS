@@ -25,6 +25,7 @@ const UserManagement = () => {
   const [departments, setDepartments] = useState([]);
   const [open, setOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [resetUserId, setResetUserId] = useState(null);
   const [newPassword, setNewPassword] = useState('');
   const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
@@ -115,15 +116,17 @@ const UserManagement = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      try {
-        await api.delete(`users/${id}/`);
-        fetchData();
-      } catch (err) {
-        console.error('Error deleting user:', err);
-        showMessage('Failed to delete user.', 'error');
-      }
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      await api.delete(`users/${deleteTarget.id}/`);
+      setDeleteTarget(null);
+      showMessage('User deleted successfully.');
+      fetchData();
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      showMessage(formatApiError(err, 'Failed to delete user.'), 'error');
     }
   };
 
@@ -325,7 +328,7 @@ const UserManagement = () => {
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Delete">
-                      <IconButton onClick={() => handleDelete(user.id)} size="small" sx={{ color: '#f44336' }}>
+                      <IconButton onClick={() => setDeleteTarget(user)} size="small" sx={{ color: '#f44336' }}>
                         <DeleteRounded fontSize="small" />
                       </IconButton>
                     </Tooltip>
@@ -393,6 +396,19 @@ const UserManagement = () => {
             </Button>
           </DialogActions>
         </form>
+      </Dialog>
+
+      <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
+        <DialogTitle sx={{ fontWeight: 800 }}>Delete User</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            {`Delete "${deleteTarget?.username || 'this user'}"? The account will be deactivated and hidden from active users.`}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setDeleteTarget(null)} color="inherit">Cancel</Button>
+          <Button onClick={handleDelete} color="error" variant="contained">Delete</Button>
+        </DialogActions>
       </Dialog>
 
       <Dialog open={Boolean(resetUserId)} onClose={() => setResetUserId(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>

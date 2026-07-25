@@ -5,20 +5,20 @@ from .models import User, Department, Task, SubTask, Submission, TaskReport, Not
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
-        data = super().validate(attrs) # type: ignore
-        user = self.user # type: ignore
+        data = super().validate(attrs)
+        user = self.user
         
-        if not user.is_active: # type: ignore
+        if not user.is_active:
             raise AuthenticationFailed('Your account is inactive. Please contact the administrator.', code='account_inactive')
             
-        data['user'] = { # type: ignore
-            'id': user.id, # type: ignore
-            'username': user.username, # type: ignore
-            'email': user.email, # type: ignore
-            'role': user.role, # type: ignore
-            'department': user.department_id, # type: ignore
-            'full_name': user.get_full_name(), # type: ignore
-            'must_change_password': user.must_change_password # type: ignore
+        data['user'] = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'role': user.role,
+            'department': user.department_id,
+            'full_name': user.get_full_name(),
+            'must_change_password': user.must_change_password
         }
         return data
 

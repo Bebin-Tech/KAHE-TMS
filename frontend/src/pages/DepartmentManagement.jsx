@@ -14,6 +14,7 @@ const DepartmentManagement = () => {
   const [departments, setDepartments] = useState([]);
   const [open, setOpen] = useState(false);
   const [editingDept, setEditingDept] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     block_name: ''
@@ -71,15 +72,17 @@ const DepartmentManagement = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this department?')) {
-      try {
-        await api.delete(`departments/${id}/`);
-        fetchData();
-      } catch (err) {
-        console.error('Error deleting department:', err);
-        showMessage(formatApiError(err, 'Failed to delete department.'), 'error');
-      }
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      await api.delete(`departments/${deleteTarget.id}/`);
+      setDeleteTarget(null);
+      showMessage('Department deleted successfully.');
+      fetchData();
+    } catch (err) {
+      console.error('Error deleting department:', err);
+      showMessage(formatApiError(err, 'Failed to delete department.'), 'error');
     }
   };
 
@@ -127,7 +130,7 @@ const DepartmentManagement = () => {
                   <IconButton onClick={() => handleOpen(dept)} size="small" sx={{ color: '#237dba' }}>
                     <EditRounded fontSize="small" />
                   </IconButton>
-                  <IconButton onClick={() => handleDelete(dept.id)} size="small" sx={{ color: '#f44336' }}>
+                  <IconButton onClick={() => setDeleteTarget(dept)} size="small" sx={{ color: '#f44336' }}>
                     <DeleteRounded fontSize="small" />
                   </IconButton>
                 </TableCell>
@@ -180,6 +183,19 @@ const DepartmentManagement = () => {
             </Button>
           </DialogActions>
         </form>
+      </Dialog>
+
+      <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
+        <DialogTitle sx={{ fontWeight: 800 }}>Delete Department</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            {`Delete "${deleteTarget?.name || 'this department'}"? It will no longer appear in active department lists.`}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setDeleteTarget(null)} color="inherit">Cancel</Button>
+          <Button onClick={handleDelete} color="error" variant="contained">Delete</Button>
+        </DialogActions>
       </Dialog>
 
       <Snackbar

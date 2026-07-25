@@ -5,7 +5,8 @@ import TaskSuccessDialog from '../components/TaskSuccessDialog';
 import {
   Paper, Typography, Box, Button, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow,
-  Chip, IconButton, Tooltip, Avatar, Snackbar, Alert
+  Chip, IconButton, Tooltip, Avatar, Snackbar, Alert,
+  Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import {
   AddRounded,
@@ -24,6 +25,7 @@ const Tasks = () => {
   const [tasks, setTasks] = useState([]);
   const [open, setOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [successTask, setSuccessTask] = useState(null);
   const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
 
@@ -49,15 +51,17 @@ const Tasks = () => {
     setOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      try {
-        await api.delete(`tasks/${id}/`);
-        fetchData();
-      } catch (err) {
-        console.error('Error deleting task:', err);
-        showMessage(formatApiError(err, 'Failed to delete task.'), 'error');
-      }
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      await api.delete(`tasks/${deleteTarget.id}/`);
+      setDeleteTarget(null);
+      showMessage('Task deleted successfully.');
+      fetchData();
+    } catch (err) {
+      console.error('Error deleting task:', err);
+      showMessage(formatApiError(err, 'Failed to delete task.'), 'error');
     }
   };
 
@@ -164,7 +168,7 @@ const Tasks = () => {
                 </TableCell>
                 <TableCell align="right">
                   <IconButton onClick={() => handleEdit(task)} size="small" sx={{ color: '#237dba' }}><EditRounded fontSize="small" /></IconButton>
-                  <IconButton onClick={() => handleDelete(task.id)} size="small" sx={{ color: '#f44336' }}><DeleteRounded fontSize="small" /></IconButton>
+                  <IconButton onClick={() => setDeleteTarget(task)} size="small" sx={{ color: '#f44336' }}><DeleteRounded fontSize="small" /></IconButton>
                 </TableCell>
               </TableRow>
             )) : (
@@ -196,6 +200,18 @@ const Tasks = () => {
         onClose={() => setSuccessTask(null)}
         taskTitle={successTask?.title}
       />
+      <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
+        <DialogTitle sx={{ fontWeight: 800 }}>Delete Task</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            {`Delete "${deleteTarget?.title || 'this task'}"? It will no longer appear in active task lists.`}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setDeleteTarget(null)} color="inherit">Cancel</Button>
+          <Button onClick={handleDelete} color="error" variant="contained">Delete</Button>
+        </DialogActions>
+      </Dialog>
       <Snackbar
         open={notification.open}
         autoHideDuration={4000}
