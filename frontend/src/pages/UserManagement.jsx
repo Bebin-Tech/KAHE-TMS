@@ -36,7 +36,12 @@ const UserManagement = () => {
     role: 'FACULTY', department: '', password: ''
   });
 
-  const roles = ['FACULTY', 'HOD', 'DEAN', 'ADMIN'];
+  const pageOptions = [
+    { label: 'Department', role: null },
+    { label: 'Dean', role: 'DEAN' },
+    { label: 'Admin', role: 'ADMIN' },
+  ];
+  const currentPage = pageOptions[page - 1] || pageOptions[0];
 
   const showMessage = (message, severity = 'success') => {
     setNotification({ open: true, severity, message });
@@ -63,17 +68,47 @@ const UserManagement = () => {
     setPage(value);
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesRole = user.role === roles[page - 1];
+  const userMatchesSearch = (user) => {
     const searchLower = searchTerm.toLowerCase();
-    const matchesSearch =
+    if (!searchLower) return true;
+
+    return (
       user.first_name?.toLowerCase().includes(searchLower) ||
       user.last_name?.toLowerCase().includes(searchLower) ||
       user.username?.toLowerCase().includes(searchLower) ||
-      user.email?.toLowerCase().includes(searchLower);
+      user.email?.toLowerCase().includes(searchLower) ||
+      user.department_name?.toLowerCase().includes(searchLower)
+    );
+  };
 
-    return matchesRole && matchesSearch;
+  const filteredUsers = users.filter(user => {
+    const matchesRole = currentPage.role ? user.role === currentPage.role : ['HOD', 'FACULTY'].includes(user.role);
+    return matchesRole && userMatchesSearch(user);
   });
+
+  const departmentGroups = departments
+    .map((department) => {
+      const members = filteredUsers.filter((user) => user.department === department.id);
+      return {
+        id: department.id,
+        name: department.name,
+        blockName: department.block_name,
+        hods: members.filter((user) => user.role === 'HOD'),
+        faculty: members.filter((user) => user.role === 'FACULTY'),
+      };
+    })
+    .filter((group) => group.hods.length > 0 || group.faculty.length > 0);
+
+  const unassignedMembers = filteredUsers.filter((user) => !user.department);
+  if (unassignedMembers.length > 0) {
+    departmentGroups.push({
+      id: 'unassigned',
+      name: 'No Department Assigned',
+      blockName: '',
+      hods: unassignedMembers.filter((user) => user.role === 'HOD'),
+      faculty: unassignedMembers.filter((user) => user.role === 'FACULTY'),
+    });
+  }
 
   const handleOpen = (user = null) => {
     if (user) {
@@ -170,13 +205,96 @@ const UserManagement = () => {
     }
   };
 
+  const getUserName = (user) => `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.username;
+
+  const renderUserCard = (user) => {
+    const roleStyle = getRoleColor(user.role);
+    return (
+      <Grid item xs={12} sm={6} md={currentPage.role ? 4 : 6} key={user.id}>
+        <Card sx={{
+          p: 3,
+          minHeight: '100%',
+          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+          '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 22px 48px -32px rgba(15, 32, 58, 0.65)' }
+        }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+            <Avatar
+              sx={{ width: 48, height: 48, bgcolor: roleStyle.color, fontWeight: 700 }}
+            >
+              {user.first_name?.[0]}{user.last_name?.[0]}
+            </Avatar>
+            <Chip
+              label={user.role}
+              size="small"
+              sx={{ bgcolor: roleStyle.bg, color: roleStyle.color, fontWeight: 700, borderRadius: '6px' }}
+            />
+          </Box>
+
+          <Typography variant="h6" sx={{ fontWeight: 700, color: '#212b36', mb: 0.5 }}>
+            {getUserName(user)}
+          </Typography>
+          <Typography variant="caption" sx={{ color: '#637381', display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <BadgeOutlined sx={{ fontSize: '1rem' }} /> @{user.username}
+          </Typography>
+
+          <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <EmailOutlined sx={{ color: '#919eab', fontSize: '1.2rem' }} />
+              <Typography variant="body2" sx={{ color: '#212b36' }}>{user.email}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <BusinessOutlined sx={{ color: '#919eab', fontSize: '1.2rem' }} />
+              <Typography variant="body2" sx={{ color: '#212b36' }}>{user.department_name || 'No Department'}</Typography>
+            </Box>
+          </Box>
+
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={user.is_active}
+                  onChange={() => toggleActive(user.id)}
+                  size="small"
+                  color="primary"
+                />
+              }
+              label={user.is_active ? "Active" : "Inactive"}
+              sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.875rem', fontWeight: 600, color: user.is_active ? '#047857' : '#b91c1c' } }}
+            />
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              <Tooltip title="Edit User">
+                <IconButton onClick={() => handleOpen(user)} size="small" sx={{ color: '#237dba' }}>
+                  <EditRounded fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Reset Password">
+                <IconButton onClick={() => openResetPasswordDialog(user.id)} size="small" sx={{ color: '#f59e0b' }}>
+                  <LockResetRounded fontSize="small" />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Delete">
+                <IconButton onClick={() => setDeleteTarget(user)} size="small" sx={{ color: '#f44336' }}>
+                  <DeleteRounded fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          </Box>
+        </Card>
+      </Grid>
+    );
+  };
+
   return (
     <DashboardLayout title="User Management">
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'stretch', lg: 'flex-end' }, gap: 3, flexDirection: { xs: 'column', lg: 'row' } }}>
         <Box sx={{ display: 'flex', alignItems: { xs: 'stretch', md: 'center' }, gap: 3, flexDirection: { xs: 'column', md: 'row' }, flex: 1 }}>
           <Box sx={{ textAlign: 'left' }}>
             <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: '#212b36' }}>All users</Typography>
-            <Typography variant="body2" color="text.secondary">Viewing <b>{roles[page - 1]}</b> accounts.</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Viewing <b>{currentPage.label}</b>{currentPage.role ? ' accounts.' : ' groups with HOD and Faculty members.'}
+            </Typography>
           </Box>
 
           <Box sx={{
@@ -225,7 +343,7 @@ const UserManagement = () => {
           </Button>
 
           <Pagination
-            count={roles.length}
+            count={pageOptions.length}
             page={page}
             onChange={handlePageChange}
             renderItem={(item) => (
@@ -259,90 +377,69 @@ const UserManagement = () => {
         </Box>
       </Box>
 
-      <Grid container spacing={3}>
-        {filteredUsers.length > 0 ? filteredUsers.map((user) => {
-          const roleStyle = getRoleColor(user.role);
-          return (
-            <Grid item xs={12} sm={6} md={4} key={user.id}>
-              <Card sx={{
-                p: 3,
-                minHeight: '100%',
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 22px 48px -32px rgba(15, 32, 58, 0.65)' }
-              }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                  <Avatar
-                    sx={{ width: 48, height: 48, bgcolor: roleStyle.color, fontWeight: 700 }}
-                  >
-                    {user.first_name?.[0]}{user.last_name?.[0]}
-                  </Avatar>
-                  <Chip
-                    label={user.role}
-                    size="small"
-                    sx={{ bgcolor: roleStyle.bg, color: roleStyle.color, fontWeight: 700, borderRadius: '6px' }}
-                  />
-                </Box>
-
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#212b36', mb: 0.5 }}>
-                  {user.first_name} {user.last_name}
-                </Typography>
-                <Typography variant="caption" sx={{ color: '#637381', display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                  <BadgeOutlined sx={{ fontSize: '1rem' }} /> @{user.username}
-                </Typography>
-
-                <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
-
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <EmailOutlined sx={{ color: '#919eab', fontSize: '1.2rem' }} />
-                    <Typography variant="body2" sx={{ color: '#212b36' }}>{user.email}</Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <BusinessOutlined sx={{ color: '#919eab', fontSize: '1.2rem' }} />
-                    <Typography variant="body2" sx={{ color: '#212b36' }}>{user.department_name || 'No Department'}</Typography>
-                  </Box>
-                </Box>
-
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={user.is_active}
-                        onChange={() => toggleActive(user.id)}
-                        size="small"
-                        color="primary"
-                      />
-                    }
-                    label={user.is_active ? "Active" : "Inactive"}
-                    sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.875rem', fontWeight: 600, color: user.is_active ? '#047857' : '#b91c1c' } }}
-                  />
-                  <Box sx={{ display: 'flex', gap: 0.5 }}>
-                    <Tooltip title="Edit User">
-                      <IconButton onClick={() => handleOpen(user)} size="small" sx={{ color: '#237dba' }}>
-                        <EditRounded fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Reset Password">
-                      <IconButton onClick={() => openResetPasswordDialog(user.id)} size="small" sx={{ color: '#f59e0b' }}>
-                        <LockResetRounded fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                      <IconButton onClick={() => setDeleteTarget(user)} size="small" sx={{ color: '#f44336' }}>
-                        <DeleteRounded fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </Box>
-              </Card>
+      {currentPage.role ? (
+        <Grid container spacing={3}>
+          {filteredUsers.length > 0 ? filteredUsers.map(renderUserCard) : (
+            <Grid item xs={12} sx={{ py: 10, textAlign: 'center' }}>
+              <Typography variant="body1" color="text.secondary">No user accounts found.</Typography>
             </Grid>
-          );
-        }) : (
-          <Grid item xs={12} sx={{ py: 10, textAlign: 'center' }}>
-            <Typography variant="body1" color="text.secondary">No user accounts found.</Typography>
-          </Grid>
+          )}
+        </Grid>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {departmentGroups.length > 0 ? departmentGroups.map((group) => (
+            <Box
+              key={group.id}
+              sx={{
+                border: '1px solid #e2e8f0',
+                borderRadius: 2,
+                bgcolor: '#ffffff',
+                p: { xs: 2, md: 3 },
+                boxShadow: '0 18px 44px -36px rgba(15, 32, 58, 0.55)'
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1.5, flexDirection: { xs: 'column', sm: 'row' }, mb: 2.5 }}>
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 900, color: '#212b36' }}>{group.name}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {group.blockName || 'Block not assigned'} | {group.hods.length} HOD | {group.faculty.length} Faculty
+                  </Typography>
+                </Box>
+                <Chip
+                  label={`${group.hods.length + group.faculty.length} members`}
+                  sx={{ bgcolor: '#eaf3ff', color: '#237dba', fontWeight: 800, borderRadius: '8px' }}
+                />
+              </Box>
+
+              <Box sx={{ mb: group.faculty.length ? 3 : 0 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#8a6f00', mb: 1.5 }}>HOD</Typography>
+                <Grid container spacing={2.5}>
+                  {group.hods.length > 0 ? group.hods.map(renderUserCard) : (
+                    <Grid item xs={12}>
+                      <Typography variant="body2" color="text.secondary">No HOD assigned to this department.</Typography>
+                    </Grid>
+                  )}
+                </Grid>
+              </Box>
+
+              <Box>
+                <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#1f7f79', mb: 1.5 }}>Faculty</Typography>
+                <Grid container spacing={2.5}>
+                  {group.faculty.length > 0 ? group.faculty.map(renderUserCard) : (
+                    <Grid item xs={12}>
+                      <Typography variant="body2" color="text.secondary">No faculty assigned to this department.</Typography>
+                    </Grid>
+                  )}
+                </Grid>
+              </Box>
+            </Box>
+          )) : (
+            <Box sx={{ py: 10, textAlign: 'center' }}>
+              <Typography variant="body1" color="text.secondary">No HOD or Faculty accounts found.</Typography>
+            </Box>
+          )}
+        </Box>
         )}
-      </Grid>
 
       <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px', p: 1 } }}>
         <form onSubmit={handleSubmit}>
