@@ -7,7 +7,6 @@ import {
   Button,
   Card,
   Chip,
-  CircularProgress,
   Grid,
   LinearProgress,
   Paper,
@@ -16,14 +15,12 @@ import {
 } from '@mui/material';
 import {
   AccountBalanceOutlined,
-  AddTaskRounded,
   ArrowForwardRounded,
   AssignmentOutlined,
   AssignmentTurnedInOutlined,
   BusinessOutlined,
   PeopleOutlined,
   PriorityHighRounded,
-  RefreshRounded,
   TrendingUpRounded
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -56,7 +53,6 @@ const AdminDashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const fetchDashboard = useCallback(async ({ forceRefresh = false } = {}) => {
     const requestConfig = forceRefresh
       ? {
@@ -90,15 +86,6 @@ const AdminDashboard = () => {
   }, [fetchDashboard]);
 
   useAutoRefresh(fetchDashboard, 5000);
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    try {
-      await fetchDashboard({ forceRefresh: true });
-    } finally {
-      setRefreshing(false);
-    }
-  };
 
   const taskTotals = useMemo(() => {
     const completed = tasks.filter((task) => ['COMPLETED', 'DEAN_APPROVED'].includes(task.status)).length || stats.completed_tasks || 0;
@@ -186,33 +173,6 @@ const AdminDashboard = () => {
                 <Typography variant="body1" sx={{ color: '#42546b', fontWeight: 750 }}>
                   Real-time academic task coordination and reporting
                 </Typography>
-                <Stack direction="row" spacing={2.5} justifyContent="center" alignItems="center" sx={{ mt: 3, flexWrap: 'wrap' }}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<AddTaskRounded />}
-                    onClick={() => navigate('/tasks')}
-                    sx={{ bgcolor: 'white', borderColor: '#237dba', boxShadow: '0 12px 28px -22px rgba(35,125,186,0.8)' }}
-                  >
-                    Create Task
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    endIcon={<ArrowForwardRounded />}
-                    onClick={() => navigate('/reports')}
-                    sx={{ bgcolor: 'white', borderColor: '#237dba', boxShadow: '0 12px 28px -22px rgba(35,125,186,0.8)' }}
-                  >
-                    View Reports
-                  </Button>
-                  <Button
-                    variant="contained"
-                    startIcon={refreshing ? <CircularProgress size={18} color="inherit" /> : <RefreshRounded />}
-                    onClick={handleRefresh}
-                    disabled={refreshing}
-                    sx={{ minWidth: 150, boxShadow: '0 12px 28px -22px rgba(37,99,235,0.9)' }}
-                  >
-                    {refreshing ? 'Refreshing' : 'Refresh'}
-                  </Button>
-                </Stack>
               </Box>
               <Box sx={{ position: 'absolute', right: -70, bottom: -90, width: 300, height: 300, border: '44px solid rgba(59,143,243,0.22)', borderRadius: '50%' }} />
               <Box sx={{ position: 'absolute', right: 92, top: 36, width: 116, height: 116, border: '22px solid rgba(52,177,170,0.22)', borderRadius: '50%' }} />
