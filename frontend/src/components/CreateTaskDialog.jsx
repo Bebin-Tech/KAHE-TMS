@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  Button, TextField, MenuItem, Grid,
+  Button, TextField, MenuItem, Grid, Box, Typography,
   CircularProgress, Alert, FormControlLabel, Checkbox
 } from '@mui/material';
+import { AttachFileRounded, CloudUploadRounded } from '@mui/icons-material';
 import api from '../api/axios';
 import { getCurrentSession } from '../utils/session';
+import { formatApiError } from '../utils/errors';
 
 const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
   const [departments, setDepartments] = useState([]);
@@ -14,6 +16,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
   const [loading, setLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(false);
   const [error, setError] = useState('');
+  const [attachment, setAttachment] = useState(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -45,6 +48,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
         if (task.department) {
           fetchUsersByDepartment(task.department);
         }
+        setAttachment(null);
       } else {
         resetForm();
       }
@@ -96,22 +100,34 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
     setLoading(true);
     setError('');
 
-    // Prepare data
     const submitData = { ...formData };
     if (submitData.department === '') submitData.department = null;
     if (submitData.assigned_to_hod === '') submitData.assigned_to_hod = null;
     if (!task) submitData.status = 'ASSIGNED';
+    const requestData = new FormData();
+    Object.entries(submitData).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        requestData.append(key, value);
+      }
+    });
+    if (attachment) {
+      requestData.append('attachment', attachment);
+    }
 
     try {
       let savedTask;
       if (task) {
-        const response = await api.patch(`tasks/${task.id}/`, submitData);
+        const response = await api.patch(`tasks/${task.id}/`, requestData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
         savedTask = response.data;
       } else {
         const currentUser = getCurrentSession()?.session?.user;
-        const response = await api.post('tasks/', {
-          ...submitData,
-          created_by: currentUser?.id
+        if (currentUser?.id) {
+          requestData.append('created_by', currentUser.id);
+        }
+        const response = await api.post('tasks/', requestData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
         });
         savedTask = response.data;
       }
@@ -119,14 +135,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
       onClose();
     } catch (err) {
       console.error('Error processing task:', err);
-      const errorData = err.response?.data;
-      let errorMessage = 'Failed to process task. Check all fields.';
-      if (errorData) {
-        errorMessage = Object.entries(errorData)
-          .map(([key, value]) => `${key}: ${value}`)
-          .join('\n');
-      }
-      setError(errorMessage);
+      setError(formatApiError(err, 'Failed to process task. Check all fields.'));
     } finally {
       setLoading(false);
     }
@@ -144,6 +153,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
       is_special: false,
       priority: 'MEDIUM'
     });
+    setAttachment(null);
     setUsers([]);
     setShowingAllHods(false);
   };
@@ -269,6 +279,55 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
                 }
                 label="Special Task"
               />
+            </Grid>
+
+            <Grid item xs={12}>
+              <input
+                id="task-attachment-upload"
+                type="file"
+                style={{ display: 'none' }}
+                accept=".pdf,image/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip"
+                onChange={(event) => setAttachment(event.target.files?.[0] || null)}
+              />
+              <label htmlFor="task-attachment-upload">
+                <Box
+                  sx={{
+                    p: 2.5,
+                    border: '1.5px dashed #b7d5fb',
+                    borderRadius: 2,
+                    bgcolor: '#f8fafc',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 2,
+                    '&:hover': {
+                      bgcolor: '#eaf3ff',
+                      borderColor: '#2563eb',
+                    }
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+                    <CloudUploadRounded sx={{ color: '#237dba' }} />
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#212b36' }}>
+                        {attachment ? attachment.name : 'Upload supporting file'}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        PDFs, images, documents, spreadsheets, presentations, text, or ZIP files
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Button component="span" variant="outlined" startIcon={<AttachFileRounded />}>
+                    Choose File
+                  </Button>
+                </Box>
+              </label>
+              {task?.attachment && !attachment && (
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                  Existing attachment: {task.attachment.split('/').pop()}
+                </Typography>
+              )}
             </Grid>
           </Grid>
         </DialogContent>
