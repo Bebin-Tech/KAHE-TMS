@@ -37,9 +37,13 @@ const UserManagement = () => {
   });
 
   const pageOptions = [
-    { label: 'Department', role: null },
-    { label: 'Dean', role: 'DEAN' },
-    { label: 'Admin', role: 'ADMIN' },
+    ...departments.map((department) => ({
+      label: department.name,
+      department,
+      type: 'department',
+    })),
+    { label: 'Dean', role: 'DEAN', type: 'role' },
+    { label: 'Admin', role: 'ADMIN', type: 'role' },
   ];
   const currentPage = pageOptions[page - 1] || pageOptions[0];
 
@@ -82,33 +86,20 @@ const UserManagement = () => {
   };
 
   const filteredUsers = users.filter(user => {
-    const matchesRole = currentPage.role ? user.role === currentPage.role : ['HOD', 'FACULTY'].includes(user.role);
-    return matchesRole && userMatchesSearch(user);
+    const matchesRole = currentPage?.role ? user.role === currentPage.role : ['HOD', 'FACULTY'].includes(user.role);
+    const matchesDepartment = currentPage?.type === 'department' ? user.department === currentPage.department.id : true;
+    return matchesRole && matchesDepartment && userMatchesSearch(user);
   });
 
-  const departmentGroups = departments
-    .map((department) => {
-      const members = filteredUsers.filter((user) => user.department === department.id);
-      return {
-        id: department.id,
-        name: department.name,
-        blockName: department.block_name,
-        hods: members.filter((user) => user.role === 'HOD'),
-        faculty: members.filter((user) => user.role === 'FACULTY'),
-      };
-    })
-    .filter((group) => group.hods.length > 0 || group.faculty.length > 0);
-
-  const unassignedMembers = filteredUsers.filter((user) => !user.department);
-  if (unassignedMembers.length > 0) {
-    departmentGroups.push({
-      id: 'unassigned',
-      name: 'No Department Assigned',
-      blockName: '',
-      hods: unassignedMembers.filter((user) => user.role === 'HOD'),
-      faculty: unassignedMembers.filter((user) => user.role === 'FACULTY'),
-    });
-  }
+  const departmentPage = currentPage?.type === 'department'
+    ? {
+      id: currentPage.department.id,
+      name: currentPage.department.name,
+      blockName: currentPage.department.block_name,
+      hods: filteredUsers.filter((user) => user.role === 'HOD'),
+      faculty: filteredUsers.filter((user) => user.role === 'FACULTY'),
+    }
+    : null;
 
   const handleOpen = (user = null) => {
     if (user) {
@@ -210,7 +201,7 @@ const UserManagement = () => {
   const renderUserCard = (user) => {
     const roleStyle = getRoleColor(user.role);
     return (
-      <Grid item xs={12} sm={6} md={currentPage.role ? 4 : 6} key={user.id}>
+      <Grid item xs={12} sm={6} md={currentPage?.role ? 4 : 6} key={user.id}>
         <Card sx={{
           p: 3,
           minHeight: '100%',
@@ -293,7 +284,7 @@ const UserManagement = () => {
           <Box sx={{ textAlign: 'left' }}>
             <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: '#212b36' }}>All users</Typography>
             <Typography variant="body2" color="text.secondary">
-              Viewing <b>{currentPage.label}</b>{currentPage.role ? ' accounts.' : ' groups with HOD and Faculty members.'}
+              Viewing <b>{currentPage?.label || 'Department'}</b>{currentPage?.role ? ' accounts.' : ' department with HOD and Faculty members.'}
             </Typography>
           </Box>
 
@@ -377,7 +368,7 @@ const UserManagement = () => {
         </Box>
       </Box>
 
-      {currentPage.role ? (
+      {currentPage?.role ? (
         <Grid container spacing={3}>
           {filteredUsers.length > 0 ? filteredUsers.map(renderUserCard) : (
             <Grid item xs={12} sx={{ py: 10, textAlign: 'center' }}>
@@ -387,9 +378,9 @@ const UserManagement = () => {
         </Grid>
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {departmentGroups.length > 0 ? departmentGroups.map((group) => (
+          {departmentPage ? (
             <Box
-              key={group.id}
+              key={departmentPage.id}
               sx={{
                 border: '1px solid #e2e8f0',
                 borderRadius: 2,
@@ -400,21 +391,21 @@ const UserManagement = () => {
             >
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1.5, flexDirection: { xs: 'column', sm: 'row' }, mb: 2.5 }}>
                 <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 900, color: '#212b36' }}>{group.name}</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 900, color: '#212b36' }}>{departmentPage.name}</Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {group.blockName || 'Block not assigned'} | {group.hods.length} HOD | {group.faculty.length} Faculty
+                    {departmentPage.blockName || 'Block not assigned'} | {departmentPage.hods.length} HOD | {departmentPage.faculty.length} Faculty
                   </Typography>
                 </Box>
                 <Chip
-                  label={`${group.hods.length + group.faculty.length} members`}
+                  label={`${departmentPage.hods.length + departmentPage.faculty.length} members`}
                   sx={{ bgcolor: '#eaf3ff', color: '#237dba', fontWeight: 800, borderRadius: '8px' }}
                 />
               </Box>
 
-              <Box sx={{ mb: group.faculty.length ? 3 : 0 }}>
+              <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#8a6f00', mb: 1.5 }}>HOD</Typography>
                 <Grid container spacing={2.5}>
-                  {group.hods.length > 0 ? group.hods.map(renderUserCard) : (
+                  {departmentPage.hods.length > 0 ? departmentPage.hods.map(renderUserCard) : (
                     <Grid item xs={12}>
                       <Typography variant="body2" color="text.secondary">No HOD assigned to this department.</Typography>
                     </Grid>
@@ -425,7 +416,7 @@ const UserManagement = () => {
               <Box>
                 <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#1f7f79', mb: 1.5 }}>Faculty</Typography>
                 <Grid container spacing={2.5}>
-                  {group.faculty.length > 0 ? group.faculty.map(renderUserCard) : (
+                  {departmentPage.faculty.length > 0 ? departmentPage.faculty.map(renderUserCard) : (
                     <Grid item xs={12}>
                       <Typography variant="body2" color="text.secondary">No faculty assigned to this department.</Typography>
                     </Grid>
@@ -433,9 +424,9 @@ const UserManagement = () => {
                 </Grid>
               </Box>
             </Box>
-          )) : (
+          ) : (
             <Box sx={{ py: 10, textAlign: 'center' }}>
-              <Typography variant="body1" color="text.secondary">No HOD or Faculty accounts found.</Typography>
+              <Typography variant="body1" color="text.secondary">No departments found.</Typography>
             </Box>
           )}
         </Box>
