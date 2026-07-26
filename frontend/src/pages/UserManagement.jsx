@@ -200,17 +200,24 @@ const UserManagement = () => {
 
   const renderUserCard = (user) => {
     const roleStyle = getRoleColor(user.role);
+    const isFacultyDepartmentCard = currentPage?.type === 'department' && user.role === 'FACULTY';
     return (
-      <Grid item xs={12} sm={6} md={currentPage?.role ? 4 : 6} key={user.id}>
+      <Grid item xs={12} sm={6} md={isFacultyDepartmentCard ? 4 : currentPage?.role ? 4 : 6} key={user.id}>
         <Card sx={{
-          p: 3,
+          p: isFacultyDepartmentCard ? 2 : 3,
           minHeight: '100%',
           transition: 'transform 0.2s ease, box-shadow 0.2s ease',
           '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 22px 48px -32px rgba(15, 32, 58, 0.65)' }
         }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
             <Avatar
-              sx={{ width: 48, height: 48, bgcolor: roleStyle.color, fontWeight: 700 }}
+              sx={{
+                width: isFacultyDepartmentCard ? 40 : 48,
+                height: isFacultyDepartmentCard ? 40 : 48,
+                bgcolor: roleStyle.color,
+                fontWeight: 700,
+                fontSize: isFacultyDepartmentCard ? '0.9rem' : '1rem'
+              }}
             >
               {user.first_name?.[0]}{user.last_name?.[0]}
             </Avatar>
@@ -228,9 +235,9 @@ const UserManagement = () => {
             <BadgeOutlined sx={{ fontSize: '1rem' }} /> @{user.username}
           </Typography>
 
-          <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
+          <Divider sx={{ my: isFacultyDepartmentCard ? 1.5 : 2, borderStyle: 'dashed' }} />
 
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: isFacultyDepartmentCard ? 1 : 1.5, mb: isFacultyDepartmentCard ? 2 : 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <EmailOutlined sx={{ color: '#919eab', fontSize: '1.2rem' }} />
               <Typography variant="body2" sx={{ color: '#212b36' }}>{user.email}</Typography>
