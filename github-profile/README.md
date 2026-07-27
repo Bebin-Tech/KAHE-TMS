@@ -39,7 +39,7 @@ I'm **Bebin R**, a developer interested in building useful, modern, and scalable
 
 <div align="center">
 
-<img src="https://skillicons.dev/icons?i=python,js,html,css,react,vite,tailwind,materialui,django,mysql,postgres,sqlite,git,github,vscode,postman,docker,linux,firebase,vercel&theme=dark&perline=10" alt="Technologies and tools" />
+<img src="https://skillicons.dev/icons?i=python,cpp,js,html,css,react,vite,tailwind,materialui,django,mysql,postgres,sqlite,git,github,vscode,postman,docker,linux,firebase,vercel&theme=dark&perline=10" alt="Technologies and tools" />
 
 <br />
 <br />
@@ -224,7 +224,7 @@ Location: Add your city/country if you want
 
 ## ⚡ Fun Fact
 
-I believe a good project should feel good to use, be easy to understand, and be simple enough to maintain later.
+I like exploring new technologies more than sleeping sometimes.
 
 ---
 
