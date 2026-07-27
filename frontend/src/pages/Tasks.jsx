@@ -91,9 +91,9 @@ const Tasks = () => {
 
   return (
     <DashboardLayout title="Task Management">
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
         <Box sx={{ textAlign: 'left' }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: '#212b36', fontSize: { xs: '1.45rem', sm: '2.125rem' } }}>
+          <Typography variant="h4" sx={{ fontWeight: 900, mb: 0.75, color: '#0f172a', fontSize: { xs: '1.45rem', sm: '2.125rem' } }}>
             System Tasks
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -104,34 +104,34 @@ const Tasks = () => {
           variant="outlined"
           startIcon={<AddRounded />}
           onClick={() => setOpen(true)}
-          sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start', md: 'center' } }}
+          sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start', md: 'center' }, bgcolor: '#ffffff', borderColor: '#b7d5fb', fontWeight: 850, borderRadius: 1.5 }}
         >
           Create New Task
         </Button>
       </Box>
 
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ border: '1px solid #d8e3f0', borderRadius: 3, overflow: 'hidden', bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.45)' }}>
         <Table sx={{ minWidth: 760 }}>
-          <TableHead sx={{ bgcolor: '#f4f9ff' }}>
+          <TableHead sx={{ bgcolor: '#f8fbff' }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 700, color: '#637381' }}>Task Details</TableCell>
-              <TableCell sx={{ fontWeight: 700, color: '#637381' }}>Assignee</TableCell>
-              <TableCell sx={{ fontWeight: 700, color: '#637381' }}>Timeline</TableCell>
-              <TableCell sx={{ fontWeight: 700, color: '#637381' }}>Status</TableCell>
-              <TableCell align="right" sx={{ fontWeight: 700, color: '#637381' }}>Actions</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Task Details</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Assignee</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Timeline</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Status</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {tasks.length > 0 ? tasks.map((task) => (
-              <TableRow key={task.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+              <TableRow key={task.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { bgcolor: '#f8fbff' } }}>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: task.is_special ? '#fff8d9' : '#eaf3ff', color: task.is_special ? '#8a6f00' : '#237dba' }}>
+                    <Avatar sx={{ bgcolor: task.is_special ? '#fff8d9' : '#eaf3ff', color: task.is_special ? '#8a6f00' : '#237dba', width: 44, height: 44 }}>
                       <AssignmentOutlined />
                     </Avatar>
                     <Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#212b36' }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#0f172a' }}>
                           {task.title}
                         </Typography>
                         {task.is_special && (

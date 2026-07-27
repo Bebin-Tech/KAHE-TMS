@@ -159,12 +159,12 @@ const Reports = () => {
 
   return (
     <DashboardLayout title="Reports">
-      <Box sx={{ mb: 4, display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
+      <Box sx={{ mb: 3, display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
         <Box sx={{ width: 56, height: 56, flexShrink: 0, borderRadius: '14px', bgcolor: '#eaf3ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <AssessmentRounded sx={{ color: 'primary.main', fontSize: 32 }} />
         </Box>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h4" sx={{ fontWeight: 900, color: '#212b36', fontSize: { xs: '1.45rem', sm: '2.125rem' } }}>
+          <Typography variant="h4" sx={{ fontWeight: 900, color: '#0f172a', fontSize: { xs: '1.45rem', sm: '2.125rem' } }}>
             Task Workflow Reports
           </Typography>
           <Typography variant="body2" color="text.secondary">
@@ -194,7 +194,7 @@ const Reports = () => {
       </Box>
 
       {!isDean && (
-        <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, border: '1px solid #e5e2df', borderRadius: '12px' }}>
+        <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, border: '1px solid #d8e3f0', borderRadius: 3, bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.38)' }}>
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={3}>
               <TextField
@@ -272,20 +272,20 @@ const Reports = () => {
         </Paper>
       )}
 
-      <TableContainer component={Paper} sx={{ border: '1px solid #e5e2df', borderRadius: '12px' }}>
+      <TableContainer component={Paper} sx={{ border: '1px solid #d8e3f0', borderRadius: 3, overflow: 'hidden', bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.45)' }}>
         <Table sx={{ minWidth: 1350 }}>
-          <TableHead sx={{ bgcolor: '#f4f9ff' }}>
+          <TableHead sx={{ bgcolor: '#f8fbff' }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 800 }}>Task</TableCell>
-              <TableCell sx={{ fontWeight: 800 }}>User</TableCell>
-              <TableCell sx={{ fontWeight: 800 }}>Role</TableCell>
-              <TableCell sx={{ fontWeight: 800 }}>Action Performed</TableCell>
-              <TableCell sx={{ fontWeight: 800 }}>Action Date & Time</TableCell>
-              <TableCell sx={{ fontWeight: 800 }}>Assigned By</TableCell>
-              <TableCell sx={{ fontWeight: 800 }}>Assigned Date</TableCell>
-              <TableCell sx={{ fontWeight: 800 }}>Submission / Completion</TableCell>
-              <TableCell sx={{ fontWeight: 800 }}>Rejection / Resubmission</TableCell>
-              <TableCell sx={{ fontWeight: 800 }}>Current Status</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Task</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>User</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Role</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Action Performed</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Action Date & Time</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Assigned By</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Assigned Date</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Submission / Completion</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Rejection / Resubmission</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Current Status</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -298,9 +298,9 @@ const Reports = () => {
             ) : visibleReports.length > 0 ? visibleReports.map((report) => {
               const color = getStatusColor(report.status);
               return (
-                <TableRow key={report.id} hover>
+                <TableRow key={report.id} hover sx={{ '&:hover': { bgcolor: '#f8fbff' } }}>
                   <TableCell>
-                    <Typography variant="body2" sx={{ fontWeight: 800 }}>{report.task_name}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 900, color: '#0f172a' }}>{report.task_name}</Typography>
                     <Typography variant="caption" color="text.secondary">Dean: {report.dean_name || 'N/A'} | HOD: {report.hod_name || 'N/A'}</Typography>
                   </TableCell>
                   <TableCell>

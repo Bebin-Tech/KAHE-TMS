@@ -88,43 +88,43 @@ const DepartmentManagement = () => {
 
   return (
     <DashboardLayout title="Department Management">
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
         <Box sx={{ textAlign: 'left' }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: '#212b36' }}>Departments</Typography>
+          <Typography variant="h4" sx={{ fontWeight: 900, mb: 0.75, color: '#0f172a', fontSize: { xs: '1.45rem', sm: '2.125rem' } }}>Departments</Typography>
           <Typography variant="body2" color="text.secondary">Manage university departments and their physical locations.</Typography>
         </Box>
         <Button
           variant="outlined"
           startIcon={<AddRounded />}
           onClick={() => handleOpen()}
-          sx={{ alignSelf: { xs: 'flex-start', md: 'center' } }}
+          sx={{ alignSelf: { xs: 'flex-start', md: 'center' }, bgcolor: '#ffffff', borderColor: '#b7d5fb', fontWeight: 850, borderRadius: 1.5 }}
         >
           Add Department
         </Button>
       </Box>
 
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ border: '1px solid #d8e3f0', borderRadius: 3, overflow: 'hidden', bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.45)' }}>
         <Table>
-          <TableHead sx={{ bgcolor: '#f4f9ff' }}>
+          <TableHead sx={{ bgcolor: '#f8fbff' }}>
             <TableRow>
-              <TableCell sx={{ fontWeight: 700, color: '#637381' }}>Department Name</TableCell>
-              <TableCell sx={{ fontWeight: 700, color: '#637381' }}>Block Name</TableCell>
-              <TableCell align="right" sx={{ fontWeight: 700, color: '#637381' }}>Actions</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Department Name</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Block Name</TableCell>
+              <TableCell align="right" sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {departments.length > 0 ? departments.map((dept) => (
-              <TableRow key={dept.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+              <TableRow key={dept.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { bgcolor: '#f8fbff' } }}>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: '#eaf3ff', color: '#237dba' }}>
+                    <Avatar sx={{ bgcolor: '#eaf3ff', color: '#237dba', width: 44, height: 44 }}>
                       <BusinessRounded />
                     </Avatar>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#212b36' }}>{dept.name}</Typography>
+                    <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#0f172a' }}>{dept.name}</Typography>
                   </Box>
                 </TableCell>
                 <TableCell>
-                  <Typography variant="body2" sx={{ color: '#637381' }}>{dept.block_name || 'N/A'}</Typography>
+                  <Typography variant="body2" sx={{ color: '#64748b', fontWeight: 700 }}>{dept.block_name || 'N/A'}</Typography>
                 </TableCell>
                 <TableCell align="right">
                   <IconButton onClick={() => handleOpen(dept)} size="small" sx={{ color: '#237dba' }}>

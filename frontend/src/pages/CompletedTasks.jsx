@@ -128,8 +128,8 @@ const CompletedTasks = () => {
 
   return (
     <DashboardLayout title="Completed Tasks Archive">
-      <Box sx={{ mb: 4, textAlign: 'left' }}>
-        <Typography variant="h4" sx={{ fontWeight: 800, mb: 1, color: 'text.primary' }}>
+      <Box sx={{ mb: 3, textAlign: 'left' }}>
+        <Typography variant="h4" sx={{ fontWeight: 900, mb: 0.75, color: '#0f172a', fontSize: { xs: '1.45rem', sm: '2.125rem' } }}>
           Completed Assignments
         </Typography>
         <Typography variant="body2" color="text.secondary">
@@ -137,16 +137,16 @@ const CompletedTasks = () => {
         </Typography>
       </Box>
 
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ border: '1px solid #d8e3f0', borderRadius: 3, overflow: 'hidden', bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.45)' }}>
         <Table sx={{ minWidth: 920 }}>
-          <TableHead>
+          <TableHead sx={{ bgcolor: '#f8fbff' }}>
             <TableRow>
-              <TableCell>Task Details</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Completed By</TableCell>
-              <TableCell>Approved By</TableCell>
-              <TableCell>Status</TableCell>
-              {canDelete && <TableCell align="right">Actions</TableCell>}
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Task Details</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Type</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Completed By</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Approved By</TableCell>
+              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Status</TableCell>
+              {canDelete && <TableCell align="right" sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Actions</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -157,14 +157,14 @@ const CompletedTasks = () => {
                 </TableCell>
               </TableRow>
             ) : archiveRows.length > 0 ? archiveRows.map((task) => (
-              <TableRow key={task.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+              <TableRow key={task.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { bgcolor: '#f8fbff' } }}>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: task.type === 'Faculty Task' ? '#dbeafe' : '#ccfbf1', color: task.type === 'Faculty Task' ? '#2563eb' : '#0f766e' }}>
+                    <Avatar sx={{ bgcolor: task.type === 'Faculty Task' ? '#dbeafe' : '#ccfbf1', color: task.type === 'Faculty Task' ? '#2563eb' : '#0f766e', width: 44, height: 44 }}>
                       {task.type === 'Faculty Task' ? <FactCheckRounded /> : <AssignmentTurnedInOutlined />}
                     </Avatar>
                     <Box>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'text.primary' }}>{task.title}</Typography>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#0f172a' }}>{task.title}</Typography>
                       <Typography variant="caption" color="text.secondary">{task.subtitle}</Typography>
                     </Box>
                   </Box>
