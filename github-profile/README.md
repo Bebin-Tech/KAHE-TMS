@@ -24,51 +24,28 @@
 
 ## 👨‍💻 About Me
 
-I'm **Bebin**, a full stack developer who enjoys building practical, polished, and reliable web applications. I like working across the full product flow, from designing responsive user interfaces to building secure backend APIs and organizing data in a clean way.
+I'm **Bebin R**, a developer interested in building useful, modern, and scalable digital products. I enjoy learning new technologies, contributing to open source, and working on full stack and backend-focused projects.
 
-- 🔭 Currently working on **academic task management systems and full-stack web applications**
-- 💬 Ask me about **Django, REST APIs, React, authentication, dashboards, and deployment**
-- 🧠 I care about **clean code, good UI, maintainable architecture, and real-world usability**
-- 🤝 Open to **collaboration, internships, freelance projects, and learning opportunities**
-- ⚡ Fun fact: I enjoy making projects look professional, not just functional
+- **Name:** Bebin R
+- **Languages:** Python, C++, JavaScript, and more
+- **Interests:** AI, Open Source, Backend Development, Full Stack Development
+- **Current Focus:** AI Based Automation Projects and Open Source Contributions
+- **Hobbies:** Movies, Reading, and Exploring New Technologies
+- **Fun Fact:** I like exploring new technologies more than sleeping sometimes
 
 ---
 
-## 🚀 Tech Stack
+## ⚙️ Technologies & Tools
 
 <div align="center">
 
-### Languages
-![Python](https://img.shields.io/badge/Python-3776ab?style=for-the-badge&logo=python&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-f7df1e?style=for-the-badge&logo=javascript&logoColor=111827)
-![HTML5](https://img.shields.io/badge/HTML5-e34f26?style=for-the-badge&logo=html5&logoColor=white)
-![CSS3](https://img.shields.io/badge/CSS3-1572b6?style=for-the-badge&logo=css3&logoColor=white)
-![SQL](https://img.shields.io/badge/SQL-0f172a?style=for-the-badge&logo=postgresql&logoColor=white)
+<img src="https://skillicons.dev/icons?i=python,js,html,css,react,vite,tailwind,materialui,django,mysql,postgres,sqlite,git,github,vscode,postman,docker,linux,firebase,vercel&theme=dark&perline=10" alt="Technologies and tools" />
 
-### Frontend
-![React](https://img.shields.io/badge/React-20232a?style=for-the-badge&logo=react&logoColor=61dafb)
-![Vite](https://img.shields.io/badge/Vite-646cff?style=for-the-badge&logo=vite&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38bdf8?style=for-the-badge&logo=tailwindcss&logoColor=white)
-![Material UI](https://img.shields.io/badge/Material_UI-007fff?style=for-the-badge&logo=mui&logoColor=white)
-![Axios](https://img.shields.io/badge/Axios-5a29e4?style=for-the-badge&logo=axios&logoColor=white)
+<br />
+<br />
 
-### Backend
-![Django](https://img.shields.io/badge/Django-092e20?style=for-the-badge&logo=django&logoColor=white)
 ![Django REST Framework](https://img.shields.io/badge/Django_REST_Framework-a30000?style=for-the-badge&logo=django&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-111827?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
-![Gunicorn](https://img.shields.io/badge/Gunicorn-499848?style=for-the-badge&logo=gunicorn&logoColor=white)
-![WhiteNoise](https://img.shields.io/badge/WhiteNoise-0f172a?style=for-the-badge&logo=python&logoColor=white)
-
-### Database
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169e1?style=for-the-badge&logo=postgresql&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-4479a1?style=for-the-badge&logo=mysql&logoColor=white)
-![SQLite](https://img.shields.io/badge/SQLite-003b57?style=for-the-badge&logo=sqlite&logoColor=white)
-
-### Tools & Technologies
-![Git](https://img.shields.io/badge/Git-f05032?style=for-the-badge&logo=git&logoColor=white)
-![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)
-![VS Code](https://img.shields.io/badge/VS_Code-007acc?style=for-the-badge&logo=visualstudiocode&logoColor=white)
-![Postman](https://img.shields.io/badge/Postman-ff6c37?style=for-the-badge&logo=postman&logoColor=white)
 ![Render](https://img.shields.io/badge/Render-46e3b7?style=for-the-badge&logo=render&logoColor=111827)
 
 </div>
