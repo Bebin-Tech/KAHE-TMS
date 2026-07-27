@@ -212,29 +212,56 @@ const AdminDashboard = () => {
 
       <Grid container spacing={3}>
         <Grid item xs={12} lg={7}>
-          <Paper sx={{ borderRadius: 3, border: '1px solid #dde5f0', overflow: 'hidden' }}>
-            <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e7edf5' }}>
+          <Paper sx={{ borderRadius: 3, border: '1px solid #d8e3f0', overflow: 'hidden', bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.45)' }}>
+            <Box sx={{ p: { xs: 2.25, md: 3 }, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2, borderBottom: '1px solid #e7edf5', flexDirection: { xs: 'column', sm: 'row' } }}>
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: 900 }}>Recent Task Flow</Typography>
-                <Typography variant="body2" color="text.secondary">Latest assignments moving through the institution.</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>Recent Task Flow</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35 }}>Latest assignments moving through the institution.</Typography>
               </Box>
-              <Button size="small" endIcon={<ArrowForwardRounded />} onClick={() => navigate('/tasks')}>All tasks</Button>
+              <Button
+                size="small"
+                variant="outlined"
+                endIcon={<ArrowForwardRounded />}
+                onClick={() => navigate('/tasks')}
+                sx={{ bgcolor: '#ffffff', borderColor: '#b7d5fb', fontWeight: 850, borderRadius: 1.5, alignSelf: { xs: 'flex-start', sm: 'center' } }}
+              >
+                All tasks
+              </Button>
             </Box>
-            <Stack divider={<Box sx={{ borderTop: '1px solid #edf2f7' }} />}>
+            <Stack spacing={0}>
               {(recentTasks.length ? recentTasks : [{ id: 'empty', title: loading ? 'Loading task activity...' : 'No tasks created yet', department_name: 'Create a task to begin tracking workflow', status: 'ASSIGNED' }]).map((task) => {
                 const config = statusConfig[task.status] || statusConfig.ASSIGNED;
                 return (
-                  <Box key={task.id} sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: config.bg, color: config.color }}>
+                  <Box
+                    key={task.id}
+                    sx={{
+                      mx: { xs: 1.5, md: 2 },
+                      my: 1,
+                      p: { xs: 1.75, md: 2 },
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                      borderRadius: 2,
+                      border: '1px solid #edf2f7',
+                      bgcolor: '#ffffff',
+                      transition: 'background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease',
+                      '&:hover': {
+                        bgcolor: '#f8fbff',
+                        borderColor: '#d8e7fb',
+                        boxShadow: '0 16px 36px -30px rgba(15,23,42,0.4)'
+                      }
+                    }}
+                  >
+                    <Avatar sx={{ bgcolor: config.bg, color: config.color, width: 46, height: 46 }}>
                       {task.is_special ? <PriorityHighRounded /> : <AssignmentOutlined />}
                     </Avatar>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography variant="subtitle2" noWrap sx={{ fontWeight: 900 }}>{task.title}</Typography>
-                      <Typography variant="body2" color="text.secondary" noWrap>{task.department_name || task.assigned_to_hod_name || 'General workflow'}</Typography>
+                      <Typography variant="subtitle2" noWrap sx={{ fontWeight: 900, color: '#0f172a', fontSize: '0.95rem' }}>{task.title}</Typography>
+                      <Typography variant="body2" color="text.secondary" noWrap sx={{ mt: 0.35 }}>{task.department_name || task.assigned_to_hod_name || 'General workflow'}</Typography>
                     </Box>
-                    <Box sx={{ textAlign: 'right', display: { xs: 'none', sm: 'block' } }}>
-                      <Chip label={config.label} size="small" sx={{ bgcolor: config.bg, color: config.color, fontWeight: 800, mb: 0.75 }} />
-                      <Typography variant="caption" display="block" color="text.secondary">{formatDate(task.deadline)}</Typography>
+                    <Box sx={{ textAlign: 'right', display: { xs: 'none', sm: 'flex' }, flexDirection: 'column', alignItems: 'flex-end', gap: 0.75, minWidth: 116 }}>
+                      <Chip label={config.label} size="small" sx={{ bgcolor: config.bg, color: config.color, fontWeight: 900, borderRadius: 1.25 }} />
+                      <Typography variant="caption" display="block" color="text.secondary" sx={{ fontWeight: 700 }}>{formatDate(task.deadline)}</Typography>
                     </Box>
                   </Box>
                 );
@@ -244,26 +271,35 @@ const AdminDashboard = () => {
         </Grid>
 
         <Grid item xs={12} lg={5}>
-          <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #dde5f0', height: '100%' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Paper sx={{ p: { xs: 2.25, md: 3 }, borderRadius: 3, border: '1px solid #d8e3f0', height: '100%', bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.45)' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2.5, gap: 2 }}>
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: 900 }}>Department Workload</Typography>
-                <Typography variant="body2" color="text.secondary">Relative distribution across active units.</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>Department Workload</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35 }}>Relative distribution across active units.</Typography>
               </Box>
-              <BusinessOutlined sx={{ color: 'text.secondary' }} />
+              <Avatar sx={{ bgcolor: '#f1f5f9', color: '#64748b', width: 42, height: 42 }}>
+                <BusinessOutlined />
+              </Avatar>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1.25, flexWrap: 'wrap', mb: 3 }}>
+              <Chip label={`${departmentLoad.length} active units`} size="small" sx={{ bgcolor: '#eaf3ff', color: '#237dba', fontWeight: 850, borderRadius: 1.25 }} />
+              <Chip label={`${taskTotals.total} total tasks`} size="small" sx={{ bgcolor: '#f1f5f9', color: '#334155', fontWeight: 850, borderRadius: 1.25 }} />
             </Box>
             {departmentLoad.length > 0 ? (
-              <Stack spacing={2.5}>
+              <Stack spacing={2}>
                 {departmentLoad.map((department) => (
-                  <Box key={department.id || department.name}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.75 }}>
-                      <Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{department.name}</Typography>
-                        <Typography variant="caption" color="text.secondary">{department.block_name || 'Campus block not assigned'}</Typography>
+                  <Box key={department.id || department.name} sx={{ p: 2, border: '1px solid #edf2f7', borderRadius: 2, bgcolor: '#ffffff' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.1, gap: 2 }}>
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography variant="subtitle2" noWrap sx={{ fontWeight: 900, color: '#0f172a' }}>{department.name}</Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>{department.block_name || 'Campus block not assigned'}</Typography>
                       </Box>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{department.taskCount} tasks</Typography>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#0f172a', whiteSpace: 'nowrap' }}>{department.taskCount} tasks</Typography>
                     </Box>
-                    <LinearProgress variant="determinate" value={department.load} sx={{ height: 8, borderRadius: 5, bgcolor: '#e7edf5' }} />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                      <LinearProgress variant="determinate" value={department.load} sx={{ flex: 1, height: 9, borderRadius: 5, bgcolor: '#e7edf5' }} />
+                      <Typography variant="caption" sx={{ width: 38, textAlign: 'right', color: 'text.secondary', fontWeight: 850 }}>{department.load}%</Typography>
+                    </Box>
                   </Box>
                 ))}
               </Stack>
