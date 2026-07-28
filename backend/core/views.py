@@ -177,7 +177,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Task.objects.all().filter(subtasks__assigned_to=user).distinct()
 
         # Admin, Dean, and HOD only see active tasks
-        base_queryset = Task.objects.filter(is_active=True)
+        base_queryset = Task.objects.filter(is_active=True).order_by('-created_at', '-id')
         if user.role == 'ADMIN':
             return base_queryset
         elif user.role == 'DEAN':

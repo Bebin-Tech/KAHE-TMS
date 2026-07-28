@@ -47,7 +47,13 @@ const Tasks = () => {
 
   const fetchData = async () => {
     try {
-      const res = await api.get('tasks/');
+      const res = await api.get('tasks/', {
+        params: { refresh: Date.now() },
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
+      });
       setTasks(res.data);
     } catch (err) {
       console.error('Error fetching tasks:', err);
@@ -159,7 +165,7 @@ const Tasks = () => {
   };
 
   const visibleTasks = isHod
-    ? tasks.filter((task) => !['COMPLETED', 'DEAN_APPROVED', 'CANCELLED'].includes(task.status))
+    ? tasks.filter((task) => task.assigned_to_hod && !['COMPLETED', 'DEAN_APPROVED', 'CANCELLED'].includes(task.status))
     : tasks;
 
   const canStartTask = (task) => ['ASSIGNED', 'REJECTED_DEAN'].includes(task.status);
