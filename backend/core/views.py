@@ -684,9 +684,8 @@ class TaskReportViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(task__created_by=user, role__in=['HOD', 'FACULTY'])
         elif user.role == 'HOD':
             queryset = queryset.filter(task__assigned_to_hod=user).exclude(
-                role='HOD',
-                status='ASSIGNED',
-                action_performed='Assigned task to HOD'
+                Q(role='HOD', status='ASSIGNED', action_performed='Assigned task to HOD')
+                | Q(role='DEAN', status='ASSIGNED', action_performed='Created task')
             )
         elif user.role == 'FACULTY':
             queryset = queryset.filter(user=user)
