@@ -195,7 +195,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         task_status = 'ASSIGNED' if serializer.validated_data.get('assigned_to_hod') else 'ONGOING'
-        task = serializer.save(created_by=self.request.user, status=task_status)
+        task = serializer.save(created_by=self.request.user, status=task_status, is_active=True)
         record_task_activity(
             task=task,
             user=task.created_by,
@@ -222,7 +222,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         previous_assignee = self.get_object().assigned_to_hod
-        task = serializer.save()
+        task = serializer.save(is_active=True if serializer.validated_data.get('assigned_to_hod') else serializer.instance.is_active)
         now = timezone.now()
         record_task_activity(
             task=task,
@@ -256,10 +256,13 @@ class TaskViewSet(viewsets.ModelViewSet):
         if request.user.role != 'HOD':
             return Response({'error': 'Only HOD users can access assigned HOD tasks.'}, status=status.HTTP_403_FORBIDDEN)
 
+        active_workflow_statuses = ['ASSIGNED', 'IN_PROGRESS', 'REJECTED_DEAN', 'SUBMITTED_HOD', 'HOD_APPROVED']
         queryset = Task.objects.filter(
-            is_active=True,
-            assigned_to_hod=request.user
-        ).exclude(status__in=['COMPLETED', 'DEAN_APPROVED', 'CANCELLED']).order_by('-created_at', '-id')
+            assigned_to_hod=request.user,
+            status__in=active_workflow_statuses
+        ).filter(
+            Q(is_active=True) | Q(created_by__role='DEAN')
+        ).order_by('-created_at', '-id')
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -674,7 +677,11 @@ class TaskReportViewSet(viewsets.ReadOnlyModelViewSet):
         if user.role == 'DEAN':
             queryset = queryset.filter(task__created_by=user, role__in=['HOD', 'FACULTY'])
         elif user.role == 'HOD':
-            queryset = queryset.filter(task__assigned_to_hod=user)
+            queryset = queryset.filter(task__assigned_to_hod=user).exclude(
+                role='HOD',
+                status='ASSIGNED',
+                action_performed='Assigned task to HOD'
+            )
         elif user.role == 'FACULTY':
             queryset = queryset.filter(user=user)
         elif user.role != 'ADMIN':

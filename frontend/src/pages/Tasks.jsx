@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import CreateTaskDialog from '../components/CreateTaskDialog';
 import CreateSubTaskDialog from '../components/CreateSubTaskDialog';
+import ReviewSubmissionDialog from '../components/ReviewSubmissionDialog';
 import TaskSuccessDialog from '../components/TaskSuccessDialog';
 import {
   Paper, Typography, Box, Button, Table, TableBody,
@@ -20,9 +21,10 @@ import {
   CancelRounded,
   VisibilityRounded,
   PlayArrowRounded,
-  DoneAllRounded,
   FlagRounded,
-  AttachFileRounded
+  AttachFileRounded,
+  RateReviewRounded,
+  SendRounded
 } from '@mui/icons-material';
 import api from '../api/axios';
 import { getCurrentSession } from '../utils/session';
@@ -36,6 +38,11 @@ const getFileUrl = (path) => {
   return `${fileBaseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
 };
 
+const activeHodStatuses = ['ASSIGNED', 'IN_PROGRESS', 'REJECTED_DEAN', 'SUBMITTED_HOD', 'HOD_APPROVED'];
+const filterActiveHodTasks = (rows) => (
+  (rows || []).filter((task) => activeHodStatuses.includes(task.status))
+);
+
 const Tasks = () => {
   const currentRole = getCurrentSession()?.role;
   const isHod = currentRole === 'HOD';
@@ -44,9 +51,11 @@ const Tasks = () => {
   const [editingTask, setEditingTask] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [selectedTask, setSelectedTask] = useState(null);
-  const [completionTarget, setCompletionTarget] = useState(null);
-  const [completionRemarks, setCompletionRemarks] = useState('');
+  const [submitTarget, setSubmitTarget] = useState(null);
+  const [submissionRemarks, setSubmissionRemarks] = useState('');
   const [facultyAssignmentTask, setFacultyAssignmentTask] = useState(null);
+  const [reviewTask, setReviewTask] = useState(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [successTask, setSuccessTask] = useState(null);
   const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
@@ -57,17 +66,40 @@ const Tasks = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      const endpoint = isHod ? 'tasks/assigned-to-me/' : 'tasks/';
-      const res = await api.get(endpoint, {
+      const requestConfig = {
         params: { refresh: Date.now() },
         headers: {
           'Cache-Control': 'no-cache',
           Pragma: 'no-cache',
         },
-      });
-      setTasks(res.data);
+      };
+      if (!isHod) {
+        const res = await api.get('tasks/', requestConfig);
+        setTasks(res.data);
+        return;
+      }
+
+      const assignedResponse = await api.get('tasks/assigned-to-me/', requestConfig);
+      if (assignedResponse.data?.length) {
+        setTasks(assignedResponse.data);
+        return;
+      }
+
+      const fallbackResponse = await api.get('tasks/', requestConfig);
+      setTasks(filterActiveHodTasks(fallbackResponse.data));
     } catch (err) {
       console.error('Error fetching tasks:', err);
+      if (isHod) {
+        try {
+          const fallbackResponse = await api.get('tasks/', {
+            params: { refresh: Date.now() },
+            headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+          });
+          setTasks(filterActiveHodTasks(fallbackResponse.data));
+        } catch (fallbackErr) {
+          console.error('Error fetching fallback HOD tasks:', fallbackErr);
+        }
+      }
     }
   }, [isHod]);
 
@@ -108,22 +140,22 @@ const Tasks = () => {
     }
   };
 
-  const handleOpenComplete = (task) => {
-    setCompletionTarget(task);
-    setCompletionRemarks('');
+  const handleOpenSubmitToDean = (task) => {
+    setSubmitTarget(task);
+    setSubmissionRemarks('');
   };
 
-  const handleCompleteTask = async () => {
-    if (!completionTarget) return;
+  const handleSubmitToDean = async () => {
+    if (!submitTarget) return;
 
     setActionLoading(true);
     try {
-      await api.post(`tasks/${completionTarget.id}/complete_by_hod/`, {
-        remarks: completionRemarks || 'Task completed by HOD.',
+      await api.post(`tasks/${submitTarget.id}/submit_to_dean/`, {
+        content: submissionRemarks || 'Verified faculty work submitted by HOD for Dean final review.',
       });
-      showMessage('Task completed and moved to Completed Tasks.');
-      setCompletionTarget(null);
-      setCompletionRemarks('');
+      showMessage('Task submitted to Dean for final review.');
+      setSubmitTarget(null);
+      setSubmissionRemarks('');
       setSelectedTask(null);
       await fetchData();
     } catch (err) {
@@ -135,6 +167,11 @@ const Tasks = () => {
 
   const handleAssignFaculty = (task) => {
     setFacultyAssignmentTask(task);
+  };
+
+  const handleReviewFacultyWork = (subtask) => {
+    setReviewTask({ ...subtask, type: 'subtask' });
+    setReviewOpen(true);
   };
 
   const getStatusIcon = (status) => {
@@ -182,7 +219,13 @@ const Tasks = () => {
   const visibleTasks = tasks;
 
   const canStartTask = (task) => ['ASSIGNED', 'REJECTED_DEAN'].includes(task.status);
-  const canCompleteTask = (task) => !['COMPLETED', 'DEAN_APPROVED', 'CANCELLED', 'SUBMITTED_DEAN'].includes(task.status);
+  const hasFacultyTasks = (task) => (task.subtasks || []).length > 0;
+  const hasSubmittedFacultyWork = (task) => (task.subtasks || []).some((subtask) => subtask.status === 'SUBMITTED');
+  const canSubmitToDean = (task) => (
+    hasFacultyTasks(task)
+    && (task.subtasks || []).every((subtask) => ['APPROVED_HOD', 'COMPLETED'].includes(subtask.status))
+    && !['COMPLETED', 'DEAN_APPROVED', 'CANCELLED', 'SUBMITTED_DEAN'].includes(task.status)
+  );
 
   return (
     <DashboardLayout title="Task Management">
@@ -192,7 +235,7 @@ const Tasks = () => {
             {isHod ? 'HOD Task Module' : 'System Tasks'}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {isHod ? 'Open assigned Dean tasks, review priority, update progress, and complete work.' : 'Assign and monitor tasks across all departments.'}
+            {isHod ? 'Open assigned Dean tasks, review priority, update progress, and route work to Faculty.' : 'Assign and monitor tasks across all departments.'}
           </Typography>
         </Box>
         {!isHod && (
@@ -208,6 +251,12 @@ const Tasks = () => {
       </Box>
 
       <TableContainer component={Paper} sx={{ border: '1px solid #d8e3f0', borderRadius: 3, overflow: 'hidden', bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.45)' }}>
+        {isHod && (
+          <Box sx={{ p: { xs: 2.25, md: 3 }, borderBottom: '1px solid #e7edf5', bgcolor: '#ffffff' }}>
+            <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a' }}>Dean Assignments</Typography>
+            <Typography variant="body2" color="text.secondary">Primary tasks routed to this department.</Typography>
+          </Box>
+        )}
         <Table sx={{ minWidth: 760 }}>
           <TableHead sx={{ bgcolor: '#f8fbff' }}>
             <TableRow>
@@ -275,11 +324,16 @@ const Tasks = () => {
                           Start
                         </Button>
                       )}
-                      {canCompleteTask(task) && (
-                        <Button size="small" variant="contained" startIcon={<DoneAllRounded />} disabled={actionLoading} onClick={() => handleOpenComplete(task)}>
-                          Complete
-                        </Button>
-                      )}
+                      <Button size="small" variant="outlined" startIcon={<AddRounded />} onClick={() => handleAssignFaculty(task)}>
+                        Add Sub-Task
+                      </Button>
+                      <Tooltip title={!canSubmitToDean(task) ? 'Assign Faculty and approve submitted Faculty work before sending this task to Dean.' : ''}>
+                        <span>
+                          <Button size="small" variant="contained" startIcon={<SendRounded />} disabled={actionLoading || !canSubmitToDean(task)} onClick={() => handleOpenSubmitToDean(task)}>
+                            Submit Dean
+                          </Button>
+                        </span>
+                      </Tooltip>
                     </Box>
                   ) : (
                     <>
@@ -294,7 +348,7 @@ const Tasks = () => {
                 <TableCell colSpan={5} align="center" sx={{ py: 10 }}>
                   <AssignmentOutlined sx={{ fontSize: 48, color: '#919eab', mb: 2 }} />
                   <Typography variant="body1" color="text.secondary">
-                    {isHod ? 'No active HOD tasks found. Completed tasks appear in Completed Tasks.' : 'No tasks found. Create one to get started.'}
+                    {isHod ? 'No Dean assignments are currently available for processing.' : 'No tasks found. Create one to get started.'}
                   </Typography>
                 </TableCell>
               </TableRow>
@@ -364,10 +418,19 @@ const Tasks = () => {
                   <Stack spacing={1}>
                     {selectedTask.subtasks.map((subtask) => (
                       <Box key={subtask.id} sx={{ p: 1.5, border: '1px solid #e2e8f0', borderRadius: 2, bgcolor: '#f8fafc' }}>
-                        <Typography variant="body2" sx={{ fontWeight: 900 }}>{subtask.title}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {subtask.assigned_to_name || 'Faculty'} - {subtask.status}
-                        </Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1.5, flexDirection: { xs: 'column', sm: 'row' } }}>
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 900 }}>{subtask.title}</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {subtask.assigned_to_name || 'Faculty'} - {subtask.status}
+                            </Typography>
+                          </Box>
+                          {subtask.status === 'SUBMITTED' && (
+                            <Button size="small" variant="contained" color="warning" startIcon={<RateReviewRounded />} onClick={() => handleReviewFacultyWork(subtask)}>
+                              Review
+                            </Button>
+                          )}
+                        </Box>
                       </Box>
                     ))}
                   </Stack>
@@ -388,33 +451,42 @@ const Tasks = () => {
               Assign Faculty
             </Button>
           )}
-          {selectedTask && canCompleteTask(selectedTask) && (
-            <Button variant="contained" startIcon={<DoneAllRounded />} disabled={actionLoading} onClick={() => handleOpenComplete(selectedTask)}>
-              Complete Task
+          {selectedTask && hasSubmittedFacultyWork(selectedTask) && (
+            <Button variant="outlined" color="warning" startIcon={<RateReviewRounded />} onClick={() => handleReviewFacultyWork(selectedTask.subtasks.find((subtask) => subtask.status === 'SUBMITTED'))}>
+              Review Faculty Work
             </Button>
+          )}
+          {selectedTask && (
+            <Tooltip title={!canSubmitToDean(selectedTask) ? 'All Faculty sub-tasks must be approved before submitting to Dean.' : ''}>
+              <span>
+                <Button variant="contained" startIcon={<SendRounded />} disabled={actionLoading || !canSubmitToDean(selectedTask)} onClick={() => handleOpenSubmitToDean(selectedTask)}>
+                  Submit to Dean
+                </Button>
+              </span>
+            </Tooltip>
           )}
         </DialogActions>
       </Dialog>
-      <Dialog open={Boolean(completionTarget)} onClose={() => setCompletionTarget(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
-        <DialogTitle sx={{ fontWeight: 900 }}>Complete Task</DialogTitle>
+      <Dialog open={Boolean(submitTarget)} onClose={() => setSubmitTarget(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
+        <DialogTitle sx={{ fontWeight: 900 }}>Submit Task to Dean</DialogTitle>
         <DialogContent dividers>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Add final remarks before moving this task to Completed Tasks.
+            Add verification remarks before returning this task to the Dean for final review and completion.
           </Typography>
           <TextField
             fullWidth
-            label="Completion Remarks"
+            label="HOD Verification Remarks"
             multiline
             minRows={4}
-            value={completionRemarks}
-            onChange={(event) => setCompletionRemarks(event.target.value)}
-            placeholder="Enter completion details, remarks, or summary..."
+            value={submissionRemarks}
+            onChange={(event) => setSubmissionRemarks(event.target.value)}
+            placeholder="Summarize the verified Faculty work and any remarks for Dean..."
           />
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setCompletionTarget(null)} color="inherit">Cancel</Button>
-          <Button variant="contained" startIcon={<DoneAllRounded />} disabled={actionLoading} onClick={handleCompleteTask}>
-            Complete
+          <Button onClick={() => setSubmitTarget(null)} color="inherit">Cancel</Button>
+          <Button variant="contained" startIcon={<SendRounded />} disabled={actionLoading} onClick={handleSubmitToDean}>
+            Submit to Dean
           </Button>
         </DialogActions>
       </Dialog>
@@ -427,6 +499,20 @@ const Tasks = () => {
           onTaskCreated={async () => {
             showMessage('Task assigned to Faculty successfully.');
             setFacultyAssignmentTask(null);
+            setSelectedTask(null);
+            await fetchData();
+          }}
+        />
+      )}
+      {reviewTask && (
+        <ReviewSubmissionDialog
+          open={reviewOpen}
+          onClose={() => setReviewOpen(false)}
+          task={reviewTask}
+          onProcessed={async () => {
+            showMessage('Faculty work reviewed successfully.');
+            setReviewTask(null);
+            setReviewOpen(false);
             setSelectedTask(null);
             await fetchData();
           }}

@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
-import CreateSubTaskDialog from '../components/CreateSubTaskDialog';
 import ReviewSubmissionDialog from '../components/ReviewSubmissionDialog';
 import useAutoRefresh from '../hooks/useAutoRefresh';
 import {
@@ -8,16 +7,12 @@ import {
   Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Chip, IconButton,
   Card, CardContent, Avatar,
-  Dialog, DialogTitle, DialogContent, DialogActions, TextField,
-  CircularProgress,
-  Tooltip,
   Stack,
   Snackbar,
   Alert
 } from '@mui/material';
 import {
   AssignmentRounded,
-  AddRounded,
   VisibilityRounded,
   GroupWorkRounded,
   TimerRounded,
@@ -25,19 +20,12 @@ import {
   RateReviewRounded
 } from '@mui/icons-material';
 import api from '../api/axios';
-import { formatApiError } from '../utils/errors';
 
 const HODDashboard = () => {
-  const [tasks, setTasks] = useState([]);
   const [subtasks, setSubtasks] = useState([]);
   const [stats, setStats] = useState({ assigned: 0, pendingReview: 0, teamPerformance: '92%' });
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewTask, setReviewTask] = useState(null);
-  const [submitTask, setSubmitTask] = useState(null);
-  const [submissionContent, setSubmissionContent] = useState('');
-  const [submitting, setSubmitting] = useState(false);
   const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
 
   const fetchData = useCallback(async () => {
@@ -46,7 +34,6 @@ const HODDashboard = () => {
         api.get('tasks/'),
         api.get('subtasks/')
       ]);
-      setTasks(taskRes.data);
       setSubtasks(subRes.data);
       setStats({
         assigned: taskRes.data.length,
@@ -62,54 +49,11 @@ const HODDashboard = () => {
     fetchData();
   }, [fetchData]);
 
-  useAutoRefresh(fetchData, 10000, !dialogOpen && !reviewOpen && !submitTask);
+  useAutoRefresh(fetchData, 10000, !reviewOpen);
 
   const handleOpenReview = (item, type) => {
     setReviewTask({ ...item, type });
     setReviewOpen(true);
-  };
-
-  const handleOpenSubTaskDialog = (task) => {
-    setSelectedTask(task);
-    setDialogOpen(true);
-  };
-
-  const handleStartWork = async (task) => {
-    try {
-      await api.patch(`tasks/${task.id}/`, { status: 'IN_PROGRESS' });
-      fetchData();
-    } catch (err) {
-      console.error('Error starting task:', err);
-    }
-  };
-
-  const handleSubmitToDean = async () => {
-    if (!submitTask) return;
-    setSubmitting(true);
-    try {
-      await api.post(`tasks/${submitTask.id}/submit_to_dean/`, {
-        content: submissionContent || 'Completed task submitted by HOD for Dean review.'
-      });
-      setSubmitTask(null);
-      setSubmissionContent('');
-      fetchData();
-    } catch (err) {
-      console.error('Error submitting task to Dean:', err);
-      setNotification({
-        open: true,
-        severity: 'error',
-        message: formatApiError(err, 'Failed to submit task to Dean.'),
-      });
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const getTaskSubtasks = (taskId) => subtasks.filter((subtask) => subtask.task === taskId);
-
-  const canSubmitToDean = (task) => {
-    const taskSubtasks = getTaskSubtasks(task.id);
-    return taskSubtasks.length === 0 || taskSubtasks.every((subtask) => ['APPROVED_HOD', 'COMPLETED'].includes(subtask.status));
   };
 
   const activeSubtasks = subtasks.filter((subtask) => !['APPROVED_HOD', 'COMPLETED'].includes(subtask.status)).length;
@@ -176,79 +120,6 @@ const HODDashboard = () => {
       </Grid>
 
       <Grid container spacing={{ xs: 2, md: 3 }} justifyContent="center">
-        <Grid item xs={12} lg={12} sx={{ mb: 3 }}>
-          <Paper sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
-            <Box sx={{ p: { xs: 2.25, md: 3 }, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1.5, flexDirection: { xs: 'column', sm: 'row' }, borderBottom: '1px solid', borderColor: 'divider' }}>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 900 }}>Dean Assignments</Typography>
-                <Typography variant="body2" color="text.secondary">Primary tasks routed to this department.</Typography>
-              </Box>
-            </Box>
-            <TableContainer>
-              <Table sx={{ minWidth: 780 }}>
-                <TableHead sx={{ bgcolor: '#f4f9ff' }}>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: 700 }}>Task Title</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Deadline</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {tasks.map((task) => (
-                    <TableRow key={task.id} hover>
-                      <TableCell sx={{ fontWeight: 700 }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{task.title}</Typography>
-                        <Typography variant="caption" color="text.secondary">Assigned by Dean: {task.created_by_name}</Typography>
-                      </TableCell>
-                      <TableCell>{new Date(task.deadline).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <Chip label={task.status} size="small" variant="outlined" sx={{ fontWeight: 700 }} />
-                      </TableCell>
-                      <TableCell align="right">
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, flexWrap: 'wrap' }}>
-                        {['ASSIGNED', 'REJECTED_DEAN'].includes(task.status) && (
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => handleStartWork(task)}
-                          >
-                            Start Work
-                          </Button>
-                        )}
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          startIcon={<AddRounded />}
-                          onClick={() => handleOpenSubTaskDialog(task)}
-                        >
-                          Add Sub-Task
-                        </Button>
-                        <Tooltip title={!canSubmitToDean(task) ? 'Approve all faculty sub-tasks before submitting to Dean.' : ''}>
-                          <span>
-                            <Button
-                              size="small"
-                              variant="contained"
-                              disabled={task.status === 'SUBMITTED_DEAN' || task.status === 'COMPLETED' || !canSubmitToDean(task)}
-                              onClick={() => {
-                                setSubmitTask(task);
-                                setSubmissionContent('');
-                              }}
-                            >
-                              Submit to Dean
-                            </Button>
-                          </span>
-                        </Tooltip>
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
-        </Grid>
-
         <Grid item xs={12} lg={8}>
           <Paper sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
             <Box sx={{ p: { xs: 2.25, md: 3 }, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1.5, flexDirection: { xs: 'column', sm: 'row' }, borderBottom: '1px solid', borderColor: 'divider' }}>
@@ -342,15 +213,6 @@ const HODDashboard = () => {
         </Grid>
       </Grid>
 
-      {selectedTask && (
-        <CreateSubTaskDialog
-          open={dialogOpen}
-          onClose={() => setDialogOpen(false)}
-          taskId={selectedTask.id}
-          taskDepartmentId={selectedTask.department}
-          onTaskCreated={fetchData}
-        />
-      )}
       {reviewTask && (
         <ReviewSubmissionDialog
           open={reviewOpen}
@@ -359,39 +221,6 @@ const HODDashboard = () => {
           onProcessed={fetchData}
         />
       )}
-      <Dialog
-        open={Boolean(submitTask)}
-        onClose={() => setSubmitTask(null)}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{ sx: { borderRadius: '20px' } }}
-      >
-        <DialogTitle sx={{ fontWeight: 800 }}>Submit Task to Dean</DialogTitle>
-        <DialogContent dividers>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Add the final HOD summary. Approved faculty submissions are retained with the task and can be reviewed by the Dean.
-          </Typography>
-          <TextField
-            fullWidth
-            label="Final Submission Summary"
-            multiline
-            minRows={4}
-            value={submissionContent}
-            onChange={(e) => setSubmissionContent(e.target.value)}
-            placeholder="Summarize the completed work and corrections made..."
-          />
-        </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setSubmitTask(null)} color="inherit">Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={handleSubmitToDean}
-            disabled={submitting}
-          >
-            {submitting ? <CircularProgress size={22} color="inherit" /> : 'Submit to Dean'}
-          </Button>
-        </DialogActions>
-      </Dialog>
       <Snackbar
         open={notification.open}
         autoHideDuration={4000}
