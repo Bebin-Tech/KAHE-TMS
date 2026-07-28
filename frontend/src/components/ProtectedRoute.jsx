@@ -1,9 +1,9 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { getAvailableSession, redirectPathForUser, setActiveRole } from '../utils/session';
+import { getAvailableSession, getCurrentSession, redirectPathForUser, setActiveRole } from '../utils/session';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const current = getAvailableSession(allowedRoles);
+  const current = allowedRoles ? getAvailableSession(allowedRoles) : getCurrentSession();
   const user = current?.session?.user || {};
 
   if (!current?.session?.access) {

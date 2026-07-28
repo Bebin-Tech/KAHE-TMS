@@ -23,7 +23,7 @@ import {
   LogoutRounded
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { clearRoleSession, getCurrentSession, setActiveRole } from '../utils/session';
+import { clearRoleSession, getCurrentSession, setActiveRole, setRouteRole } from '../utils/session';
 import api from '../api/axios';
 
 const drawerWidth = 292;
@@ -98,7 +98,10 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const handleDrawerToggle = () => setOpen(!open);
   const handleHomeToggle = () => setHomeOpen((current) => !current);
   const handleNavigate = (path) => {
-    if (user.role) setActiveRole(user.role);
+    if (user.role) {
+      setActiveRole(user.role);
+      setRouteRole(path, user.role);
+    }
     navigate(path);
     if (isMobile) setOpen(false);
   };
@@ -512,7 +515,8 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           sx={{
             flex: 1,
             px: { xs: 1, sm: 2, md: 4 },
-            py: { xs: 1.5, sm: 2, md: 3.5 },
+            pt: { xs: 1.5, sm: 2, md: 3.5 },
+            pb: { xs: 4, md: 6 },
             minWidth: 0,
           }}
         >

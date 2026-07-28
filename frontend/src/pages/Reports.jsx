@@ -272,9 +272,20 @@ const Reports = () => {
         </Paper>
       )}
 
-      <TableContainer component={Paper} sx={{ border: '1px solid #d8e3f0', borderRadius: 3, overflow: 'hidden', bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.45)' }}>
+      <TableContainer
+        component={Paper}
+        sx={{
+          border: '1px solid #d8e3f0',
+          borderRadius: 3,
+          overflow: 'auto',
+          maxHeight: { xs: 'calc(100vh - 220px)', md: 'calc(100vh - 300px)' },
+          mb: 4,
+          bgcolor: '#ffffff',
+          boxShadow: '0 20px 54px -42px rgba(15,23,42,0.45)'
+        }}
+      >
         <Table sx={{ minWidth: 1350 }}>
-          <TableHead sx={{ bgcolor: '#f8fbff' }}>
+          <TableHead sx={{ bgcolor: '#f8fbff', position: 'sticky', top: 0, zIndex: 1 }}>
             <TableRow>
               <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Task</TableCell>
               <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>User</TableCell>

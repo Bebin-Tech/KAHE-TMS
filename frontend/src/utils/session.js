@@ -1,5 +1,6 @@
 const SESSION_PREFIX = 'tms_session';
 const ACTIVE_ROLE_KEY = 'tms_active_role';
+const ROUTE_ROLE_PREFIX = 'tms_route_role';
 const LEGACY_KEYS = ['access_token', 'refresh_token', 'user'];
 
 export const ROLE_ROUTES = {
@@ -19,6 +20,7 @@ const ROUTE_ROLES = {
 };
 
 const getSessionKey = (role) => `${SESSION_PREFIX}:${role}`;
+const getRouteRoleKey = (path) => `${ROUTE_ROLE_PREFIX}:${path}`;
 
 const getLegacySession = (role) => {
   try {
@@ -35,6 +37,16 @@ const getLegacySession = (role) => {
 };
 
 export const getRoleFromPath = (path = window.location.pathname) => ROUTE_ROLES[path] || null;
+
+export const setRouteRole = (path, role) => {
+  if (path && role) sessionStorage.setItem(getRouteRoleKey(path), role);
+};
+
+export const getRouteRole = (path = window.location.pathname) => {
+  const fixedRole = getRoleFromPath(path);
+  if (fixedRole) return fixedRole;
+  return sessionStorage.getItem(getRouteRoleKey(path));
+};
 
 export const getStoredSession = (role) => {
   if (!role) return null;
@@ -59,7 +71,7 @@ export const setActiveRole = (role) => {
   if (role) sessionStorage.setItem(ACTIVE_ROLE_KEY, role);
 };
 
-export const getActiveRole = () => sessionStorage.getItem(ACTIVE_ROLE_KEY) || getRoleFromPath();
+export const getActiveRole = () => sessionStorage.getItem(ACTIVE_ROLE_KEY) || getRouteRole();
 
 export const getAvailableSession = (roles) => {
   const roleList = roles || Object.keys(ROLE_ROUTES);
@@ -79,7 +91,7 @@ export const getAvailableSession = (roles) => {
 };
 
 export const getCurrentSession = () => {
-  const pathRole = getRoleFromPath();
+  const pathRole = getRouteRole();
   if (pathRole) {
     const pathSession = getStoredSession(pathRole);
     if (pathSession?.access) {
