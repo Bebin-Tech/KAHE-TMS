@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, Box, Typography, Divider,
+  Alert,
   CircularProgress
 } from '@mui/material';
 import { GetAppRounded } from '@mui/icons-material';
@@ -19,13 +20,16 @@ const ReviewSubmissionDialog = ({ open, onClose, task, onProcessed }) => {
   const [submission, setSubmission] = useState(null);
   const [loading, setLoading] = useState(true);
   const [feedback, setFeedback] = useState('');
+  const [error, setError] = useState('');
   const [processing, setProcessing] = useState(false);
+  const isSubtaskReview = task?.type === 'subtask';
 
   const fetchSubmission = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
       // Fetch latest submission for this subtask or task
-      const endpoint = task.type === 'subtask'
+      const endpoint = isSubtaskReview
         ? `submissions/?subtask=${task.id}`
         : `submissions/?task=${task.id}`;
       const res = await api.get(endpoint);
@@ -35,7 +39,7 @@ const ReviewSubmissionDialog = ({ open, onClose, task, onProcessed }) => {
     } finally {
       setLoading(false);
     }
-  }, [task]);
+  }, [isSubtaskReview, task]);
 
   useEffect(() => {
     if (open && task) {
@@ -44,9 +48,15 @@ const ReviewSubmissionDialog = ({ open, onClose, task, onProcessed }) => {
   }, [fetchSubmission, open, task]);
 
   const handleAction = async (action) => {
+    setError('');
+    if (action === 'reject' && !feedback.trim()) {
+      setError(isSubtaskReview ? 'Please enter a rejection reason before sending this work back.' : 'Please enter a rework reason before sending this task back to the HOD.');
+      return;
+    }
+
     setProcessing(true);
     try {
-      if (task.type === 'subtask') {
+      if (isSubtaskReview) {
         const endpoint = action === 'approve' ? 'approve_by_hod' : 'reject_by_hod';
         await api.post(`subtasks/${task.id}/${endpoint}/`, { feedback });
       } else {
@@ -57,6 +67,7 @@ const ReviewSubmissionDialog = ({ open, onClose, task, onProcessed }) => {
       onClose();
     } catch (err) {
       console.error('Error processing review:', err);
+      setError(err.response?.data?.error || 'Unable to process this review. Please try again.');
     } finally {
       setProcessing(false);
     }
@@ -64,13 +75,18 @@ const ReviewSubmissionDialog = ({ open, onClose, task, onProcessed }) => {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '20px' } }}>
-      <DialogTitle sx={{ fontWeight: 800 }}>Review Submission</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 800 }}>{isSubtaskReview ? 'Review Faculty Submission' : 'Dean Verification Review'}</DialogTitle>
       <DialogContent dividers>
         {loading ? <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}><CircularProgress /></Box> : (
           submission ? (
             <Box>
+              {error && (
+                <Alert severity="error" variant="outlined" sx={{ mb: 2, borderRadius: 2 }}>
+                  {error}
+                </Alert>
+              )}
               <Typography variant="subtitle2" gutterBottom color="primary">
-                {task.type === 'subtask' ? 'FACULTY COMMENTS' : 'HOD SUBMISSION SUMMARY'}
+                {isSubtaskReview ? 'FACULTY COMMENTS' : 'HOD SUBMISSION SUMMARY'}
               </Typography>
               <Typography variant="body1" sx={{ mb: 3 }}>{submission.content}</Typography>
 
@@ -92,11 +108,11 @@ const ReviewSubmissionDialog = ({ open, onClose, task, onProcessed }) => {
               <Divider sx={{ my: 3 }} />
 
               <TextField
-                fullWidth label="Your Feedback / Rejection Reason"
+                fullWidth label={isSubtaskReview ? 'Feedback / Rejection Reason' : 'Verification Feedback / Rework Reason'}
                 multiline rows={3}
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
-                placeholder="Required for rejections..."
+                placeholder={isSubtaskReview ? 'Required when rejecting faculty work...' : 'Required when sending this task back to the HOD...'}
               />
             </Box>
           ) : <Typography align="center" sx={{ py: 4 }}>No submission data found.</Typography>
@@ -110,7 +126,7 @@ const ReviewSubmissionDialog = ({ open, onClose, task, onProcessed }) => {
           onClick={() => handleAction('reject')}
           disabled={processing || !submission}
         >
-          Reject
+          {isSubtaskReview ? 'Reject' : 'Reject & Send Back'}
         </Button>
         <Button
           variant="contained"
@@ -118,7 +134,7 @@ const ReviewSubmissionDialog = ({ open, onClose, task, onProcessed }) => {
           onClick={() => handleAction('approve')}
           disabled={processing || !submission}
         >
-          Approve
+          {isSubtaskReview ? 'Approve' : 'Mark Verified'}
         </Button>
       </DialogActions>
     </Dialog>

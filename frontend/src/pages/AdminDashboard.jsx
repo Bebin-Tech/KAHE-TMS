@@ -28,7 +28,7 @@ import api from '../api/axios';
 
 const statusConfig = {
   COMPLETED: { label: 'Completed', color: '#1f7f79', bg: '#e8f7f6' },
-  DEAN_APPROVED: { label: 'Approved', color: '#1f7f79', bg: '#e8f7f6' },
+  DEAN_APPROVED: { label: 'Verified', color: '#1f7f79', bg: '#e8f7f6' },
   ASSIGNED: { label: 'Assigned', color: '#237dba', bg: '#eaf3ff' },
   IN_PROGRESS: { label: 'In Progress', color: '#8a6f00', bg: '#fff8d9' },
   SUBMITTED_HOD: { label: 'HOD Review', color: '#0f172a', bg: '#f1f5f9' },

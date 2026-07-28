@@ -389,22 +389,22 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def approve_as_dean(self, request, pk=None):
-        """Dean approves the task, marking it as COMPLETED."""
+        """Dean verifies the task after HOD submission."""
         task = self.get_object()
         latest_submission = task.submissions.order_by('-submitted_at').first()
         if latest_submission:
             latest_submission.is_approved = True
             latest_submission.feedback = request.data.get('feedback', latest_submission.feedback)
             latest_submission.save()
-        task.status = 'COMPLETED'
+        task.status = 'DEAN_APPROVED'
         task.save()
         now = timezone.now()
         record_task_activity(
             task=task,
             user=task.created_by,
             role='DEAN',
-            status='COMPLETED',
-            action_performed='Approved task',
+            status='DEAN_APPROVED',
+            action_performed='Verified task',
             assigned_by=task.created_by,
             assigned_at=task.created_at,
             work_completed_at=now,
@@ -414,21 +414,24 @@ class TaskViewSet(viewsets.ModelViewSet):
             task=task,
             user=task.assigned_to_hod,
             role='HOD',
-            status='COMPLETED',
-            action_performed='Task completed after Dean approval',
+            status='DEAN_APPROVED',
+            action_performed='Task verified by Dean',
             assigned_by=task.created_by,
             assigned_at=task.created_at,
             work_completed_at=now,
             action_at=now
         )
-        Notification.objects.create(user=task.assigned_to_hod, message=f"Task '{task.title}' has been officially approved by the Dean.")
-        return Response({'status': 'completed'})
+        Notification.objects.create(user=task.assigned_to_hod, message=f"Task '{task.title}' has been verified by the Dean.")
+        return Response({'status': 'verified'})
 
     @action(detail=True, methods=['post'])
     def reject_as_dean(self, request, pk=None):
         """Dean rejects the task, sending it back to the HOD."""
         task = self.get_object()
-        feedback = request.data.get('feedback', 'No feedback provided.')
+        feedback = (request.data.get('feedback') or '').strip()
+        if not feedback:
+            return Response({'error': 'Rejection reason is required before sending the task back to the HOD.'}, status=status.HTTP_400_BAD_REQUEST)
+
         latest_submission = task.submissions.order_by('-submitted_at').first()
         if latest_submission:
             latest_submission.feedback = feedback

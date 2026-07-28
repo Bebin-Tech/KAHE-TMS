@@ -17,6 +17,7 @@ const statusOptions = [
   'APPROVED_HOD',
   'REJECTED_HOD',
   'REJECTED_DEAN',
+  'DEAN_APPROVED',
   'COMPLETED'
 ];
 
@@ -33,9 +34,9 @@ const actionOptions = [
   'Reviewed and rejected faculty submission',
   'Submitted task to Dean',
   'Received task for review',
-  'Approved task',
+  'Verified task',
   'Rejected task',
-  'Task completed after Dean approval',
+  'Task verified by Dean',
   'Completed task',
   'Task completed by HOD'
 ];
@@ -54,7 +55,7 @@ const formatDateTime = (value) => {
 const statusLabel = (status) => status?.replaceAll('_', ' ') || 'Unknown';
 
 const getStatusColor = (status) => {
-  if (['COMPLETED', 'APPROVED_HOD'].includes(status)) return { bg: '#e8f7f6', color: '#1f7f79' };
+  if (['COMPLETED', 'APPROVED_HOD', 'DEAN_APPROVED'].includes(status)) return { bg: '#e8f7f6', color: '#1f7f79' };
   if (['REJECTED_HOD', 'REJECTED_DEAN'].includes(status)) return { bg: '#fef2f2', color: '#b91c1c' };
   if (['SUBMITTED', 'SUBMITTED_DEAN'].includes(status)) return { bg: '#eaf3ff', color: '#237dba' };
   if (status === 'IN_PROGRESS') return { bg: '#fff8d9', color: '#8a6f00' };
