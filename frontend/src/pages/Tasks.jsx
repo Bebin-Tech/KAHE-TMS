@@ -104,7 +104,7 @@ const Tasks = () => {
           variant="outlined"
           startIcon={<AddRounded />}
           onClick={() => setOpen(true)}
-          sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start', md: 'center' }, bgcolor: '#ffffff', borderColor: '#b7d5fb', fontWeight: 850, borderRadius: 1.5 }}
+          sx={{ width: { xs: '100%', sm: 'auto' }, alignSelf: { xs: 'stretch', sm: 'flex-start', md: 'center' }, bgcolor: '#ffffff', borderColor: '#b7d5fb', fontWeight: 850, borderRadius: 1.5 }}
         >
           Create New Task
         </Button>

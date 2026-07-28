@@ -104,7 +104,7 @@ const DepartmentManagement = () => {
       </Box>
 
       <TableContainer component={Paper} sx={{ border: '1px solid #d8e3f0', borderRadius: 3, overflow: 'hidden', bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.45)' }}>
-        <Table>
+        <Table sx={{ minWidth: 560 }}>
           <TableHead sx={{ bgcolor: '#f8fbff' }}>
             <TableRow>
               <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Department Name</TableCell>

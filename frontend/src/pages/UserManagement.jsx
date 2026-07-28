@@ -228,7 +228,7 @@ const UserManagement = () => {
             />
           </Box>
 
-          <Typography variant="h6" sx={{ fontWeight: 700, color: '#212b36', mb: 0.5 }}>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: '#212b36', mb: 0.5, overflowWrap: 'anywhere' }}>
             {getUserName(user)}
           </Typography>
           <Typography variant="caption" sx={{ color: '#637381', display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -240,7 +240,7 @@ const UserManagement = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: isFacultyDepartmentCard ? 1 : 1.5, mb: isFacultyDepartmentCard ? 2 : 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <EmailOutlined sx={{ color: '#919eab', fontSize: '1.2rem' }} />
-              <Typography variant="body2" sx={{ color: '#212b36' }}>{user.email}</Typography>
+              <Typography variant="body2" sx={{ color: '#212b36', minWidth: 0, overflowWrap: 'anywhere' }}>{user.email}</Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <BusinessOutlined sx={{ color: '#919eab', fontSize: '1.2rem' }} />
@@ -335,7 +335,7 @@ const UserManagement = () => {
             variant="outlined"
             startIcon={<PersonAddRounded />}
             onClick={() => handleOpen()}
-            sx={{ whiteSpace: 'nowrap' }}
+            sx={{ width: { xs: '100%', sm: 'auto' }, whiteSpace: 'nowrap' }}
           >
             Add New User
           </Button>
@@ -344,6 +344,7 @@ const UserManagement = () => {
             count={pageOptions.length}
             page={page}
             onChange={handlePageChange}
+            siblingCount={0}
             renderItem={(item) => (
               <PaginationItem
                 {...item}
@@ -353,8 +354,8 @@ const UserManagement = () => {
                   borderRadius: '8px',
                   width: '40px',
                   height: '40px',
-                  margin: '0 4px',
-                      border: '1px solid #e5e2df',
+                  margin: { xs: '0 1px', sm: '0 4px' },
+                  border: '1px solid #e5e2df',
                   '&:hover': {
                     bgcolor: item.selected ? 'primary.dark' : '#eaf3ff'
                   },
@@ -446,10 +447,10 @@ const UserManagement = () => {
           </DialogTitle>
           <DialogContent sx={{ px: 3 }}>
             <Grid container spacing={2.5} sx={{ mt: 0.5 }}>
-              <Grid item xs={6}>
+              <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="First Name" required value={formData.first_name} onChange={(e) => setFormData({...formData, first_name: e.target.value})} />
               </Grid>
-              <Grid item xs={6}>
+              <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="Last Name" required value={formData.last_name} onChange={(e) => setFormData({...formData, last_name: e.target.value})} />
               </Grid>
               <Grid item xs={12}>
@@ -463,7 +464,7 @@ const UserManagement = () => {
                   <TextField fullWidth label="Temporary Password" type="password" required value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} />
                 </Grid>
               )}
-              <Grid item xs={6}>
+              <Grid item xs={12} sm={6}>
                 <TextField select fullWidth label="Assigned Role" value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}>
                   <MenuItem value="ADMIN">Admin</MenuItem>
                   <MenuItem value="DEAN">Dean</MenuItem>
@@ -471,7 +472,7 @@ const UserManagement = () => {
                   <MenuItem value="FACULTY">Faculty</MenuItem>
                 </TextField>
               </Grid>
-              <Grid item xs={6}>
+              <Grid item xs={12} sm={6}>
                 <TextField select fullWidth label="Department" value={formData.department} onChange={(e) => setFormData({...formData, department: e.target.value})}>
                   {departments.map((d) => (
                     <MenuItem key={d.id} value={d.id}>{d.name}</MenuItem>

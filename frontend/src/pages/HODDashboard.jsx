@@ -175,17 +175,17 @@ const HODDashboard = () => {
         </Grid>
       </Grid>
 
-      <Grid container spacing={3} justifyContent="center">
+      <Grid container spacing={{ xs: 2, md: 3 }} justifyContent="center">
         <Grid item xs={12} lg={12} sx={{ mb: 3 }}>
           <Paper sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
-            <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
+            <Box sx={{ p: { xs: 2.25, md: 3 }, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1.5, flexDirection: { xs: 'column', sm: 'row' }, borderBottom: '1px solid', borderColor: 'divider' }}>
               <Box>
                 <Typography variant="h6" sx={{ fontWeight: 900 }}>Dean Assignments</Typography>
                 <Typography variant="body2" color="text.secondary">Primary tasks routed to this department.</Typography>
               </Box>
             </Box>
             <TableContainer>
-              <Table>
+              <Table sx={{ minWidth: 780 }}>
                 <TableHead sx={{ bgcolor: '#f4f9ff' }}>
                   <TableRow>
                     <TableCell sx={{ fontWeight: 700 }}>Task Title</TableCell>
@@ -251,15 +251,15 @@ const HODDashboard = () => {
 
         <Grid item xs={12} lg={8}>
           <Paper sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
-            <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
+            <Box sx={{ p: { xs: 2.25, md: 3 }, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1.5, flexDirection: { xs: 'column', sm: 'row' }, borderBottom: '1px solid', borderColor: 'divider' }}>
               <Box>
                 <Typography variant="h6" sx={{ fontWeight: 900 }}>Faculty Work Queue</Typography>
                 <Typography variant="body2" color="text.secondary">Sub-tasks assigned and returned by faculty.</Typography>
               </Box>
-              <Button size="small" variant="outlined" sx={{ borderRadius: '8px' }}>View All</Button>
+              <Button size="small" variant="outlined" sx={{ borderRadius: '8px', alignSelf: { xs: 'flex-start', sm: 'center' } }}>View All</Button>
             </Box>
             <TableContainer>
-              <Table>
+              <Table sx={{ minWidth: 680 }}>
                 <TableHead sx={{ bgcolor: '#f4f9ff' }}>
                   <TableRow>
                     <TableCell sx={{ fontWeight: 700 }}>Faculty Task</TableCell>
@@ -316,7 +316,7 @@ const HODDashboard = () => {
         </Grid>
 
         <Grid item xs={12} lg={4}>
-          <Paper sx={{ borderRadius: 2, p: 3, border: '1px solid', borderColor: 'divider', height: '100%' }}>
+          <Paper sx={{ borderRadius: 2, p: { xs: 2.25, md: 3 }, border: '1px solid', borderColor: 'divider', height: '100%' }}>
             <Typography variant="h6" sx={{ mb: 3, fontWeight: 900 }}>Department Activity</Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               {recentActivity.length > 0 ? recentActivity.map((activity) => (

@@ -245,7 +245,7 @@ const Settings = () => {
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={4}>
-          <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid #dde5f0' }}>
+          <Paper sx={{ p: { xs: 2.25, md: 3 }, borderRadius: 2, border: '1px solid #dde5f0' }}>
             <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2.5 }}>
               <Avatar sx={{ bgcolor: '#eaf3ff', color: '#237dba' }}>
                 <LockPersonRounded />
@@ -285,7 +285,7 @@ const Settings = () => {
 
         <Grid item xs={12} md={8}>
           <Paper sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid #dde5f0' }}>
-            <Box sx={{ p: 3, borderBottom: '1px solid #e7edf5', display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box sx={{ p: { xs: 2.25, md: 3 }, borderBottom: '1px solid #e7edf5', display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <SecurityRounded sx={{ color: '#237dba' }} />
               <Box>
                 <Typography variant="h6" sx={{ fontWeight: 900 }}>Module Permissions</Typography>

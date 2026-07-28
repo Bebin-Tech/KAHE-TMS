@@ -86,7 +86,7 @@ const FacultyDashboard = () => {
         </Stack>
       </Paper>
 
-      <Grid container spacing={3} justifyContent="center">
+      <Grid container spacing={{ xs: 2, md: 3 }} justifyContent="center">
         <Grid item xs={12} md={8}>
           {subtasks.length === 0 ? (
             <Alert severity="info" variant="outlined" sx={{ borderRadius: '16px' }}>
@@ -94,7 +94,7 @@ const FacultyDashboard = () => {
             </Alert>
           ) : (
             subtasks.map((task) => (
-              <Paper key={task.id} sx={{ p: { xs: 2.25, md: 3 }, mb: 2.5, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+              <Paper key={task.id} sx={{ p: { xs: 2, md: 3 }, mb: { xs: 2, md: 2.5 }, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, gap: 1.5, flexDirection: { xs: 'column', sm: 'row' } }}>
                   <Box sx={{ display: 'flex', gap: 1.5, minWidth: 0 }}>
                     <Avatar sx={{ bgcolor: '#eaf3ff', color: '#237dba', width: 42, height: 42 }}>
@@ -119,6 +119,7 @@ const FacultyDashboard = () => {
 
                 <Box sx={{ display: 'flex', gap: 1.5, flexDirection: { xs: 'column', sm: 'row' } }}>
                   <Button
+                    fullWidth
                     variant="contained"
                     startIcon={<CloudUploadRounded />}
                     onClick={() => handleOpenSubmit(task)}
@@ -127,6 +128,7 @@ const FacultyDashboard = () => {
                     {task.status === 'SUBMITTED' ? 'Submitted' : task.status === 'APPROVED_HOD' ? 'Approved' : 'Submit Work'}
                   </Button>
                   <Button
+                    fullWidth
                     variant="outlined"
                     startIcon={<HistoryRounded />}
                     onClick={() => handleUpdateProgress(task.id, task.progress)}
@@ -141,7 +143,7 @@ const FacultyDashboard = () => {
         </Grid>
 
         <Grid item xs={12} md={4}>
-           <Paper sx={{ p: 3, borderRadius: 2, border: '1px solid #c9ece8', bgcolor: '#ffffff', height: '100%' }}>
+           <Paper sx={{ p: { xs: 2.25, md: 3 }, borderRadius: 2, border: '1px solid #c9ece8', bgcolor: '#ffffff', height: '100%' }}>
              <Typography variant="h6" sx={{ mb: 1, fontWeight: 900 }}>Progress Summary</Typography>
              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                {completedCount} of {subtasks.length} assigned tasks are approved or completed.

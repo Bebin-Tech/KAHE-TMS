@@ -151,8 +151,8 @@ const AdminDashboard = () => {
           <Grid item xs={12}>
             <Paper
               sx={{
-                p: { xs: 3, md: 4 },
-                minHeight: { xs: 260, md: 290 },
+                p: { xs: 2.25, sm: 3, md: 4 },
+                minHeight: { xs: 190, sm: 230, md: 290 },
                 borderRadius: 3,
                 border: '1px solid #b7d5fb',
                 color: '#122033',
@@ -174,8 +174,8 @@ const AdminDashboard = () => {
                   Real-time academic task coordination and reporting
                 </Typography>
               </Box>
-              <Box sx={{ position: 'absolute', right: -70, bottom: -90, width: 300, height: 300, border: '44px solid rgba(59,143,243,0.22)', borderRadius: '50%' }} />
-              <Box sx={{ position: 'absolute', right: 92, top: 36, width: 116, height: 116, border: '22px solid rgba(52,177,170,0.22)', borderRadius: '50%' }} />
+              <Box sx={{ display: { xs: 'none', sm: 'block' }, position: 'absolute', right: -70, bottom: -90, width: 300, height: 300, border: '44px solid rgba(59,143,243,0.22)', borderRadius: '50%' }} />
+              <Box sx={{ display: { xs: 'none', md: 'block' }, position: 'absolute', right: 92, top: 36, width: 116, height: 116, border: '22px solid rgba(52,177,170,0.22)', borderRadius: '50%' }} />
             </Paper>
           </Grid>
         </Grid>
@@ -186,7 +186,7 @@ const AdminDashboard = () => {
           <Grid item xs={12} sm={6} lg={3} key={card.title}>
             <Card
               sx={{
-                p: 2.5,
+                p: { xs: 2, sm: 2.5 },
                 height: '100%',
                 borderRadius: 3,
                 transition: 'transform 180ms ease, box-shadow 180ms ease',
@@ -252,7 +252,7 @@ const AdminDashboard = () => {
                       }
                     }}
                   >
-                    <Avatar sx={{ bgcolor: config.bg, color: config.color, width: 46, height: 46 }}>
+                    <Avatar sx={{ bgcolor: config.bg, color: config.color, width: { xs: 40, sm: 46 }, height: { xs: 40, sm: 46 } }}>
                       {task.is_special ? <PriorityHighRounded /> : <AssignmentOutlined />}
                     </Avatar>
                     <Box sx={{ flex: 1, minWidth: 0 }}>

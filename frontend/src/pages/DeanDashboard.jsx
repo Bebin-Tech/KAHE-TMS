@@ -145,8 +145,8 @@ const DeanDashboard = () => {
           <Grid item xs={12}>
             <Paper
               sx={{
-                p: { xs: 3, md: 4 },
-                minHeight: { xs: 248, md: 280 },
+                p: { xs: 2.25, sm: 3, md: 4 },
+                minHeight: { xs: 220, sm: 240, md: 280 },
                 borderRadius: 3,
                 border: '1px solid #bfdbfe',
                 color: '#0f172a',
@@ -167,12 +167,12 @@ const DeanDashboard = () => {
                 <Typography variant="body1" sx={{ color: '#475569', fontWeight: 720 }}>
                   Monitor HOD submissions, deadline risk, and final approvals across departments.
                 </Typography>
-                <Stack direction="row" spacing={2.5} justifyContent="center" alignItems="center" sx={{ mt: 3, flexWrap: 'wrap' }}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="center" alignItems="center" sx={{ mt: 3 }}>
                   <Button
                     variant="outlined"
                     startIcon={<AddTaskRounded />}
                     onClick={() => setDialogOpen(true)}
-                    sx={{ bgcolor: 'white', borderColor: '#2563eb', boxShadow: '0 12px 28px -22px rgba(37,99,235,0.8)' }}
+                    sx={{ width: { xs: '100%', sm: 'auto' }, bgcolor: 'white', borderColor: '#2563eb', boxShadow: '0 12px 28px -22px rgba(37,99,235,0.8)' }}
                   >
                     Create Task
                   </Button>
@@ -180,14 +180,14 @@ const DeanDashboard = () => {
                     variant="outlined"
                     endIcon={<ArrowForwardRounded />}
                     onClick={() => document.getElementById('dean-review-flow')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                    sx={{ bgcolor: 'white', borderColor: '#2563eb', boxShadow: '0 12px 28px -22px rgba(37,99,235,0.8)' }}
+                    sx={{ width: { xs: '100%', sm: 'auto' }, bgcolor: 'white', borderColor: '#2563eb', boxShadow: '0 12px 28px -22px rgba(37,99,235,0.8)' }}
                   >
                     Review Flow
                   </Button>
                 </Stack>
               </Box>
-              <Box sx={{ position: 'absolute', right: -70, bottom: -90, width: 300, height: 300, border: '44px solid rgba(37,99,235,0.18)', borderRadius: '50%' }} />
-              <Box sx={{ position: 'absolute', right: 92, top: 36, width: 116, height: 116, border: '22px solid rgba(15,118,110,0.18)', borderRadius: '50%' }} />
+              <Box sx={{ display: { xs: 'none', sm: 'block' }, position: 'absolute', right: -70, bottom: -90, width: 300, height: 300, border: '44px solid rgba(37,99,235,0.18)', borderRadius: '50%' }} />
+              <Box sx={{ display: { xs: 'none', md: 'block' }, position: 'absolute', right: 92, top: 36, width: 116, height: 116, border: '22px solid rgba(15,118,110,0.18)', borderRadius: '50%' }} />
             </Paper>
           </Grid>
         </Grid>
@@ -198,7 +198,7 @@ const DeanDashboard = () => {
           <Grid item xs={12} sm={6} lg={3} key={card.title}>
             <Card
               sx={{
-                p: 2.5,
+                p: { xs: 2, sm: 2.5 },
                 height: '100%',
                 borderRadius: 3,
                 transition: 'transform 180ms ease, box-shadow 180ms ease',
@@ -225,7 +225,7 @@ const DeanDashboard = () => {
       <Grid container spacing={3} id="dean-review-flow">
         <Grid item xs={12} lg={7}>
           <Paper sx={{ borderRadius: 3, border: '1px solid #dde5f0', overflow: 'hidden' }}>
-            <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e7edf5' }}>
+            <Box sx={{ p: { xs: 2.25, md: 3 }, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1.5, flexDirection: { xs: 'column', sm: 'row' }, borderBottom: '1px solid #e7edf5' }}>
               <Box>
                 <Typography variant="h6" sx={{ fontWeight: 900 }}>Recent Task Flow</Typography>
                 <Typography variant="body2" color="text.secondary">Latest assignments moving through Dean oversight.</Typography>
@@ -237,7 +237,7 @@ const DeanDashboard = () => {
                 const config = statusConfig[task.status] || statusConfig.ASSIGNED;
                 const progress = getProgressValue(task);
                 return (
-                  <Box key={task.id} sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Box key={task.id} sx={{ p: { xs: 2, md: 2.5 }, display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Avatar sx={{ bgcolor: config.bg, color: config.color }}>
                       {task.is_special ? <PriorityHighRounded /> : <AssignmentRounded />}
                     </Avatar>
@@ -262,7 +262,7 @@ const DeanDashboard = () => {
 
         <Grid item xs={12} lg={5}>
           <Stack spacing={3}>
-            <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #dde5f0' }}>
+            <Paper sx={{ p: { xs: 2.25, md: 3 }, borderRadius: 3, border: '1px solid #dde5f0' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Box>
                   <Typography variant="h6" sx={{ fontWeight: 900 }}>Final Review Queue</Typography>
@@ -292,7 +292,7 @@ const DeanDashboard = () => {
               </Stack>
             </Paper>
 
-            <Paper sx={{ p: 3, borderRadius: 3, border: '1px solid #dde5f0' }}>
+            <Paper sx={{ p: { xs: 2.25, md: 3 }, borderRadius: 3, border: '1px solid #dde5f0' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Box>
                   <Typography variant="h6" sx={{ fontWeight: 900 }}>Deadline Focus</Typography>

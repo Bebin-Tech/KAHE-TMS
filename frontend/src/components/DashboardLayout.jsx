@@ -133,8 +133,8 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const isHomeActive = menuItems.some((item) => location.pathname === item.path);
 
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#ffffff', color: '#0f172a', px: 2 }}>
-      <Box sx={{ py: 3, px: 1, display: 'flex', alignItems: 'center', gap: 1.4 }}>
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#ffffff', color: '#0f172a', px: { xs: 1.5, sm: 2 } }}>
+      <Box sx={{ py: { xs: 2.25, sm: 3 }, px: 1, display: 'flex', alignItems: 'center', gap: 1.4 }}>
         <Box
           sx={{
             bgcolor: '#f8fafc',
@@ -143,8 +143,8 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: 50,
-            height: 50,
+            width: { xs: 44, sm: 50 },
+            height: { xs: 44, sm: 50 },
             border: '1px solid #e2e8f0',
             boxShadow: '0 16px 34px -26px rgba(15,23,42,0.35)'
           }}
@@ -170,9 +170,9 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
         </Box>
       </Box>
 
-      <Box sx={{ px: 0.5, mb: 3 }}>
+      <Box sx={{ px: 0.5, mb: { xs: 2, sm: 3 } }}>
         <Paper elevation={0} sx={{
-          p: 1.75,
+          p: { xs: 1.35, sm: 1.75 },
           bgcolor: '#ffffff',
           border: '1px solid #e2e8f0',
           boxShadow: '0 16px 34px -30px rgba(15,23,42,0.45)',
@@ -305,11 +305,11 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           open={isMobile ? open : true}
           onClose={handleDrawerToggle}
           sx={{
-            width: drawerWidth,
+            width: { xs: 'min(86vw, 292px)', md: drawerWidth },
             flexShrink: 0,
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
-              width: drawerWidth,
+              width: { xs: 'min(86vw, 292px)', md: drawerWidth },
               borderRight: '1px solid #e2e8f0',
               bgcolor: '#ffffff',
               boxShadow: '10px 0 30px -28px rgba(15,23,42,0.45)',
@@ -336,17 +336,17 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           <Toolbar
             sx={{
               justifyContent: 'space-between',
-              alignItems: { xs: 'flex-start', sm: 'center' },
-              minHeight: { xs: 92, sm: 76 },
-              px: { xs: 1.5, sm: 2, md: 4 },
-              py: { xs: 1.25, sm: 0 },
+              alignItems: 'center',
+              minHeight: { xs: 64, sm: 76 },
+              px: { xs: 1.25, sm: 2, md: 4 },
+              py: { xs: 0.85, sm: 0 },
               gap: { xs: 1, sm: 2 },
-              flexWrap: { xs: 'wrap', sm: 'nowrap' }
+              flexWrap: 'nowrap'
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, minWidth: 0, flex: '1 1 auto' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.75, sm: 2 }, minWidth: 0, flex: '1 1 auto' }}>
               {isMobile && !hideSidebar && (
-                <IconButton onClick={handleDrawerToggle} edge="start" sx={{ mr: { xs: 0, sm: 1 } }}>
+                <IconButton onClick={handleDrawerToggle} edge="start" sx={{ mr: { xs: 0, sm: 1 }, width: 42, height: 42 }}>
                   <MenuIcon />
                 </IconButton>
               )}
@@ -357,14 +357,14 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 <Typography
                   variant="h6"
                   noWrap
-                  sx={{ fontWeight: 800, color: 'text.primary', lineHeight: 1.2, fontSize: { xs: '1rem', sm: '1.25rem' } }}
+                  sx={{ fontWeight: 800, color: 'text.primary', lineHeight: 1.2, fontSize: { xs: '0.98rem', sm: '1.25rem' }, maxWidth: { xs: '48vw', sm: 'none' } }}
                 >
                   {title || 'Dashboard'}
                 </Typography>
               </Box>
             </Box>
 
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flex: { xs: '1 0 100%', sm: '0 0 auto' }, justifyContent: { xs: 'space-between', sm: 'flex-end' }, minWidth: 0 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.75, sm: 2 }, flex: '0 0 auto', justifyContent: 'flex-end', minWidth: 0 }}>
               <Paper
                 elevation={0}
                 sx={{
@@ -373,11 +373,11 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   border: '1px solid #ccfbf1',
                   borderRadius: 2,
                   bgcolor: '#f0fdfa',
-                  display: 'flex',
                   alignItems: 'center',
                   minHeight: 42,
                   minWidth: 0,
-                  flex: { xs: '1 1 auto', sm: '0 1 auto' }
+                  flex: '0 1 auto',
+                  display: { xs: 'none', sm: 'flex' }
                 }}
               >
                 <Typography
@@ -393,10 +393,12 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 color="error"
                 startIcon={<ExitToAppRounded />}
                 onClick={handleLogoutClick}
+                aria-label="Logout"
                 sx={{
                   flexShrink: 0,
                   minHeight: 42,
-                  px: { xs: 1.5, sm: 2.25 },
+                  px: { xs: 1.15, sm: 2.25 },
+                  minWidth: { xs: 42, sm: 92 },
                   bgcolor: 'white',
                   borderColor: '#d90429',
                   color: '#d90429',
@@ -405,10 +407,14 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                     bgcolor: '#fff1f2',
                     borderColor: '#a80f24',
                     color: '#a80f24'
+                  },
+                  '& .MuiButton-startIcon': {
+                    mr: { xs: 0, sm: 1 },
+                    ml: 0
                   }
                 }}
               >
-                Logout
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Logout</Box>
               </Button>
             </Box>
           </Toolbar>
@@ -453,8 +459,8 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           component="main"
           sx={{
             flex: 1,
-            px: { xs: 1.5, sm: 2, md: 4 },
-            py: { xs: 2, md: 3.5 },
+            px: { xs: 1, sm: 2, md: 4 },
+            py: { xs: 1.5, sm: 2, md: 3.5 },
             minWidth: 0,
           }}
         >
