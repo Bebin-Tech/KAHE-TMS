@@ -470,11 +470,13 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
               sx={{
                 minHeight: 48,
                 bgcolor: '#f7f7f8',
+                background: '#f7f7f8',
                 color: '#4b4f58',
                 fontWeight: 900,
                 boxShadow: 'none',
                 '&:hover': {
                   bgcolor: '#eeeeef',
+                  background: '#eeeeef',
                   boxShadow: 'none'
                 }
               }}
@@ -488,11 +490,13 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
               sx={{
                 minHeight: 48,
                 bgcolor: '#e9353d',
+                background: '#e9353d',
                 color: '#ffffff',
                 fontWeight: 900,
                 boxShadow: '0 12px 24px -18px rgba(233,53,61,0.85)',
                 '&:hover': {
                   bgcolor: '#d92f36',
+                  background: '#d92f36',
                   boxShadow: '0 14px 28px -20px rgba(217,47,54,0.9)'
                 }
               }}
