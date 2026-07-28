@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import CreateTaskDialog from '../components/CreateTaskDialog';
+import CreateSubTaskDialog from '../components/CreateSubTaskDialog';
 import TaskSuccessDialog from '../components/TaskSuccessDialog';
 import {
   Paper, Typography, Box, Button, Table, TableBody,
@@ -27,6 +28,14 @@ import api from '../api/axios';
 import { getCurrentSession } from '../utils/session';
 import { formatApiError } from '../utils/errors';
 
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/';
+const fileBaseUrl = apiBaseUrl.replace(/\/api\/?$/, '');
+const getFileUrl = (path) => {
+  if (!path) return '';
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${fileBaseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+};
+
 const Tasks = () => {
   const currentRole = getCurrentSession()?.role;
   const isHod = currentRole === 'HOD';
@@ -37,6 +46,7 @@ const Tasks = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [completionTarget, setCompletionTarget] = useState(null);
   const [completionRemarks, setCompletionRemarks] = useState('');
+  const [facultyAssignmentTask, setFacultyAssignmentTask] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [successTask, setSuccessTask] = useState(null);
   const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
@@ -45,9 +55,10 @@ const Tasks = () => {
     setNotification({ open: true, severity, message });
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const res = await api.get('tasks/', {
+      const endpoint = isHod ? 'tasks/assigned-to-me/' : 'tasks/';
+      const res = await api.get(endpoint, {
         params: { refresh: Date.now() },
         headers: {
           'Cache-Control': 'no-cache',
@@ -58,11 +69,11 @@ const Tasks = () => {
     } catch (err) {
       console.error('Error fetching tasks:', err);
     }
-  };
+  }, [isHod]);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const handleEdit = (task) => {
     setEditingTask(task);
@@ -122,6 +133,10 @@ const Tasks = () => {
     }
   };
 
+  const handleAssignFaculty = (task) => {
+    setFacultyAssignmentTask(task);
+  };
+
   const getStatusIcon = (status) => {
     switch (status) {
       case 'COMPLETED': return <CheckCircleRounded sx={{ color: '#1f7f79', fontSize: '1rem' }} />;
@@ -164,9 +179,7 @@ const Tasks = () => {
     );
   };
 
-  const visibleTasks = isHod
-    ? tasks.filter((task) => task.assigned_to_hod && !['COMPLETED', 'DEAN_APPROVED', 'CANCELLED'].includes(task.status))
-    : tasks;
+  const visibleTasks = tasks;
 
   const canStartTask = (task) => ['ASSIGNED', 'REJECTED_DEAN'].includes(task.status);
   const canCompleteTask = (task) => !['COMPLETED', 'DEAN_APPROVED', 'CANCELLED', 'SUBMITTED_DEAN'].includes(task.status);
@@ -340,8 +353,8 @@ const Tasks = () => {
               </Grid>
               {selectedTask.attachment && (
                 <Grid item xs={12}>
-                  <Button variant="outlined" startIcon={<AttachFileRounded />} href={selectedTask.attachment} target="_blank" rel="noreferrer">
-                    Open Attachment
+                  <Button variant="outlined" startIcon={<AttachFileRounded />} href={getFileUrl(selectedTask.attachment)} target="_blank" rel="noreferrer" download>
+                    Open / Download Attachment
                   </Button>
                 </Grid>
               )}
@@ -368,6 +381,11 @@ const Tasks = () => {
           {selectedTask && canStartTask(selectedTask) && (
             <Button variant="outlined" startIcon={<PlayArrowRounded />} disabled={actionLoading} onClick={() => handleStartWork(selectedTask)}>
               Start Work
+            </Button>
+          )}
+          {isHod && selectedTask && (
+            <Button variant="outlined" startIcon={<AddRounded />} onClick={() => handleAssignFaculty(selectedTask)}>
+              Assign Faculty
             </Button>
           )}
           {selectedTask && canCompleteTask(selectedTask) && (
@@ -400,6 +418,20 @@ const Tasks = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      {facultyAssignmentTask && (
+        <CreateSubTaskDialog
+          open={Boolean(facultyAssignmentTask)}
+          onClose={() => setFacultyAssignmentTask(null)}
+          taskId={facultyAssignmentTask.id}
+          taskDepartmentId={facultyAssignmentTask.department}
+          onTaskCreated={async () => {
+            showMessage('Task assigned to Faculty successfully.');
+            setFacultyAssignmentTask(null);
+            setSelectedTask(null);
+            await fetchData();
+          }}
+        />
+      )}
       <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
         <DialogTitle sx={{ fontWeight: 800 }}>Delete Task</DialogTitle>
         <DialogContent>

@@ -5,7 +5,7 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Chip, CircularProgress, Stack
 } from '@mui/material';
-import { AssessmentRounded, FilterAltOffRounded, RefreshRounded, SearchRounded } from '@mui/icons-material';
+import { AssessmentRounded, AssignmentOutlined, FilterAltOffRounded, RefreshRounded, SearchRounded } from '@mui/icons-material';
 import api from '../api/axios';
 import { getCurrentSession } from '../utils/session';
 
@@ -35,7 +35,9 @@ const actionOptions = [
   'Received task for review',
   'Approved task',
   'Rejected task',
-  'Task completed after Dean approval'
+  'Task completed after Dean approval',
+  'Completed task',
+  'Task completed by HOD'
 ];
 
 const formatDateTime = (value) => {
@@ -61,6 +63,7 @@ const getStatusColor = (status) => {
 
 const Reports = () => {
   const [reports, setReports] = useState([]);
+  const [deanTasks, setDeanTasks] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const currentRole = getCurrentSession()?.role;
@@ -84,6 +87,22 @@ const Reports = () => {
     isDean ? reports.filter((report) => ['HOD', 'FACULTY'].includes(report.role)) : reports
   ), [isDean, reports]);
 
+  const deanTaskProgress = useMemo(() => deanTasks.map((task) => {
+    const activeFaculty = (task.subtasks || []).filter((subtask) => !['APPROVED_HOD', 'COMPLETED'].includes(subtask.status));
+    const completedFaculty = (task.subtasks || []).filter((subtask) => ['APPROVED_HOD', 'COMPLETED'].includes(subtask.status));
+    const currentWorker = activeFaculty.length > 0
+      ? activeFaculty.map((subtask) => subtask.assigned_to_name || 'Faculty').join(', ')
+      : task.assigned_to_hod_name || 'Assigned HOD';
+    const isCompleted = ['COMPLETED', 'DEAN_APPROVED'].includes(task.status);
+
+    return {
+      ...task,
+      currentWorker: isCompleted ? 'Completed' : currentWorker,
+      facultyProgress: `${completedFaculty.length}/${task.subtasks?.length || 0}`,
+      isCompleted,
+    };
+  }), [deanTasks]);
+
   const buildParams = useCallback(() => {
     const params = {};
     Object.entries(filters).forEach(([key, value]) => {
@@ -95,14 +114,23 @@ const Reports = () => {
   const fetchReports = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.get('reports/', { params: buildParams() });
-      setReports(response.data);
+      const [reportResponse, taskResponse] = await Promise.all([
+        api.get('reports/', { params: buildParams() }),
+        isDean
+          ? api.get('tasks/', {
+              params: { refresh: Date.now() },
+              headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+            })
+          : Promise.resolve({ data: [] }),
+      ]);
+      setReports(reportResponse.data);
+      if (isDean) setDeanTasks(taskResponse.data);
     } catch (err) {
       console.error('Error fetching reports:', err);
     } finally {
       setLoading(false);
     }
-  }, [buildParams]);
+  }, [buildParams, isDean]);
 
   const fetchUsers = async () => {
     try {
@@ -116,12 +144,19 @@ const Reports = () => {
   const handleRefresh = async () => {
     setLoading(true);
     try {
-      const [usersResponse, refreshResponse] = await Promise.all([
+      const [usersResponse, refreshResponse, taskResponse] = await Promise.all([
         api.get('users/'),
-        api.post('reports/refresh/', null, { params: buildParams() })
+        api.post('reports/refresh/', null, { params: buildParams() }),
+        isDean
+          ? api.get('tasks/', {
+              params: { refresh: Date.now() },
+              headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+            })
+          : Promise.resolve({ data: [] }),
       ]);
       setUsers(usersResponse.data);
       setReports(refreshResponse.data.results || []);
+      if (isDean) setDeanTasks(taskResponse.data);
     } catch (err) {
       console.error('Error refreshing reports:', err);
     } finally {
@@ -269,6 +304,62 @@ const Reports = () => {
               </Stack>
             </Grid>
           </Grid>
+        </Paper>
+      )}
+
+      {isDean && (
+        <Paper sx={{ mb: 3, border: '1px solid #d8e3f0', borderRadius: 3, overflow: 'hidden', bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.38)' }}>
+          <Box sx={{ p: { xs: 2.25, md: 3 }, display: 'flex', alignItems: 'center', gap: 1.5, borderBottom: '1px solid #e7edf5' }}>
+            <Box sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: '#eaf3ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <AssignmentOutlined sx={{ color: '#237dba' }} />
+            </Box>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a' }}>Dean Task Progress</Typography>
+              <Typography variant="body2" color="text.secondary">Current ownership and completion state for tasks created by Dean.</Typography>
+            </Box>
+          </Box>
+          <TableContainer sx={{ maxHeight: 360, overflow: 'auto' }}>
+            <Table sx={{ minWidth: 840 }}>
+              <TableHead sx={{ bgcolor: '#f8fbff', position: 'sticky', top: 0, zIndex: 1 }}>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Task</TableCell>
+                  <TableCell sx={{ fontWeight: 900, color: '#475569' }}>HOD</TableCell>
+                  <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Currently Working</TableCell>
+                  <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Faculty Progress</TableCell>
+                  <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Status</TableCell>
+                  <TableCell sx={{ fontWeight: 900, color: '#475569' }}>Completed</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {deanTaskProgress.length > 0 ? deanTaskProgress.map((task) => {
+                  const color = getStatusColor(task.status);
+                  return (
+                    <TableRow key={task.id} hover>
+                      <TableCell>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{task.title}</Typography>
+                        <Typography variant="caption" color="text.secondary">{task.department_name || 'General'}</Typography>
+                      </TableCell>
+                      <TableCell>{task.assigned_to_hod_name || 'Unassigned'}</TableCell>
+                      <TableCell>{task.currentWorker}</TableCell>
+                      <TableCell>{task.facultyProgress}</TableCell>
+                      <TableCell>
+                        <Chip label={statusLabel(task.status)} size="small" sx={{ bgcolor: color.bg, color: color.color, fontWeight: 850 }} />
+                      </TableCell>
+                      <TableCell>
+                        <Chip label={task.isCompleted ? 'Yes' : 'No'} size="small" sx={{ bgcolor: task.isCompleted ? '#e8f7f6' : '#fff8d9', color: task.isCompleted ? '#1f7f79' : '#8a6f00', fontWeight: 850 }} />
+                      </TableCell>
+                    </TableRow>
+                  );
+                }) : (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
+                      <Typography variant="body2" color="text.secondary">No Dean-created tasks found.</Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </Paper>
       )}
 

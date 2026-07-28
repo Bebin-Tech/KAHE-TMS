@@ -250,6 +250,19 @@ class TaskViewSet(viewsets.ModelViewSet):
                 message=f"Task '{task.title}' has been assigned to you by {self.request.user.get_full_name() or self.request.user.username}."
             )
 
+    @action(detail=False, methods=['get'], url_path='assigned-to-me')
+    def assigned_to_me(self, request):
+        """Active Dean-created tasks assigned to the logged-in HOD."""
+        if request.user.role != 'HOD':
+            return Response({'error': 'Only HOD users can access assigned HOD tasks.'}, status=status.HTTP_403_FORBIDDEN)
+
+        queryset = Task.objects.filter(
+            is_active=True,
+            assigned_to_hod=request.user
+        ).exclude(status__in=['COMPLETED', 'DEAN_APPROVED', 'CANCELLED']).order_by('-created_at', '-id')
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     @action(detail=True, methods=['post'])
     def submit_to_dean(self, request, pk=None):
         """HOD submits the main task to the Dean."""
