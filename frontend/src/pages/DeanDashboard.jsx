@@ -17,8 +17,6 @@ import {
   Typography
 } from '@mui/material';
 import {
-  AddTaskRounded,
-  ArrowForwardRounded,
   AssignmentOutlined,
   AssignmentRounded,
   AssignmentTurnedInOutlined,
@@ -181,27 +179,12 @@ const DeanDashboard = () => {
                 >
                   Karpagam Academy of Higher Education
                 </Typography>
-                <Typography variant="body1" sx={{ color: '#475569', fontWeight: 720 }}>
+                <Typography
+                  variant="h4"
+                  sx={{ color: '#1d4ed8', fontWeight: 900, fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.85rem' }, lineHeight: 1.12 }}
+                >
                   Welcome Back, Dean
                 </Typography>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="center" alignItems="center" sx={{ mt: 3 }}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<AddTaskRounded />}
-                    onClick={() => setDialogOpen(true)}
-                    sx={{ width: { xs: '100%', sm: 'auto' }, bgcolor: 'white', borderColor: '#2563eb', boxShadow: '0 12px 28px -22px rgba(37,99,235,0.8)' }}
-                  >
-                    Create Task
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    endIcon={<ArrowForwardRounded />}
-                    onClick={() => document.getElementById('dean-review-flow')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                    sx={{ width: { xs: '100%', sm: 'auto' }, bgcolor: 'white', borderColor: '#2563eb', boxShadow: '0 12px 28px -22px rgba(37,99,235,0.8)' }}
-                  >
-                    Review Flow
-                  </Button>
-                </Stack>
               </Box>
               <Box sx={{ display: { xs: 'none', sm: 'block' }, position: 'absolute', right: -70, bottom: -90, width: 300, height: 300, border: '44px solid rgba(37,99,235,0.18)', borderRadius: '50%' }} />
               <Box sx={{ display: { xs: 'none', md: 'block' }, position: 'absolute', right: 92, top: 36, width: 116, height: 116, border: '22px solid rgba(15,118,110,0.18)', borderRadius: '50%' }} />
