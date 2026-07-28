@@ -6,7 +6,7 @@ import {
   Paper, Typography, Box, Button, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow,
   Chip, IconButton, Tooltip, Avatar, Snackbar, Alert,
-  Dialog, DialogTitle, DialogContent, DialogActions
+  Dialog, DialogTitle, DialogContent, DialogActions, Grid, TextField, Stack
 } from '@mui/material';
 import {
   AddRounded,
@@ -16,16 +16,28 @@ import {
   StarRounded,
   ScheduleRounded,
   CheckCircleRounded,
-  CancelRounded
+  CancelRounded,
+  VisibilityRounded,
+  PlayArrowRounded,
+  DoneAllRounded,
+  FlagRounded,
+  AttachFileRounded
 } from '@mui/icons-material';
 import api from '../api/axios';
+import { getCurrentSession } from '../utils/session';
 import { formatApiError } from '../utils/errors';
 
 const Tasks = () => {
+  const currentRole = getCurrentSession()?.role;
+  const isHod = currentRole === 'HOD';
   const [tasks, setTasks] = useState([]);
   const [open, setOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [completionTarget, setCompletionTarget] = useState(null);
+  const [completionRemarks, setCompletionRemarks] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
   const [successTask, setSuccessTask] = useState(null);
   const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
 
@@ -65,6 +77,45 @@ const Tasks = () => {
     }
   };
 
+  const handleStartWork = async (task) => {
+    setActionLoading(true);
+    try {
+      await api.patch(`tasks/${task.id}/`, { status: 'IN_PROGRESS' });
+      showMessage('Task status updated to In Progress.');
+      await fetchData();
+      setSelectedTask((current) => (current?.id === task.id ? { ...current, status: 'IN_PROGRESS' } : current));
+    } catch (err) {
+      showMessage(formatApiError(err, 'Failed to start the task.'), 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleOpenComplete = (task) => {
+    setCompletionTarget(task);
+    setCompletionRemarks('');
+  };
+
+  const handleCompleteTask = async () => {
+    if (!completionTarget) return;
+
+    setActionLoading(true);
+    try {
+      await api.post(`tasks/${completionTarget.id}/complete_by_hod/`, {
+        remarks: completionRemarks || 'Task completed by HOD.',
+      });
+      showMessage('Task completed and moved to Completed Tasks.');
+      setCompletionTarget(null);
+      setCompletionRemarks('');
+      setSelectedTask(null);
+      await fetchData();
+    } catch (err) {
+      showMessage(formatApiError(err, 'Failed to complete the task.'), 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const getStatusIcon = (status) => {
     switch (status) {
       case 'COMPLETED': return <CheckCircleRounded sx={{ color: '#1f7f79', fontSize: '1rem' }} />;
@@ -89,25 +140,52 @@ const Tasks = () => {
     );
   };
 
+  const getPriorityChip = (priority, isSpecial) => {
+    const priorityStyles = {
+      LOW: { bg: '#e8f7f6', color: '#1f7f79', label: 'Low' },
+      MEDIUM: { bg: '#eaf3ff', color: '#237dba', label: 'Medium' },
+      HIGH: { bg: '#fff8d9', color: '#8a6f00', label: 'High' },
+      URGENT: { bg: '#fff0ef', color: '#c2413b', label: 'Urgent' },
+    };
+    const style = isSpecial ? { bg: '#fff8d9', color: '#8a6f00', label: 'Special' } : (priorityStyles[priority] || priorityStyles.MEDIUM);
+    return (
+      <Chip
+        icon={isSpecial ? <StarRounded /> : <FlagRounded />}
+        label={style.label}
+        size="small"
+        sx={{ bgcolor: style.bg, color: style.color, fontWeight: 850, borderRadius: '8px', '& .MuiChip-icon': { color: style.color } }}
+      />
+    );
+  };
+
+  const visibleTasks = isHod
+    ? tasks.filter((task) => !['COMPLETED', 'DEAN_APPROVED', 'CANCELLED'].includes(task.status))
+    : tasks;
+
+  const canStartTask = (task) => ['ASSIGNED', 'REJECTED_DEAN'].includes(task.status);
+  const canCompleteTask = (task) => !['COMPLETED', 'DEAN_APPROVED', 'CANCELLED', 'SUBMITTED_DEAN'].includes(task.status);
+
   return (
     <DashboardLayout title="Task Management">
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
         <Box sx={{ textAlign: 'left' }}>
           <Typography variant="h4" sx={{ fontWeight: 900, mb: 0.75, color: '#0f172a', fontSize: { xs: '1.45rem', sm: '2.125rem' } }}>
-            System Tasks
+            {isHod ? 'HOD Task Module' : 'System Tasks'}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Assign and monitor tasks across all departments.
+            {isHod ? 'Open assigned Dean tasks, review priority, update progress, and complete work.' : 'Assign and monitor tasks across all departments.'}
           </Typography>
         </Box>
-        <Button
-          variant="outlined"
-          startIcon={<AddRounded />}
-          onClick={() => setOpen(true)}
-          sx={{ width: { xs: '100%', sm: 'auto' }, alignSelf: { xs: 'stretch', sm: 'flex-start', md: 'center' }, bgcolor: '#ffffff', borderColor: '#b7d5fb', fontWeight: 850, borderRadius: 1.5 }}
-        >
-          Create New Task
-        </Button>
+        {!isHod && (
+          <Button
+            variant="outlined"
+            startIcon={<AddRounded />}
+            onClick={() => setOpen(true)}
+            sx={{ width: { xs: '100%', sm: 'auto' }, alignSelf: { xs: 'stretch', sm: 'flex-start', md: 'center' }, bgcolor: '#ffffff', borderColor: '#b7d5fb', fontWeight: 850, borderRadius: 1.5 }}
+          >
+            Create New Task
+          </Button>
+        )}
       </Box>
 
       <TableContainer component={Paper} sx={{ border: '1px solid #d8e3f0', borderRadius: 3, overflow: 'hidden', bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.45)' }}>
@@ -122,7 +200,7 @@ const Tasks = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {tasks.length > 0 ? tasks.map((task) => (
+            {visibleTasks.length > 0 ? visibleTasks.map((task) => (
               <TableRow key={task.id} hover sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { bgcolor: '#f8fbff' } }}>
                 <TableCell>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -139,6 +217,7 @@ const Tasks = () => {
                             <StarRounded sx={{ color: '#f59e0b', fontSize: '1.1rem' }} />
                           </Tooltip>
                         )}
+                        {isHod && getPriorityChip(task.priority, task.is_special)}
                       </Box>
                       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', maxWidth: 300, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {task.description}
@@ -167,15 +246,37 @@ const Tasks = () => {
                   </Box>
                 </TableCell>
                 <TableCell align="right">
-                  <IconButton onClick={() => handleEdit(task)} size="small" sx={{ color: '#237dba' }}><EditRounded fontSize="small" /></IconButton>
-                  <IconButton onClick={() => setDeleteTarget(task)} size="small" sx={{ color: '#f44336' }}><DeleteRounded fontSize="small" /></IconButton>
+                  {isHod ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, flexWrap: 'wrap' }}>
+                      <Button size="small" variant="outlined" startIcon={<VisibilityRounded />} onClick={() => setSelectedTask(task)}>
+                        Open
+                      </Button>
+                      {canStartTask(task) && (
+                        <Button size="small" variant="outlined" startIcon={<PlayArrowRounded />} disabled={actionLoading} onClick={() => handleStartWork(task)}>
+                          Start
+                        </Button>
+                      )}
+                      {canCompleteTask(task) && (
+                        <Button size="small" variant="contained" startIcon={<DoneAllRounded />} disabled={actionLoading} onClick={() => handleOpenComplete(task)}>
+                          Complete
+                        </Button>
+                      )}
+                    </Box>
+                  ) : (
+                    <>
+                      <IconButton onClick={() => handleEdit(task)} size="small" sx={{ color: '#237dba' }}><EditRounded fontSize="small" /></IconButton>
+                      <IconButton onClick={() => setDeleteTarget(task)} size="small" sx={{ color: '#f44336' }}><DeleteRounded fontSize="small" /></IconButton>
+                    </>
+                  )}
                 </TableCell>
               </TableRow>
             )) : (
               <TableRow>
                 <TableCell colSpan={5} align="center" sx={{ py: 10 }}>
                   <AssignmentOutlined sx={{ fontSize: 48, color: '#919eab', mb: 2 }} />
-                  <Typography variant="body1" color="text.secondary">No tasks found. Create one to get started.</Typography>
+                  <Typography variant="body1" color="text.secondary">
+                    {isHod ? 'No active HOD tasks found. Completed tasks appear in Completed Tasks.' : 'No tasks found. Create one to get started.'}
+                  </Typography>
                 </TableCell>
               </TableRow>
             )}
@@ -200,6 +301,99 @@ const Tasks = () => {
         onClose={() => setSuccessTask(null)}
         taskTitle={successTask?.title}
       />
+      <Dialog open={Boolean(selectedTask)} onClose={() => setSelectedTask(null)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
+        <DialogTitle sx={{ fontWeight: 900 }}>Task Details</DialogTitle>
+        <DialogContent dividers>
+          {selectedTask && (
+            <Grid container spacing={2.5}>
+              <Grid item xs={12}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+                  <Typography variant="h5" sx={{ fontWeight: 900, color: '#0f172a', flex: 1 }}>{selectedTask.title}</Typography>
+                  {getPriorityChip(selectedTask.priority, selectedTask.is_special)}
+                  {getStatusChip(selectedTask.status)}
+                </Stack>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>{selectedTask.description}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>Department</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 800 }}>{selectedTask.department_name || 'General'}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>Assigned By</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 800 }}>{selectedTask.created_by_name || 'Dean'}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>Start Date</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 800 }}>{selectedTask.start_date ? new Date(selectedTask.start_date).toLocaleString() : 'N/A'}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>Due Date</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 800 }}>{selectedTask.deadline ? new Date(selectedTask.deadline).toLocaleString() : 'N/A'}</Typography>
+              </Grid>
+              {selectedTask.attachment && (
+                <Grid item xs={12}>
+                  <Button variant="outlined" startIcon={<AttachFileRounded />} href={selectedTask.attachment} target="_blank" rel="noreferrer">
+                    Open Attachment
+                  </Button>
+                </Grid>
+              )}
+              {selectedTask.subtasks?.length > 0 && (
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 1 }}>Faculty Sub-Tasks</Typography>
+                  <Stack spacing={1}>
+                    {selectedTask.subtasks.map((subtask) => (
+                      <Box key={subtask.id} sx={{ p: 1.5, border: '1px solid #e2e8f0', borderRadius: 2, bgcolor: '#f8fafc' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 900 }}>{subtask.title}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {subtask.assigned_to_name || 'Faculty'} - {subtask.status}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                </Grid>
+              )}
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 3, gap: 1, flexWrap: 'wrap' }}>
+          <Button onClick={() => setSelectedTask(null)} color="inherit">Close</Button>
+          {selectedTask && canStartTask(selectedTask) && (
+            <Button variant="outlined" startIcon={<PlayArrowRounded />} disabled={actionLoading} onClick={() => handleStartWork(selectedTask)}>
+              Start Work
+            </Button>
+          )}
+          {selectedTask && canCompleteTask(selectedTask) && (
+            <Button variant="contained" startIcon={<DoneAllRounded />} disabled={actionLoading} onClick={() => handleOpenComplete(selectedTask)}>
+              Complete Task
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
+      <Dialog open={Boolean(completionTarget)} onClose={() => setCompletionTarget(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
+        <DialogTitle sx={{ fontWeight: 900 }}>Complete Task</DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Add final remarks before moving this task to Completed Tasks.
+          </Typography>
+          <TextField
+            fullWidth
+            label="Completion Remarks"
+            multiline
+            minRows={4}
+            value={completionRemarks}
+            onChange={(event) => setCompletionRemarks(event.target.value)}
+            placeholder="Enter completion details, remarks, or summary..."
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => setCompletionTarget(null)} color="inherit">Cancel</Button>
+          <Button variant="contained" startIcon={<DoneAllRounded />} disabled={actionLoading} onClick={handleCompleteTask}>
+            Complete
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
         <DialogTitle sx={{ fontWeight: 800 }}>Delete Task</DialogTitle>
         <DialogContent>

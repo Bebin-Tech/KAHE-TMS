@@ -311,6 +311,61 @@ class TaskViewSet(viewsets.ModelViewSet):
         return Response({'status': 'submitted to dean'})
 
     @action(detail=True, methods=['post'])
+    def complete_by_hod(self, request, pk=None):
+        """HOD completes an assigned main task and moves it to Completed Tasks."""
+        task = self.get_object()
+        if request.user != task.assigned_to_hod and request.user.role not in ['ADMIN']:
+            return Response({'error': 'Only the assigned HOD can complete this task.'}, status=status.HTTP_403_FORBIDDEN)
+
+        unfinished_subtasks = task.subtasks.filter(is_active=True).exclude(status__in=['APPROVED_HOD', 'COMPLETED'])
+        if unfinished_subtasks.exists():
+            return Response({
+                'error': 'Approve or complete all faculty sub-tasks before completing this task.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        remarks = request.data.get('remarks') or request.data.get('content') or 'Task completed by HOD.'
+        Submission.objects.create(
+            task=task,
+            submitted_by=request.user,
+            content=remarks,
+            attachment=request.FILES.get('attachment')
+        )
+        task.status = 'COMPLETED'
+        task.save()
+
+        now = timezone.now()
+        record_task_activity(
+            task=task,
+            user=task.assigned_to_hod,
+            role='HOD',
+            status='COMPLETED',
+            action_performed='Completed task',
+            assigned_by=task.created_by,
+            assigned_at=task.created_at,
+            work_completed_at=now,
+            submission_at=now,
+            action_at=now
+        )
+        if task.created_by:
+            record_task_activity(
+                task=task,
+                user=task.created_by,
+                role=task.created_by.role,
+                status='COMPLETED',
+                action_performed='Task completed by HOD',
+                assigned_by=task.created_by,
+                assigned_at=task.created_at,
+                work_completed_at=now,
+                action_at=now
+            )
+            Notification.objects.create(
+                user=task.created_by,
+                message=f"Task '{task.title}' has been completed by HOD."
+            )
+
+        return Response(TaskSerializer(task, context={'request': request}).data)
+
+    @action(detail=True, methods=['post'])
     def approve_as_dean(self, request, pk=None):
         """Dean approves the task, marking it as COMPLETED."""
         task = self.get_object()
