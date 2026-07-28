@@ -266,6 +266,16 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], url_path='dean-workflow')
+    def dean_workflow(self, request):
+        """Dean-owned task workflow data for the Task module."""
+        if request.user.role != 'DEAN':
+            return Response({'error': 'Only Dean users can access Dean workflow tasks.'}, status=status.HTTP_403_FORBIDDEN)
+
+        queryset = Task.objects.filter(created_by=request.user).order_by('-created_at', '-id')
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     @action(detail=True, methods=['post'])
     def submit_to_dean(self, request, pk=None):
         """HOD submits the main task to the Dean."""

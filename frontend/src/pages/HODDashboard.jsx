@@ -109,7 +109,7 @@ const HODDashboard = () => {
 
   const canSubmitToDean = (task) => {
     const taskSubtasks = getTaskSubtasks(task.id);
-    return taskSubtasks.length === 0 || taskSubtasks.every((subtask) => ['APPROVED_HOD', 'COMPLETED'].includes(subtask.status));
+    return taskSubtasks.length > 0 && taskSubtasks.every((subtask) => ['APPROVED_HOD', 'COMPLETED'].includes(subtask.status));
   };
 
   const activeSubtasks = subtasks.filter((subtask) => !['APPROVED_HOD', 'COMPLETED'].includes(subtask.status)).length;
@@ -224,12 +224,12 @@ const HODDashboard = () => {
                         >
                           Add Sub-Task
                         </Button>
-                        <Tooltip title={!canSubmitToDean(task) ? 'Approve all faculty sub-tasks before submitting to Dean.' : ''}>
+                        <Tooltip title={!canSubmitToDean(task) ? 'Assign Faculty and approve all submitted Faculty work before submitting to Dean.' : ''}>
                           <span>
                             <Button
                               size="small"
                               variant="contained"
-                              disabled={task.status === 'SUBMITTED_DEAN' || task.status === 'COMPLETED' || !canSubmitToDean(task)}
+                              disabled={['SUBMITTED_DEAN', 'COMPLETED', 'DEAN_APPROVED'].includes(task.status) || !canSubmitToDean(task)}
                               onClick={() => {
                                 setSubmitTask(task);
                                 setSubmissionContent('');
@@ -369,7 +369,7 @@ const HODDashboard = () => {
         <DialogTitle sx={{ fontWeight: 800 }}>Submit Task to Dean</DialogTitle>
         <DialogContent dividers>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Add the final HOD summary. Approved faculty submissions are retained with the task and can be reviewed by the Dean.
+            Add the final HOD summary. Verified Faculty submissions are retained with the task and can be reviewed by the Dean.
           </Typography>
           <TextField
             fullWidth
