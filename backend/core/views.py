@@ -273,7 +273,13 @@ class TaskViewSet(viewsets.ModelViewSet):
         if request.user != task.assigned_to_hod and request.user.role not in ['ADMIN']:
             return Response({'error': 'Only the assigned HOD can submit this task.'}, status=status.HTTP_403_FORBIDDEN)
 
-        unfinished_subtasks = task.subtasks.filter(is_active=True).exclude(status__in=['APPROVED_HOD', 'COMPLETED'])
+        active_subtasks = task.subtasks.filter(is_active=True)
+        if not active_subtasks.exists():
+            return Response({
+                'error': 'Assign this task to at least one Faculty member before submitting it to the Dean.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        unfinished_subtasks = active_subtasks.exclude(status__in=['APPROVED_HOD', 'COMPLETED'])
         if unfinished_subtasks.exists():
             return Response({
                 'error': 'Approve or complete all faculty sub-tasks before submitting this task to the Dean.'

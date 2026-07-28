@@ -7,6 +7,14 @@ import {
 import { GetAppRounded } from '@mui/icons-material';
 import api from '../api/axios';
 
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/';
+const fileBaseUrl = apiBaseUrl.replace(/\/api\/?$/, '');
+const getFileUrl = (path) => {
+  if (!path) return '';
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${fileBaseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+};
+
 const ReviewSubmissionDialog = ({ open, onClose, task, onProcessed }) => {
   const [submission, setSubmission] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -71,8 +79,9 @@ const ReviewSubmissionDialog = ({ open, onClose, task, onProcessed }) => {
                   <Typography variant="body2" noWrap sx={{ fontWeight: 700 }}>{submission.attachment.split('/').pop()}</Typography>
                   <Button
                     startIcon={<GetAppRounded />}
-                    href={`http://127.0.0.1:8000${submission.attachment}`}
+                    href={getFileUrl(submission.attachment)}
                     target="_blank"
+                    rel="noreferrer"
                     size="small"
                   >
                     Download

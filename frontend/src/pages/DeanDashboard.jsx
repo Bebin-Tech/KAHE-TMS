@@ -26,6 +26,7 @@ import {
   PendingActionsRounded,
   PriorityHighRounded,
   RateReviewRounded,
+  SupervisorAccountRounded,
   TrendingUpRounded
 } from '@mui/icons-material';
 import api from '../api/axios';
@@ -54,6 +55,22 @@ const getProgressValue = (task) => {
   if (task.status === 'IN_PROGRESS') return 42;
   if (task.status === 'ASSIGNED') return 18;
   return 10;
+};
+
+const getFacultyProgress = (task) => {
+  const subtasks = task.subtasks || [];
+  if (!subtasks.length) {
+    return { total: 0, complete: 0, submitted: 0, value: 0 };
+  }
+
+  const complete = subtasks.filter((subtask) => ['APPROVED_HOD', 'COMPLETED'].includes(subtask.status)).length;
+  const submitted = subtasks.filter((subtask) => subtask.status === 'SUBMITTED').length;
+  return {
+    total: subtasks.length,
+    complete,
+    submitted,
+    value: Math.round((complete / subtasks.length) * 100),
+  };
 };
 
 const DeanDashboard = () => {
@@ -127,7 +144,7 @@ const DeanDashboard = () => {
   ];
 
   const recentTasks = tasks.slice(0, 5);
-  const reviewQueue = tasks.filter((task) => task.status === 'SUBMITTED_DEAN').slice(0, 4);
+  const reviewQueue = tasks.filter((task) => task.status === 'SUBMITTED_DEAN');
   const deadlineFocus = tasks
     .filter((task) => task.deadline && !['COMPLETED', 'DEAN_APPROVED', 'CANCELLED'].includes(task.status))
     .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
@@ -162,10 +179,10 @@ const DeanDashboard = () => {
                   variant="h3"
                   sx={{ mb: 1, fontSize: { xs: '1.55rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1.12, fontWeight: 800, color: '#0f172a' }}
                 >
-                  Dean Task Review Workflow
+                  Karpagam Academy of Higher Education
                 </Typography>
                 <Typography variant="body1" sx={{ color: '#475569', fontWeight: 720 }}>
-                  Monitor HOD submissions, deadline risk, and final approvals across departments.
+                  Welcome Back, Dean
                 </Typography>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="center" alignItems="center" sx={{ mt: 3 }}>
                   <Button
@@ -265,31 +282,78 @@ const DeanDashboard = () => {
             <Paper sx={{ p: { xs: 2.25, md: 3 }, borderRadius: 3, border: '1px solid #dde5f0' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 900 }}>Final Review Queue</Typography>
-                  <Typography variant="body2" color="text.secondary">HOD submissions ready for Dean action.</Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 900 }}>HOD Submissions</Typography>
+                  <Typography variant="body2" color="text.secondary">Completed department work waiting for Dean review.</Typography>
                 </Box>
                 <RateReviewRounded sx={{ color: 'text.secondary' }} />
               </Box>
-              <Stack spacing={2}>
-                {(reviewQueue.length ? reviewQueue : [{ id: 'empty-review', title: 'No tasks awaiting final review', assigned_to_hod_name: 'Queue is clear' }]).map((task) => (
-                  <Box key={task.id} sx={{ p: 2, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{task.title}</Typography>
-                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: task.status === 'SUBMITTED_DEAN' ? 1.5 : 0 }}>
-                      {task.assigned_to_hod_name || 'No HOD assigned'}
-                    </Typography>
-                    {task.status === 'SUBMITTED_DEAN' && (
-                      <Button
-                        size="small"
-                        variant="contained"
-                        startIcon={<RateReviewRounded />}
-                        onClick={() => handleOpenReview(task)}
-                      >
-                        Final Review
-                      </Button>
-                    )}
-                  </Box>
-                ))}
-              </Stack>
+              {reviewQueue.length ? (
+                <Stack spacing={2}>
+                  {reviewQueue.map((task) => {
+                    const config = statusConfig[task.status] || statusConfig.ASSIGNED;
+                    const facultyProgress = getFacultyProgress(task);
+                    return (
+                      <Box key={task.id} sx={{ p: 2, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between">
+                          <Box sx={{ minWidth: 0 }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{task.title}</Typography>
+                            <Typography variant="caption" color="text.secondary" display="block">
+                              {task.department_name || 'General'} | HOD: {task.assigned_to_hod_name || 'Unassigned'}
+                            </Typography>
+                          </Box>
+                          <Chip label={config.label} size="small" sx={{ bgcolor: config.bg, color: config.color, fontWeight: 800 }} />
+                        </Stack>
+
+                        <Box sx={{ mt: 1.75 }}>
+                          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.75 }}>
+                            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 800 }}>
+                              Faculty completion
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: '#0f172a', fontWeight: 900 }}>
+                              {facultyProgress.complete}/{facultyProgress.total} approved
+                            </Typography>
+                          </Stack>
+                          <LinearProgress variant="determinate" value={facultyProgress.value || getProgressValue(task)} sx={{ height: 8, borderRadius: 5 }} />
+                        </Box>
+
+                        <Grid container spacing={1.25} sx={{ mt: 1 }}>
+                          <Grid item xs={6}>
+                            <Typography variant="caption" color="text.secondary" display="block">Created</Typography>
+                            <Typography variant="caption" sx={{ fontWeight: 900 }}>{formatDate(task.created_at)}</Typography>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <Typography variant="caption" color="text.secondary" display="block">Due</Typography>
+                            <Typography variant="caption" sx={{ fontWeight: 900 }}>{formatDate(task.deadline)}</Typography>
+                          </Grid>
+                          <Grid item xs={12}>
+                            <Typography variant="caption" color="text.secondary" display="block">Progress</Typography>
+                            <Typography variant="caption" sx={{ fontWeight: 900 }}>
+                              {facultyProgress.total ? `${facultyProgress.total} Faculty task${facultyProgress.total === 1 ? '' : 's'} routed, ${facultyProgress.submitted} pending HOD review, ${facultyProgress.complete} verified.` : 'No Faculty subtasks recorded.'}
+                            </Typography>
+                          </Grid>
+                        </Grid>
+
+                        <Button
+                          fullWidth
+                          size="small"
+                          variant="contained"
+                          startIcon={<RateReviewRounded />}
+                          onClick={() => handleOpenReview(task)}
+                          sx={{ mt: 1.75 }}
+                        >
+                          Open Final Review
+                        </Button>
+                      </Box>
+                    );
+                  })}
+                </Stack>
+              ) : (
+                <Box sx={{ py: 5, px: 2, textAlign: 'center', borderRadius: 2, bgcolor: '#f8fafc', border: '1px dashed #cbd5e1' }}>
+                  <SupervisorAccountRounded sx={{ fontSize: 42, color: '#94a3b8', mb: 1 }} />
+                  <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>No HOD submissions yet</Typography>
+                  <Typography variant="body2" color="text.secondary">Tasks submitted by HODs will appear here with status and progress details.</Typography>
+                </Box>
+              )}
             </Paper>
 
             <Paper sx={{ p: { xs: 2.25, md: 3 }, borderRadius: 3, border: '1px solid #dde5f0' }}>
