@@ -469,11 +469,13 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
               fullWidth
               sx={{
                 minHeight: 48,
-                bgcolor: '#f8fafc',
-                color: '#374151',
+                bgcolor: '#f7f7f8',
+                color: '#4b4f58',
                 fontWeight: 900,
+                boxShadow: 'none',
                 '&:hover': {
-                  bgcolor: '#eef2f7'
+                  bgcolor: '#eeeeef',
+                  boxShadow: 'none'
                 }
               }}
             >
@@ -485,11 +487,13 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
               fullWidth
               sx={{
                 minHeight: 48,
-                bgcolor: '#e53935',
+                bgcolor: '#e9353d',
                 color: '#ffffff',
                 fontWeight: 900,
+                boxShadow: '0 12px 24px -18px rgba(233,53,61,0.85)',
                 '&:hover': {
-                  bgcolor: '#c62828'
+                  bgcolor: '#d92f36',
+                  boxShadow: '0 14px 28px -20px rgba(217,47,54,0.9)'
                 }
               }}
             >
