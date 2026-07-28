@@ -19,7 +19,8 @@ import {
   AssignmentTurnedInOutlined,
   HomeOutlined,
   ExpandLessRounded,
-  ExpandMoreRounded
+  ExpandMoreRounded,
+  LogoutRounded
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { clearRoleSession, getCurrentSession } from '../utils/session';
@@ -425,32 +426,74 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           onClose={() => setLogoutDialogOpen(false)}
           maxWidth="xs"
           fullWidth
-          PaperProps={{ sx: { borderRadius: '16px' } }}
+          PaperProps={{
+            sx: {
+              width: '100%',
+              maxWidth: 360,
+              borderRadius: 3,
+              p: { xs: 2, sm: 2.5 },
+              boxShadow: '0 26px 70px -42px rgba(15,23,42,0.45)'
+            }
+          }}
         >
-          <DialogTitle sx={{ fontWeight: 900, textAlign: 'center' }}>Logout</DialogTitle>
-          <DialogContent>
-            <Typography variant="body2" color="text.secondary" align="center">
+          <DialogTitle sx={{ p: 0, textAlign: 'center' }}>
+            <Box
+              sx={{
+                width: 82,
+                height: 82,
+                mx: 'auto',
+                mb: 2.25,
+                borderRadius: '50%',
+                bgcolor: '#fff1f2',
+                color: '#dc2626',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <LogoutRounded sx={{ fontSize: 36 }} />
+            </Box>
+            <Typography variant="h6" sx={{ fontWeight: 900, color: '#111827' }}>
+              Logout
+            </Typography>
+          </DialogTitle>
+          <DialogContent sx={{ px: 0, pt: 1, pb: 2.5 }}>
+            <Typography variant="body2" color="text.secondary" align="center" sx={{ fontWeight: 650 }}>
               Are you sure you want to log out?
             </Typography>
           </DialogContent>
-          <DialogActions sx={{ px: 3, pb: 3, gap: 1.5 }}>
-            <Button
-              onClick={handleLogout}
-              variant="outlined"
-              color="inherit"
-              fullWidth
-              sx={{ fontWeight: 900, minHeight: 48 }}
-            >
-              Logout
-            </Button>
+          <DialogActions sx={{ p: 0, gap: 1.5 }}>
             <Button
               onClick={() => setLogoutDialogOpen(false)}
               variant="contained"
-              color="error"
               fullWidth
-              sx={{ fontWeight: 900, minHeight: 48 }}
+              sx={{
+                minHeight: 48,
+                bgcolor: '#f8fafc',
+                color: '#374151',
+                fontWeight: 900,
+                '&:hover': {
+                  bgcolor: '#eef2f7'
+                }
+              }}
             >
               Cancel
+            </Button>
+            <Button
+              onClick={handleLogout}
+              variant="contained"
+              fullWidth
+              sx={{
+                minHeight: 48,
+                bgcolor: '#e53935',
+                color: '#ffffff',
+                fontWeight: 900,
+                '&:hover': {
+                  bgcolor: '#c62828'
+                }
+              }}
+            >
+              Logout
             </Button>
           </DialogActions>
         </Dialog>
