@@ -12,17 +12,22 @@ import { formatApiError } from '../utils/errors';
 const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
   const [departments, setDepartments] = useState([]);
   const [users, setUsers] = useState([]);
+  const [facultyUsers, setFacultyUsers] = useState([]);
   const [showingAllHods, setShowingAllHods] = useState(false);
+  const [showingAllFaculty, setShowingAllFaculty] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(false);
   const [error, setError] = useState('');
   const [attachment, setAttachment] = useState(null);
+  const currentUser = getCurrentSession()?.session?.user;
+  const isHodCreate = currentUser?.role === 'HOD' && !task;
 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     department: '',
     assigned_to_hod: '',
+    assigned_to_faculty: '',
     start_date: '',
     deadline: '',
     status: 'ASSIGNED',
@@ -39,6 +44,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
           description: task.description,
           department: task.department || '',
           assigned_to_hod: task.assigned_to_hod || '',
+          assigned_to_faculty: '',
           start_date: task.start_date ? task.start_date.slice(0, 16) : '',
           deadline: task.deadline ? task.deadline.slice(0, 16) : '',
           status: task.status,
@@ -51,10 +57,13 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
         setAttachment(null);
       } else {
         resetForm();
+        if (isHodCreate && currentUser?.department) {
+          fetchFacultyByDepartment(currentUser.department);
+        }
       }
       setError('');
     }
-  }, [open, task]);
+  }, [open, task, isHodCreate, currentUser?.department]);
 
   const fetchDepartments = async () => {
     setFetchingData(true);
@@ -90,6 +99,30 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
     }
   };
 
+  const fetchFacultyByDepartment = async (deptId) => {
+    setFetchingData(true);
+    try {
+      const response = await api.get(`users/?department=${deptId}`);
+      const departmentFaculty = response.data.filter((user) => user.role === 'FACULTY' && user.is_active);
+      if (departmentFaculty.length > 0) {
+        setFacultyUsers(departmentFaculty);
+        setShowingAllFaculty(false);
+        return;
+      }
+
+      const fallbackResponse = await api.get('users/');
+      const allFaculty = fallbackResponse.data.filter((user) => user.role === 'FACULTY' && user.is_active);
+      setFacultyUsers(allFaculty);
+      setShowingAllFaculty(allFaculty.length > 0);
+    } catch (err) {
+      setFacultyUsers([]);
+      setShowingAllFaculty(false);
+      setError('Failed to fetch Faculty members for this department.');
+    } finally {
+      setFetchingData(false);
+    }
+  };
+
   const handleDepartmentChange = (deptId) => {
     setFormData({ ...formData, department: deptId, assigned_to_hod: '' });
     fetchUsersByDepartment(deptId);
@@ -101,6 +134,12 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
     setError('');
 
     const submitData = { ...formData };
+    const assignedFaculty = submitData.assigned_to_faculty;
+    delete submitData.assigned_to_faculty;
+    if (isHodCreate) {
+      submitData.department = currentUser?.department || null;
+      submitData.assigned_to_hod = currentUser?.id || null;
+    }
     if (submitData.department === '') submitData.department = null;
     if (submitData.assigned_to_hod === '') submitData.assigned_to_hod = null;
     if (!task) submitData.status = 'ASSIGNED';
@@ -130,6 +169,16 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
         savedTask = response.data;
+        if (isHodCreate) {
+          await api.post('subtasks/', {
+            task: savedTask.id,
+            title: formData.title,
+            description: formData.description,
+            assigned_to: assignedFaculty,
+            deadline: formData.deadline,
+            status: 'ASSIGNED',
+          });
+        }
       }
       onTaskCreated(savedTask, !task);
       onClose();
@@ -147,6 +196,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
       description: '',
       department: '',
       assigned_to_hod: '',
+      assigned_to_faculty: '',
       start_date: '',
       deadline: '',
       status: 'ASSIGNED',
@@ -155,7 +205,9 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
     });
     setAttachment(null);
     setUsers([]);
+    setFacultyUsers([]);
     setShowingAllHods(false);
+    setShowingAllFaculty(false);
   };
 
   return (
@@ -166,6 +218,11 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
         </DialogTitle>
         <DialogContent dividers sx={{ pt: 3 }}>
           {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+          {isHodCreate && !currentUser?.department && (
+            <Alert severity="warning" sx={{ mb: 3 }}>
+              Your HOD account is not linked to a department. Please ask Admin to assign your department before creating Faculty tasks.
+            </Alert>
+          )}
 
           <Grid container spacing={3}>
             <Grid item xs={12}>
@@ -186,40 +243,68 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
               />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
-              <TextField
-                select fullWidth label="Department" required
-                value={formData.department}
-                onChange={(e) => handleDepartmentChange(e.target.value)}
-                disabled={fetchingData}
-              >
-                {departments.map((dept) => (
-                  <MenuItem key={dept.id} value={dept.id}>{dept.name}</MenuItem>
-                ))}
-              </TextField>
-            </Grid>
+            {isHodCreate ? (
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select fullWidth label="Assign to Faculty" required
+                  value={formData.assigned_to_faculty}
+                  onChange={(e) => setFormData({...formData, assigned_to_faculty: e.target.value})}
+                  disabled={!currentUser?.department || fetchingData}
+                  helperText={
+                    !currentUser?.department
+                      ? 'A department is required before assigning Faculty.'
+                      : facultyUsers.length === 0 && !fetchingData
+                        ? 'No active Faculty found. Add an active Faculty user first.'
+                        : showingAllFaculty
+                          ? 'No Faculty is linked to your department, so all active Faculty are shown.'
+                          : 'Select the Faculty member who will complete this task'
+                  }
+                >
+                  {facultyUsers.map((user) => (
+                    <MenuItem key={user.id} value={user.id}>
+                      {user.first_name} {user.last_name} ({user.username})
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+            ) : (
+              <>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    select fullWidth label="Department" required
+                    value={formData.department}
+                    onChange={(e) => handleDepartmentChange(e.target.value)}
+                    disabled={fetchingData}
+                  >
+                    {departments.map((dept) => (
+                      <MenuItem key={dept.id} value={dept.id}>{dept.name}</MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
 
-            <Grid item xs={12} sm={6}>
-              <TextField
-                select fullWidth label="Assign to HOD" required
-                value={formData.assigned_to_hod}
-                onChange={(e) => setFormData({...formData, assigned_to_hod: e.target.value})}
-                disabled={!formData.department || fetchingData}
-                helperText={
-                  formData.department && !fetchingData && users.length === 0
-                    ? 'No active HOD found. Add an active HOD user first.'
-                    : showingAllHods
-                      ? 'No HOD is linked to this department, so all active HODs are shown.'
-                      : 'Select the department HOD who will own this task'
-                }
-              >
-                {users.map((user) => (
-                  <MenuItem key={user.id} value={user.id}>
-                    {user.first_name} {user.last_name} ({user.role})
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    select fullWidth label="Assign to HOD" required
+                    value={formData.assigned_to_hod}
+                    onChange={(e) => setFormData({...formData, assigned_to_hod: e.target.value})}
+                    disabled={!formData.department || fetchingData}
+                    helperText={
+                      formData.department && !fetchingData && users.length === 0
+                        ? 'No active HOD found. Add an active HOD user first.'
+                        : showingAllHods
+                          ? 'No HOD is linked to this department, so all active HODs are shown.'
+                          : 'Select the department HOD who will own this task'
+                    }
+                  >
+                    {users.map((user) => (
+                      <MenuItem key={user.id} value={user.id}>
+                        {user.first_name} {user.last_name} ({user.role})
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                </Grid>
+              </>
+            )}
 
             <Grid item xs={12} sm={6}>
               <TextField
@@ -336,7 +421,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
           <Button
             type="submit"
             variant="contained"
-            disabled={loading || fetchingData}
+            disabled={loading || fetchingData || (isHodCreate && (!currentUser?.department || !formData.assigned_to_faculty))}
             sx={{ px: 4, py: 1.2, borderRadius: '12px', fontWeight: 700, textTransform: 'none' }}
           >
             {loading ? <CircularProgress size={24} color="inherit" /> : (task ? 'Update Task' : 'Create Task')}

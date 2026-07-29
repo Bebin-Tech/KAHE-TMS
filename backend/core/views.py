@@ -193,9 +193,21 @@ class TaskViewSet(viewsets.ModelViewSet):
         instance.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    def create(self, request, *args, **kwargs):
+        if request.user.role == 'FACULTY':
+            return Response({'error': 'Faculty users cannot create main tasks.'}, status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
-        task_status = 'ASSIGNED' if serializer.validated_data.get('assigned_to_hod') else 'ONGOING'
-        task = serializer.save(created_by=self.request.user, status=task_status, is_active=True)
+        save_kwargs = {'created_by': self.request.user, 'is_active': True}
+        if self.request.user.role == 'HOD':
+            save_kwargs['assigned_to_hod'] = self.request.user
+            if self.request.user.department_id:
+                save_kwargs['department'] = self.request.user.department
+
+        assigned_to_hod = save_kwargs.get('assigned_to_hod') or serializer.validated_data.get('assigned_to_hod')
+        task_status = 'ASSIGNED' if assigned_to_hod else 'ONGOING'
+        task = serializer.save(status=task_status, **save_kwargs)
         record_task_activity(
             task=task,
             user=task.created_by,
