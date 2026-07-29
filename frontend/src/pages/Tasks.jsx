@@ -76,6 +76,7 @@ const Tasks = () => {
   const currentRole = getCurrentSession()?.role;
   const isHod = currentRole === 'HOD';
   const isDean = currentRole === 'DEAN';
+  const canCreateTask = ['ADMIN', 'DEAN', 'HOD'].includes(currentRole);
   const [tasks, setTasks] = useState([]);
   const [open, setOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
@@ -318,7 +319,7 @@ const Tasks = () => {
   return (
     <DashboardLayout title="Task Management">
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end', alignItems: { xs: 'stretch', md: 'center' } }}>
-        {!isHod && (
+        {canCreateTask && (
           <Button
             variant="outlined"
             startIcon={<AddRounded />}
