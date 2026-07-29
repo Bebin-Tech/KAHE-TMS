@@ -8,7 +8,7 @@ import {
   Paper, Typography, Box, Button, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow,
   Chip, IconButton, Tooltip, Avatar, Snackbar, Alert,
-  Card, Dialog, DialogTitle, DialogContent, DialogActions, Grid, LinearProgress, TextField, Stack
+  Dialog, DialogTitle, DialogContent, DialogActions, Grid, LinearProgress, TextField, Stack
 } from '@mui/material';
 import {
   AddRounded,
@@ -23,12 +23,9 @@ import {
   PlayArrowRounded,
   FlagRounded,
   AttachFileRounded,
-  AssignmentTurnedInOutlined,
   ErrorOutlineRounded,
-  PendingActionsRounded,
   RateReviewRounded,
-  SendRounded,
-  TrendingUpRounded
+  SendRounded
 } from '@mui/icons-material';
 import api from '../api/axios';
 import { getCurrentSession } from '../utils/session';
@@ -302,41 +299,6 @@ const Tasks = () => {
     return { completed, pendingReview, overdue, active, total: tasks.length, completionRate };
   }, [tasks]);
 
-  const deanSummaryCards = [
-    {
-      title: 'Total Tasks',
-      value: taskTotals.total,
-      helper: `${taskTotals.active} currently active`,
-      icon: <AssignmentOutlined />,
-      color: '#2563eb',
-      bg: '#dbeafe'
-    },
-    {
-      title: 'Dean Review',
-      value: taskTotals.pendingReview,
-      helper: 'Awaiting final decision',
-      icon: <PendingActionsRounded />,
-      color: '#0f172a',
-      bg: '#f1f5f9'
-    },
-    {
-      title: 'Verified',
-      value: taskTotals.completed,
-      helper: `${taskTotals.completionRate}% completion rate`,
-      icon: <AssignmentTurnedInOutlined />,
-      color: '#0f766e',
-      bg: '#ccfbf1'
-    },
-    {
-      title: 'Overdue',
-      value: taskTotals.overdue,
-      helper: 'Needs follow-up',
-      icon: <ErrorOutlineRounded />,
-      color: '#dc2626',
-      bg: '#fee2e2'
-    }
-  ];
-
   const recentTasks = tasks.slice(0, 5);
   const reviewQueue = tasks.filter((task) => task.status === 'SUBMITTED_DEAN');
   const deadlineFocus = tasks
@@ -370,41 +332,15 @@ const Tasks = () => {
 
       {isDean && (
         <>
-          <Grid container spacing={2.5} sx={{ mb: 3 }}>
-            {deanSummaryCards.map((card) => (
-              <Grid item xs={12} sm={6} lg={3} key={card.title}>
-                <Card
-                  sx={{
-                    p: { xs: 2, sm: 2.5 },
-                    height: '100%',
-                    borderRadius: 3,
-                    transition: 'transform 180ms ease, box-shadow 180ms ease',
-                    '&:hover': {
-                      transform: 'translateY(-3px)',
-                      boxShadow: '0 20px 52px -36px rgba(15,23,42,0.62)'
-                    }
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                    <Avatar sx={{ bgcolor: card.bg, color: card.color, width: 48, height: 48 }}>
-                      {card.icon}
-                    </Avatar>
-                    <TrendingUpRounded sx={{ color: '#94a3b8', fontSize: 20 }} />
-                  </Box>
-                  <Typography variant="h4" sx={{ mb: 0.5, fontWeight: 800 }}>{card.value}</Typography>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 760, color: 'text.primary' }}>{card.title}</Typography>
-                  <Typography variant="body2" color="text.secondary">{card.helper}</Typography>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-
           <Grid container spacing={3} sx={{ mb: 3 }}>
             <Grid item xs={12} lg={7}>
               <Paper sx={{ borderRadius: 3, border: '1px solid #dde5f0', overflow: 'hidden', height: '100%' }}>
-                <Box sx={{ p: { xs: 2.25, md: 3 }, borderBottom: '1px solid #e7edf5' }}>
-                  <Typography variant="h6" sx={{ fontWeight: 900 }}>Recent Task Flow</Typography>
-                  <Typography variant="body2" color="text.secondary">Latest assignments moving through Dean oversight.</Typography>
+                <Box sx={{ p: { xs: 2.25, md: 3 }, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1.5, flexDirection: { xs: 'column', sm: 'row' }, borderBottom: '1px solid #e7edf5' }}>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 900 }}>Recent Task Flow</Typography>
+                    <Typography variant="body2" color="text.secondary">Latest assignments moving through Dean oversight.</Typography>
+                  </Box>
+                  <Chip label={`${taskTotals.pendingReview} for review`} sx={{ bgcolor: '#dbeafe', color: '#2563eb', fontWeight: 800 }} />
                 </Box>
                 <Stack divider={<Box sx={{ borderTop: '1px solid #edf2f7' }} />}>
                   {(recentTasks.length ? recentTasks : [{ id: 'empty-recent', title: 'No tasks assigned yet', department_name: 'Create a task to begin tracking workflow', status: 'ASSIGNED', deadline: null }]).map((task) => {
@@ -466,19 +402,31 @@ const Tasks = () => {
                             </Stack>
                             <LinearProgress variant="determinate" value={facultyProgress.value || getProgressValue(task)} sx={{ height: 8, borderRadius: 5 }} />
                           </Box>
-                          <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1.25 }}>
-                            Due {formatDate(task.deadline)}
-                          </Typography>
+                          <Grid container spacing={1.25} sx={{ mt: 1 }}>
+                            <Grid item xs={6}>
+                              <Typography variant="caption" color="text.secondary" display="block">Created</Typography>
+                              <Typography variant="caption" sx={{ fontWeight: 900 }}>{formatDate(task.created_at)}</Typography>
+                            </Grid>
+                            <Grid item xs={6}>
+                              <Typography variant="caption" color="text.secondary" display="block">Due</Typography>
+                              <Typography variant="caption" sx={{ fontWeight: 900 }}>{formatDate(task.deadline)}</Typography>
+                            </Grid>
+                            <Grid item xs={12}>
+                              <Typography variant="caption" color="text.secondary" display="block">Progress</Typography>
+                              <Typography variant="caption" sx={{ fontWeight: 900 }}>
+                                {facultyProgress.total ? `${facultyProgress.total} Faculty task${facultyProgress.total === 1 ? '' : 's'} routed, ${facultyProgress.submitted} pending HOD review, ${facultyProgress.complete} verified.` : 'No Faculty subtasks recorded.'}
+                              </Typography>
+                            </Grid>
+                          </Grid>
                           <Button
                             fullWidth
                             size="small"
                             variant="contained"
-                            color="success"
                             startIcon={<RateReviewRounded />}
                             onClick={() => handleReviewDeanSubmission(task)}
                             sx={{ mt: 1.75 }}
                           >
-                            Final Review
+                            Open Final Review
                           </Button>
                         </Box>
                       );
@@ -493,9 +441,12 @@ const Tasks = () => {
                 </Paper>
 
                 <Paper sx={{ p: { xs: 2.25, md: 3 }, borderRadius: 3, border: '1px solid #dde5f0' }}>
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 900 }}>Deadline Focus</Typography>
-                    <Typography variant="body2" color="text.secondary">Nearest active deadlines under Dean supervision.</Typography>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2, mb: 3 }}>
+                    <Box>
+                      <Typography variant="h6" sx={{ fontWeight: 900 }}>Deadline Focus</Typography>
+                      <Typography variant="body2" color="text.secondary">Nearest active deadlines under Dean supervision.</Typography>
+                    </Box>
+                    <ErrorOutlineRounded sx={{ color: 'text.secondary' }} />
                   </Box>
                   <Stack spacing={2.25}>
                     {(deadlineFocus.length ? deadlineFocus : [{ id: 'empty-deadline', title: 'No active deadlines', deadline: null, department_name: 'All clear' }]).map((task) => {
