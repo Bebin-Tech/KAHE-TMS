@@ -307,16 +307,25 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Only Dean users can access completed Dean reports.'}, status=status.HTTP_403_FORBIDDEN)
 
         completed_statuses = ['SUBMITTED_DEAN', 'COMPLETED', 'DEAN_APPROVED']
+        completed_work_statuses = [*completed_statuses, 'APPROVED_HOD']
         report_task_ids = TaskReport.objects.filter(
             task__is_active=True,
             task__created_by__role='DEAN',
-            status__in=completed_statuses
+            status__in=completed_work_statuses
+        ).values_list('task_id', flat=True)
+        completed_subtask_task_ids = SubTask.objects.filter(
+            is_active=True,
+            task__is_active=True,
+            task__created_by__role='DEAN',
+            status__in=['APPROVED_HOD', 'COMPLETED']
         ).values_list('task_id', flat=True)
         queryset = Task.objects.filter(
             is_active=True,
-            status__in=completed_statuses
+            created_by__role='DEAN'
         ).filter(
-            Q(created_by=request.user) | Q(id__in=report_task_ids)
+            Q(status__in=completed_statuses)
+            | Q(id__in=report_task_ids)
+            | Q(id__in=completed_subtask_task_ids)
         ).distinct().order_by('-updated_at', '-created_at', '-id')
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
