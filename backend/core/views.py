@@ -173,8 +173,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.role == 'FACULTY':
-            # Faculty see tasks assigned to them even if soft-deleted for management roles
-            return Task.objects.all().filter(subtasks__assigned_to=user).distinct()
+            return Task.objects.filter(is_active=True, subtasks__is_active=True, subtasks__assigned_to=user).distinct()
 
         # Admin, Dean, and HOD only see active tasks
         base_queryset = Task.objects.filter(is_active=True).order_by('-created_at', '-id')
@@ -189,8 +188,18 @@ class TaskViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         """Soft delete for tasks."""
         instance = self.get_object()
+        can_delete = request.user.role == 'ADMIN' or UserModulePermission.objects.filter(
+            user=request.user,
+            module='tasks',
+            can_access=True,
+            can_delete=True
+        ).exists()
+        if not can_delete:
+            return Response({'error': 'Delete access is required for the Task module.'}, status=status.HTTP_403_FORBIDDEN)
+
         instance.is_active = False
         instance.save()
+        instance.subtasks.update(is_active=False)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def create(self, request, *args, **kwargs):
@@ -271,9 +280,8 @@ class TaskViewSet(viewsets.ModelViewSet):
         active_workflow_statuses = ['ASSIGNED', 'IN_PROGRESS', 'REJECTED_DEAN', 'SUBMITTED_HOD', 'HOD_APPROVED']
         queryset = Task.objects.filter(
             assigned_to_hod=request.user,
-            status__in=active_workflow_statuses
-        ).filter(
-            Q(is_active=True) | Q(created_by__role='DEAN')
+            status__in=active_workflow_statuses,
+            is_active=True
         ).order_by('-created_at', '-id')
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
@@ -500,10 +508,9 @@ class SubTaskViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.role == 'FACULTY':
-            # Faculty sees their subtasks even if soft-deleted for management
-            return SubTask.objects.all().filter(assigned_to=user)
+            return SubTask.objects.filter(is_active=True, task__is_active=True, assigned_to=user)
 
-        base_queryset = SubTask.objects.filter(is_active=True)
+        base_queryset = SubTask.objects.filter(is_active=True, task__is_active=True)
         if user.role == 'ADMIN':
             return base_queryset
         if user.role == 'DEAN':

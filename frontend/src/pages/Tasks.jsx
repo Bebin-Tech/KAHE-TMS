@@ -89,7 +89,9 @@ const Tasks = () => {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [successTask, setSuccessTask] = useState(null);
+  const [modulePermission, setModulePermission] = useState(null);
   const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
+  const canDeleteTask = currentRole === 'ADMIN' || Boolean(modulePermission?.can_access && modulePermission?.can_delete);
 
   const showMessage = (message, severity = 'success') => {
     setNotification({ open: true, severity, message });
@@ -156,9 +158,21 @@ const Tasks = () => {
     }
   }, [isDean, isHod]);
 
+  const fetchModulePermission = useCallback(async () => {
+    try {
+      const response = await api.get('user-module-permissions/mine/');
+      const permission = response.data.find((row) => row.module === 'tasks');
+      setModulePermission(permission || null);
+    } catch (err) {
+      console.error('Error fetching task permissions:', err);
+      setModulePermission(null);
+    }
+  }, []);
+
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    fetchModulePermission();
+  }, [fetchData, fetchModulePermission]);
 
   const handleEdit = (task) => {
     setEditingTask(task);
@@ -171,7 +185,7 @@ const Tasks = () => {
     try {
       await api.delete(`tasks/${deleteTarget.id}/`);
       setDeleteTarget(null);
-      showMessage('Task deleted successfully.');
+      showMessage('Task deleted successfully. It has been removed for all assigned users.');
       fetchData();
     } catch (err) {
       console.error('Error deleting task:', err);
@@ -316,6 +330,16 @@ const Tasks = () => {
     && !['COMPLETED', 'DEAN_APPROVED', 'CANCELLED', 'SUBMITTED_DEAN'].includes(task.status)
   );
 
+  const renderDeleteAction = (task, tooltip = 'Delete task') => (
+    canDeleteTask ? (
+      <Tooltip title={tooltip}>
+        <IconButton onClick={() => setDeleteTarget(task)} size="small" sx={{ color: '#f44336' }}>
+          <DeleteRounded fontSize="small" />
+        </IconButton>
+      </Tooltip>
+    ) : null
+  );
+
   return (
     <DashboardLayout title="Task Management">
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end', alignItems: { xs: 'stretch', md: 'center' } }}>
@@ -359,9 +383,12 @@ const Tasks = () => {
                             <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 800 }}>{progress}%</Typography>
                           </Box>
                         </Box>
-                        <Box sx={{ textAlign: 'right', display: { xs: 'none', sm: 'block' } }}>
-                          {getStatusChip(task.status)}
-                          <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.75 }}>{formatDate(task.deadline)}</Typography>
+                        <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', justifyContent: 'flex-end', gap: 1.25, textAlign: 'right' }}>
+                          <Box>
+                            {getStatusChip(task.status)}
+                            <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.75 }}>{formatDate(task.deadline)}</Typography>
+                          </Box>
+                          {renderDeleteAction(task)}
                         </Box>
                       </Box>
                     );
@@ -392,7 +419,10 @@ const Tasks = () => {
                                 {task.department_name || 'General'} | HOD: {task.assigned_to_hod_name || 'Unassigned'}
                               </Typography>
                             </Box>
-                            {getStatusChip(task.status)}
+                            <Stack direction="row" spacing={0.5} alignItems="center">
+                              {getStatusChip(task.status)}
+                              {renderDeleteAction(task)}
+                            </Stack>
                           </Stack>
                           <Box sx={{ mt: 1.75 }}>
                             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.75 }}>
@@ -459,9 +489,12 @@ const Tasks = () => {
                               <Typography variant="subtitle2" noWrap sx={{ fontWeight: 900 }}>{task.title}</Typography>
                               <Typography variant="caption" color="text.secondary">{task.department_name || task.assigned_to_hod_name || 'Dean workflow'}</Typography>
                             </Box>
-                            <Typography variant="caption" sx={{ color: isOverdue ? 'error.main' : 'text.secondary', fontWeight: 900, whiteSpace: 'nowrap' }}>
-                              {formatDate(task.deadline)}
-                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                              <Typography variant="caption" sx={{ color: isOverdue ? 'error.main' : 'text.secondary', fontWeight: 900, whiteSpace: 'nowrap' }}>
+                                {formatDate(task.deadline)}
+                              </Typography>
+                              {renderDeleteAction(task)}
+                            </Box>
                           </Box>
                           {task.deadline && (
                             <LinearProgress variant="determinate" value={isOverdue ? 100 : getProgressValue(task)} sx={{ height: 8, borderRadius: 5 }} color={isOverdue ? 'error' : 'primary'} />
@@ -575,7 +608,7 @@ const Tasks = () => {
                         </Button>
                       )}
                       <IconButton onClick={() => handleEdit(task)} size="small" sx={{ color: '#237dba' }}><EditRounded fontSize="small" /></IconButton>
-                      <IconButton onClick={() => setDeleteTarget(task)} size="small" sx={{ color: '#f44336' }}><DeleteRounded fontSize="small" /></IconButton>
+                      {renderDeleteAction(task)}
                     </Box>
                   )}
                 </TableCell>
