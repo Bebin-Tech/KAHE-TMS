@@ -3,7 +3,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import {
   Typography, Box, Paper, Grid, TextField, MenuItem, Button,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Chip, CircularProgress, Stack
+  Chip, CircularProgress, Stack, Divider, LinearProgress
 } from '@mui/material';
 import { AssessmentRounded, AssignmentOutlined, FilterAltOffRounded, RefreshRounded, SearchRounded } from '@mui/icons-material';
 import api from '../api/axios';
@@ -65,6 +65,7 @@ const getStatusColor = (status) => {
 const Reports = () => {
   const [reports, setReports] = useState([]);
   const [deanTasks, setDeanTasks] = useState([]);
+  const [submissions, setSubmissions] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const currentRole = getCurrentSession()?.role;
@@ -95,14 +96,33 @@ const Reports = () => {
       ? activeFaculty.map((subtask) => subtask.assigned_to_name || 'Faculty').join(', ')
       : task.assigned_to_hod_name || 'Assigned HOD';
     const isCompleted = ['COMPLETED', 'DEAN_APPROVED'].includes(task.status);
+    const facultySubmissions = (task.subtasks || []).map((subtask) => {
+      const subtaskSubmissions = submissions
+        .filter((submission) => Number(submission.subtask) === Number(subtask.id))
+        .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
+      return {
+        ...subtask,
+        latestSubmission: subtaskSubmissions[0] || null,
+      };
+    });
+    const hodSubmissions = submissions
+      .filter((submission) => Number(submission.task) === Number(task.id))
+      .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
+    const progressValue = task.subtasks?.length
+      ? Math.round((completedFaculty.length / task.subtasks.length) * 100)
+      : isCompleted ? 100 : 0;
 
     return {
       ...task,
       currentWorker: isCompleted ? 'Completed' : currentWorker,
       facultyProgress: `${completedFaculty.length}/${task.subtasks?.length || 0}`,
+      facultyCount: task.subtasks?.length || 0,
+      facultySubmissions,
+      hodSubmission: hodSubmissions[0] || null,
+      progressValue,
       isCompleted,
     };
-  }), [deanTasks]);
+  }), [deanTasks, submissions]);
 
   const buildParams = useCallback(() => {
     const params = {};
@@ -115,17 +135,19 @@ const Reports = () => {
   const fetchReports = useCallback(async () => {
     setLoading(true);
     try {
-      const [reportResponse, taskResponse] = await Promise.all([
+      const [reportResponse, taskResponse, submissionResponse] = await Promise.all([
         api.get('reports/', { params: buildParams() }),
         isDean
-          ? api.get('tasks/', {
+          ? api.get('tasks/dean-completed-report/', {
               params: { refresh: Date.now() },
               headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
             })
           : Promise.resolve({ data: [] }),
+        isDean ? api.get('submissions/') : Promise.resolve({ data: [] }),
       ]);
       setReports(reportResponse.data);
       if (isDean) setDeanTasks(taskResponse.data);
+      if (isDean) setSubmissions(submissionResponse.data);
     } catch (err) {
       console.error('Error fetching reports:', err);
     } finally {
@@ -145,19 +167,21 @@ const Reports = () => {
   const handleRefresh = async () => {
     setLoading(true);
     try {
-      const [usersResponse, refreshResponse, taskResponse] = await Promise.all([
+      const [usersResponse, refreshResponse, taskResponse, submissionResponse] = await Promise.all([
         api.get('users/'),
         api.post('reports/refresh/', null, { params: buildParams() }),
         isDean
-          ? api.get('tasks/', {
+          ? api.get('tasks/dean-completed-report/', {
               params: { refresh: Date.now() },
               headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
             })
           : Promise.resolve({ data: [] }),
+        isDean ? api.get('submissions/') : Promise.resolve({ data: [] }),
       ]);
       setUsers(usersResponse.data);
       setReports(refreshResponse.data.results || []);
       if (isDean) setDeanTasks(taskResponse.data);
+      if (isDean) setSubmissions(submissionResponse.data);
     } catch (err) {
       console.error('Error refreshing reports:', err);
     } finally {
@@ -354,13 +378,115 @@ const Reports = () => {
                 }) : (
                   <TableRow>
                     <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
-                      <Typography variant="body2" color="text.secondary">No Dean-created tasks found.</Typography>
+                      <Typography variant="body2" color="text.secondary">No completed Dean task reports found.</Typography>
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
             </Table>
           </TableContainer>
+        </Paper>
+      )}
+
+      {isDean && (
+        <Paper sx={{ mb: 3, border: '1px solid #d8e3f0', borderRadius: 3, overflow: 'hidden', bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.38)' }}>
+          <Box sx={{ p: { xs: 2.25, md: 3 }, borderBottom: '1px solid #e7edf5' }}>
+            <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a' }}>Complete Task Reports</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Faculty work, HOD submission details, progress, and final review status for Dean-created tasks.
+            </Typography>
+          </Box>
+          <Stack spacing={0} divider={<Divider />}>
+            {loading ? (
+              <Box sx={{ py: 6, textAlign: 'center' }}>
+                <CircularProgress />
+              </Box>
+            ) : deanTaskProgress.length > 0 ? deanTaskProgress.map((task) => {
+              const color = getStatusColor(task.status);
+              return (
+                <Box key={task.id} sx={{ p: { xs: 2, md: 3 } }}>
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', md: 'center' }} justifyContent="space-between" sx={{ mb: 2 }}>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a' }}>{task.title}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {task.department_name || 'General'} | HOD: {task.assigned_to_hod_name || 'Unassigned'}
+                      </Typography>
+                    </Box>
+                    <Chip label={statusLabel(task.status)} sx={{ bgcolor: color.bg, color: color.color, fontWeight: 850 }} />
+                  </Stack>
+
+                  <Grid container spacing={2.25}>
+                    <Grid item xs={12} md={4}>
+                      <Paper variant="outlined" sx={{ p: 2, height: '100%', borderRadius: 2, bgcolor: '#f8fafc' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 900 }}>FACULTY MEMBERS WORKED</Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 900, color: '#0f172a', mt: 0.5 }}>{task.facultyCount}</Typography>
+                        <Box sx={{ mt: 1.5 }}>
+                          <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
+                            <Typography variant="caption" color="text.secondary">Overall progress</Typography>
+                            <Typography variant="caption" sx={{ fontWeight: 900 }}>{task.progressValue}%</Typography>
+                          </Stack>
+                          <LinearProgress variant="determinate" value={task.progressValue} sx={{ height: 8, borderRadius: 5 }} />
+                        </Box>
+                      </Paper>
+                    </Grid>
+
+                    <Grid item xs={12} md={8}>
+                      <Paper variant="outlined" sx={{ p: 2, height: '100%', borderRadius: 2 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 900 }}>HOD COMPLETED WORK</Typography>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 900, mt: 0.75 }}>
+                          {task.hodSubmission?.submitted_by_name || task.assigned_to_hod_name || 'HOD'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line', mt: 0.75 }}>
+                          {task.hodSubmission?.content || 'No HOD submission summary recorded yet.'}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.25 }}>
+                          Submitted: {formatDateTime(task.hodSubmission?.submitted_at)}
+                        </Typography>
+                      </Paper>
+                    </Grid>
+
+                    <Grid item xs={12}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#0f172a', mb: 1 }}>Faculty Work Completed</Typography>
+                      <Grid container spacing={1.5}>
+                        {task.facultySubmissions.length > 0 ? task.facultySubmissions.map((subtask) => {
+                          const subtaskColor = getStatusColor(subtask.status);
+                          return (
+                            <Grid item xs={12} md={6} key={subtask.id}>
+                              <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%', bgcolor: '#ffffff' }}>
+                                <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1.5}>
+                                  <Box>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{subtask.title}</Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      Faculty: {subtask.assigned_to_name || 'Faculty'}
+                                    </Typography>
+                                  </Box>
+                                  <Chip label={statusLabel(subtask.status)} size="small" sx={{ bgcolor: subtaskColor.bg, color: subtaskColor.color, fontWeight: 800 }} />
+                                </Stack>
+                                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line', mt: 1.25 }}>
+                                  {subtask.latestSubmission?.content || 'No faculty submission content recorded yet.'}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                                  Submitted: {formatDateTime(subtask.latestSubmission?.submitted_at)}
+                                </Typography>
+                              </Paper>
+                            </Grid>
+                          );
+                        }) : (
+                          <Grid item xs={12}>
+                            <Typography variant="body2" color="text.secondary">No Faculty subtasks have been assigned for this task.</Typography>
+                          </Grid>
+                        )}
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                </Box>
+              );
+            }) : (
+              <Box sx={{ py: 6, textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary">No completed Dean task reports found.</Typography>
+              </Box>
+            )}
+          </Stack>
         </Paper>
       )}
 

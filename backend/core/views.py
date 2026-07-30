@@ -300,6 +300,27 @@ class TaskViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], url_path='dean-completed-report')
+    def dean_completed_report(self, request):
+        """Completed Dean workflow tasks with Faculty/HOD details for the Report module."""
+        if request.user.role != 'DEAN':
+            return Response({'error': 'Only Dean users can access completed Dean reports.'}, status=status.HTTP_403_FORBIDDEN)
+
+        completed_statuses = ['SUBMITTED_DEAN', 'COMPLETED', 'DEAN_APPROVED']
+        report_task_ids = TaskReport.objects.filter(
+            task__is_active=True,
+            task__created_by__role='DEAN',
+            status__in=completed_statuses
+        ).values_list('task_id', flat=True)
+        queryset = Task.objects.filter(
+            is_active=True,
+            status__in=completed_statuses
+        ).filter(
+            Q(created_by=request.user) | Q(id__in=report_task_ids)
+        ).distinct().order_by('-updated_at', '-created_at', '-id')
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     @action(detail=True, methods=['post'])
     def submit_to_dean(self, request, pk=None):
         """HOD submits the main task to the Dean."""
@@ -690,7 +711,10 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Submission.objects.all()
+        queryset = Submission.objects.filter(
+            Q(task__isnull=True) | Q(task__is_active=True),
+            Q(subtask__isnull=True) | Q(subtask__is_active=True, subtask__task__is_active=True)
+        )
 
         subtask_id = self.request.query_params.get('subtask')
         task_id = self.request.query_params.get('task')
