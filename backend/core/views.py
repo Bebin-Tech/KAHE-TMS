@@ -39,6 +39,16 @@ def record_task_activity(task, user, role, status, action_performed, subtask=Non
     return TaskReport.objects.create(**defaults)
 
 
+def has_module_delete_access(user, *modules):
+    if user.role == 'ADMIN':
+        return True
+    return UserModulePermission.objects.filter(
+        user=user,
+        module__in=modules,
+        can_delete=True
+    ).exists()
+
+
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
@@ -188,13 +198,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         """Soft delete for tasks."""
         instance = self.get_object()
-        can_delete = request.user.role == 'ADMIN' or UserModulePermission.objects.filter(
-            user=request.user,
-            module='tasks',
-            can_access=True,
-            can_delete=True
-        ).exists()
-        if not can_delete:
+        if not has_module_delete_access(request.user, 'tasks', 'completed_tasks'):
             return Response({'error': 'Delete access is required for the Task module.'}, status=status.HTTP_403_FORBIDDEN)
 
         instance.is_active = False
@@ -522,6 +526,9 @@ class SubTaskViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         """Soft delete for subtasks."""
         instance = self.get_object()
+        if not has_module_delete_access(request.user, 'tasks', 'completed_tasks'):
+            return Response({'error': 'Delete access is required for the Task module.'}, status=status.HTTP_403_FORBIDDEN)
+
         instance.is_active = False
         instance.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -704,7 +711,11 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
 
 class TaskReportViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = TaskReport.objects.select_related('task', 'subtask', 'user', 'assigned_by', 'rejected_by', 'task__created_by', 'task__assigned_to_hod')
+    queryset = TaskReport.objects.select_related('task', 'subtask', 'user', 'assigned_by', 'rejected_by', 'task__created_by', 'task__assigned_to_hod').filter(
+        task__is_active=True
+    ).filter(
+        Q(subtask__isnull=True) | Q(subtask__is_active=True)
+    )
     serializer_class = TaskReportSerializer
     permission_classes = [permissions.IsAuthenticated]
 

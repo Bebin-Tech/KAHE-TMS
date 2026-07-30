@@ -37,13 +37,16 @@ import { formatApiError } from '../utils/errors';
 const CompletedTasks = () => {
   const [completedMainTasks, setCompletedMainTasks] = useState([]);
   const [approvedFacultyTasks, setApprovedFacultyTasks] = useState([]);
-  const [modulePermission, setModulePermission] = useState(null);
+  const [modulePermissions, setModulePermissions] = useState([]);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
 
   const currentRole = getCurrentSession()?.role;
-  const canDelete = currentRole === 'ADMIN' || Boolean(modulePermission?.can_access && modulePermission?.can_delete);
+  const canDelete = currentRole === 'ADMIN' || modulePermissions.some((permission) => (
+    ['tasks', 'completed_tasks'].includes(permission.module)
+    && permission.can_delete
+  ));
 
   const fetchCompletedTasks = async () => {
     setLoading(true);
@@ -65,11 +68,10 @@ const CompletedTasks = () => {
   const fetchModulePermission = async () => {
     try {
       const response = await api.get('user-module-permissions/mine/');
-      const permission = response.data.find((row) => row.module === 'completed_tasks');
-      setModulePermission(permission || null);
+      setModulePermissions(response.data || []);
     } catch (err) {
       console.error('Error fetching completed task permissions:', err);
-      setModulePermission(null);
+      setModulePermissions([]);
     }
   };
 
@@ -89,7 +91,7 @@ const CompletedTasks = () => {
       setNotification({
         open: true,
         severity: 'success',
-        message: `${deleteTarget.type} deleted successfully.`,
+        message: `${deleteTarget.type} deleted successfully. It has been removed from all assigned users.`,
       });
       setDeleteTarget(null);
       await fetchCompletedTasks();
@@ -137,7 +139,7 @@ const CompletedTasks = () => {
         </Typography>
       </Box>
 
-      <TableContainer component={Paper} sx={{ border: '1px solid #d8e3f0', borderRadius: 3, overflow: 'hidden', bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.45)' }}>
+      <TableContainer component={Paper} sx={{ border: '1px solid #d8e3f0', borderRadius: 3, overflowX: 'auto', bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.45)' }}>
         <Table sx={{ minWidth: 920 }}>
           <TableHead sx={{ bgcolor: '#f8fbff' }}>
             <TableRow>
@@ -146,7 +148,7 @@ const CompletedTasks = () => {
               <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Completed By</TableCell>
               <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Approved By</TableCell>
               <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Status</TableCell>
-              {canDelete && <TableCell align="right" sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Actions</TableCell>}
+              {canDelete && <TableCell align="right" sx={{ fontWeight: 900, color: '#475569', py: 2, minWidth: 96 }}>Actions</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -195,7 +197,7 @@ const CompletedTasks = () => {
                   />
                 </TableCell>
                 {canDelete && (
-                  <TableCell align="right">
+                  <TableCell align="right" sx={{ minWidth: 96 }}>
                     <Tooltip title="Delete completed task">
                       <IconButton
                         size="small"

@@ -91,7 +91,7 @@ const Tasks = () => {
   const [successTask, setSuccessTask] = useState(null);
   const [modulePermission, setModulePermission] = useState(null);
   const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
-  const canDeleteTask = currentRole === 'ADMIN' || Boolean(modulePermission?.can_access && modulePermission?.can_delete);
+  const canDeleteTask = currentRole === 'ADMIN' || Boolean(modulePermission?.can_delete);
 
   const showMessage = (message, severity = 'success') => {
     setNotification({ open: true, severity, message });
