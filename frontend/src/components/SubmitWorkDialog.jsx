@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Button, TextField, Box, Typography, CircularProgress,
-  IconButton, Paper, Alert
+  IconButton, Paper, Alert, Stack, Avatar
 } from '@mui/material';
-import { CloudUploadRounded, CloseRounded } from '@mui/icons-material';
+import { AssignmentTurnedInRounded, CloudUploadRounded, CloseRounded } from '@mui/icons-material';
 import api from '../api/axios';
 import { getCurrentSession } from '../utils/session';
 import { formatApiError } from '../utils/errors';
@@ -55,15 +55,23 @@ const SubmitWorkDialog = ({ open, onClose, subtaskId, onSubmitted }) => {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '20px' } }}>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}>
       <form onSubmit={handleSubmit}>
-        <DialogTitle sx={{ fontWeight: 800, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          Submit Completed Work
-          <IconButton onClick={onClose} size="small"><CloseRounded /></IconButton>
+        <DialogTitle sx={{ p: 3, bgcolor: '#f8fbff', borderBottom: '1px solid #e7edf5' }}>
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Avatar sx={{ bgcolor: '#dbeafe', color: '#2563eb' }}>
+              <AssignmentTurnedInRounded />
+            </Avatar>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a' }}>Submit Completed Work</Typography>
+              <Typography variant="body2" color="text.secondary">Send your completed work to the HOD for review.</Typography>
+            </Box>
+            <IconButton onClick={onClose} size="small"><CloseRounded /></IconButton>
+          </Stack>
         </DialogTitle>
-        <DialogContent dividers>
+        <DialogContent dividers sx={{ p: 3 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Upload your final reports or documents and add a summary of the work completed.
+            Add a clear completion summary and attach any supporting files, reports, or documents.
           </Typography>
           {error && (
             <Alert severity="error" variant="outlined" sx={{ mb: 3, borderRadius: 2 }}>
@@ -84,6 +92,7 @@ const SubmitWorkDialog = ({ open, onClose, subtaskId, onSubmitted }) => {
               type="file"
               id="file-upload"
               style={{ display: 'none' }}
+              accept=".pdf,image/*,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip"
               onChange={handleFileChange}
             />
             <label htmlFor="file-upload">
@@ -92,6 +101,8 @@ const SubmitWorkDialog = ({ open, onClose, subtaskId, onSubmitted }) => {
                 sx={{
                   p: 3,
                   borderStyle: 'dashed',
+                  borderRadius: 2,
+                  borderColor: file ? '#2563eb' : '#b7d5fb',
                   bgcolor: '#f8fafc',
                   textAlign: 'center',
                   cursor: 'pointer',
@@ -103,19 +114,19 @@ const SubmitWorkDialog = ({ open, onClose, subtaskId, onSubmitted }) => {
                   {file ? file.name : 'Click to upload attachment'}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  PDF, DOCX, or ZIP files accepted
+                  PDF, images, documents, spreadsheets, presentations, text, or ZIP files
                 </Typography>
               </Paper>
             </label>
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
+        <DialogActions sx={{ p: 3, bgcolor: '#f8fbff', gap: 1, flexWrap: 'wrap' }}>
           <Button onClick={onClose} color="inherit" sx={{ fontWeight: 700 }}>Cancel</Button>
           <Button
             type="submit"
             variant="contained"
             disabled={loading}
-            sx={{ px: 4, borderRadius: '10px', fontWeight: 700 }}
+            sx={{ px: 4, borderRadius: 1.5, fontWeight: 850 }}
           >
             {loading ? <CircularProgress size={24} color="inherit" /> : 'Submit to HOD'}
           </Button>
