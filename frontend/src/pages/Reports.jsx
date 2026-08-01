@@ -76,6 +76,7 @@ const Reports = () => {
   const [loading, setLoading] = useState(true);
   const currentRole = getCurrentSession()?.role;
   const isDean = currentRole === 'DEAN';
+  const showReportFilters = !isDean && !['ADMIN', 'HOD'].includes(currentRole);
   const canDeleteReports = currentRole === 'ADMIN' || modulePermissions.some((permission) => (
     permission.module === 'reports' && permission.can_delete
   ));
@@ -296,7 +297,7 @@ const Reports = () => {
         </Button>
       </Box>
 
-      {!isDean && (
+      {showReportFilters && (
         <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, border: '1px solid #d8e3f0', borderRadius: 3, bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.38)' }}>
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={3}>
