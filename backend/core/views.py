@@ -905,9 +905,19 @@ class NoteViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         if not has_module_permission(request.user, 'notes', 'can_delete'):
             return Response({'error': 'Delete access is required to remove notes.'}, status=status.HTTP_403_FORBIDDEN)
-        instance = self.get_object()
-        instance.is_active = False
-        instance.save()
+
+        note_id = kwargs.get(self.lookup_url_kwarg or self.lookup_field)
+        try:
+            instance = Note.objects.get(pk=note_id)
+        except Note.DoesNotExist:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        if request.user.role != 'ADMIN' and instance.created_by_id != request.user.id:
+            return Response({'error': 'You do not have permission to delete this note.'}, status=status.HTTP_403_FORBIDDEN)
+
+        if instance.is_active:
+            instance.is_active = False
+            instance.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

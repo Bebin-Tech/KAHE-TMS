@@ -23,6 +23,7 @@ import {
   AddRounded,
   CalendarMonthRounded,
   DeleteRounded,
+  EditRounded,
   NotesRounded,
   VisibilityRounded,
 } from '@mui/icons-material';
@@ -60,6 +61,7 @@ const Notes = () => {
   const [modulePermissions, setModulePermissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingNote, setEditingNote] = useState(null);
   const [selectedNote, setSelectedNote] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [formData, setFormData] = useState({ note_date: today(), content: '' });
@@ -71,7 +73,8 @@ const Notes = () => {
     [modulePermissions]
   );
   const canView = currentRole === 'ADMIN' || Boolean(notesPermission?.can_access || notesPermission?.can_view);
-  const canCreate = currentRole === 'ADMIN' || Boolean(notesPermission?.can_edit);
+  const canEdit = currentRole === 'ADMIN' || Boolean(notesPermission?.can_edit);
+  const canCreate = canEdit;
   const canDelete = currentRole === 'ADMIN' || Boolean(notesPermission?.can_delete);
 
   const showMessage = (message, severity = 'success') => {
@@ -113,7 +116,18 @@ const Notes = () => {
   }, [fetchNotes, fetchPermissions]);
 
   const handleOpenCreate = () => {
+    setEditingNote(null);
     setFormData({ note_date: today(), content: '' });
+    setDialogOpen(true);
+  };
+
+  const handleOpenEdit = (note) => {
+    setEditingNote(note);
+    setFormData({
+      note_date: note.note_date || today(),
+      content: note.content || '',
+    });
+    setSelectedNote(null);
     setDialogOpen(true);
   };
 
@@ -121,16 +135,19 @@ const Notes = () => {
     event.preventDefault();
     setSaving(true);
     try {
-      const response = await api.post('notes/', formData);
+      const response = editingNote
+        ? await api.patch(`notes/${editingNote.id}/`, formData)
+        : await api.post('notes/', formData);
       const savedNote = response.data;
       setDialogOpen(false);
+      setEditingNote(null);
       if (savedNote?.id) {
         setNotes((current) => [
           savedNote,
           ...current.filter((note) => note.id !== savedNote.id),
         ]);
       }
-      showMessage('Note saved successfully.');
+      showMessage(editingNote ? 'Note updated successfully.' : 'Note saved successfully.');
       const refreshedNotes = await fetchNotes();
       if (savedNote?.id && refreshedNotes.length === 0) {
         setNotes([savedNote]);
@@ -154,6 +171,13 @@ const Notes = () => {
       showMessage('Note deleted successfully.');
     } catch (err) {
       console.error('Error deleting note:', err);
+      if (err.response?.status === 404) {
+        setNotes((current) => current.filter((note) => note.id !== deleteTarget.id));
+        setDeleteTarget(null);
+        if (selectedNote?.id === deleteTarget.id) setSelectedNote(null);
+        showMessage('Note was already removed.');
+        return;
+      }
       showMessage(formatApiError(err, 'Unable to delete note.'), 'error');
     }
   };
@@ -263,6 +287,13 @@ const Notes = () => {
                         <VisibilityRounded fontSize="small" />
                       </IconButton>
                     </Tooltip>
+                    {canEdit && (
+                      <Tooltip title="Edit note">
+                        <IconButton color="primary" size="small" onClick={(event) => { event.stopPropagation(); handleOpenEdit(note); }}>
+                          <EditRounded fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    )}
                     {canDelete && (
                       <Tooltip title="Delete note">
                         <IconButton color="error" size="small" onClick={(event) => { event.stopPropagation(); setDeleteTarget(note); }}>
@@ -278,9 +309,18 @@ const Notes = () => {
         </Grid>
       )}
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '18px' } }}>
+      <Dialog
+        open={dialogOpen}
+        onClose={() => {
+          setDialogOpen(false);
+          setEditingNote(null);
+        }}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: '18px' } }}
+      >
         <form onSubmit={handleSave}>
-          <DialogTitle sx={{ fontWeight: 900 }}>Create Note</DialogTitle>
+          <DialogTitle sx={{ fontWeight: 900 }}>{editingNote ? 'Edit Note' : 'Create Note'}</DialogTitle>
           <DialogContent dividers>
             <Stack spacing={2.25} sx={{ pt: 0.5 }}>
               <TextField
@@ -305,9 +345,9 @@ const Notes = () => {
             </Stack>
           </DialogContent>
           <DialogActions sx={{ p: 2.5 }}>
-            <Button onClick={() => setDialogOpen(false)} color="inherit">Cancel</Button>
+            <Button onClick={() => { setDialogOpen(false); setEditingNote(null); }} color="inherit">Cancel</Button>
             <Button type="submit" variant="contained" disabled={saving}>
-              {saving ? <CircularProgress size={22} color="inherit" /> : 'Save Note'}
+              {saving ? <CircularProgress size={22} color="inherit" /> : editingNote ? 'Update Note' : 'Save Note'}
             </Button>
           </DialogActions>
         </form>
@@ -339,6 +379,11 @@ const Notes = () => {
         </DialogContent>
         <DialogActions sx={{ p: 2.5 }}>
           <Button onClick={() => setSelectedNote(null)} color="inherit">Close</Button>
+          {canEdit && selectedNote && (
+            <Button variant="outlined" startIcon={<EditRounded />} onClick={() => handleOpenEdit(selectedNote)}>
+              Edit
+            </Button>
+          )}
           {canDelete && selectedNote && (
             <Button color="error" variant="contained" startIcon={<DeleteRounded />} onClick={() => setDeleteTarget(selectedNote)}>
               Delete
