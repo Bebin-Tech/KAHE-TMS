@@ -27,7 +27,7 @@ import {
   VisibilityRounded,
 } from '@mui/icons-material';
 import api from '../api/axios';
-import { getCurrentSession } from '../utils/session';
+import { getCurrentSession, getStoredSession, setActiveRole } from '../utils/session';
 import { formatApiError } from '../utils/errors';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -41,8 +41,19 @@ const formatDate = (value) => {
   });
 };
 
+const normalizeNotes = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.results)) return data.results;
+  if (Array.isArray(data?.value)) return data.value;
+  return [];
+};
+
 const Notes = () => {
-  const currentSession = getCurrentSession();
+  const isAdminNotesRoute = window.location.pathname === '/admin-notes';
+  if (isAdminNotesRoute) setActiveRole('ADMIN');
+  const currentSession = isAdminNotesRoute
+    ? { role: 'ADMIN', session: getStoredSession('ADMIN') }
+    : getCurrentSession();
   const currentUser = currentSession?.session?.user || {};
   const currentRole = currentUser.role || currentSession?.role;
   const [notes, setNotes] = useState([]);
@@ -84,10 +95,13 @@ const Notes = () => {
         params: { refresh: Date.now() },
         headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
       });
-      setNotes(response.data || []);
+      const nextNotes = normalizeNotes(response.data);
+      setNotes(nextNotes);
+      return nextNotes;
     } catch (err) {
       console.error('Error fetching notes:', err);
       showMessage(formatApiError(err, 'Unable to load notes.'), 'error');
+      return [];
     } finally {
       setLoading(false);
     }
@@ -107,10 +121,20 @@ const Notes = () => {
     event.preventDefault();
     setSaving(true);
     try {
-      await api.post('notes/', formData);
+      const response = await api.post('notes/', formData);
+      const savedNote = response.data;
       setDialogOpen(false);
+      if (savedNote?.id) {
+        setNotes((current) => [
+          savedNote,
+          ...current.filter((note) => note.id !== savedNote.id),
+        ]);
+      }
       showMessage('Note saved successfully.');
-      await fetchNotes();
+      const refreshedNotes = await fetchNotes();
+      if (savedNote?.id && refreshedNotes.length === 0) {
+        setNotes([savedNote]);
+      }
     } catch (err) {
       console.error('Error saving note:', err);
       showMessage(formatApiError(err, 'Unable to save note.'), 'error');

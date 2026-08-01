@@ -130,6 +130,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   ];
 
   const menuItems = modulePermissions === null ? [] : baseMenuItems.filter((item) => {
+    if (user.role === 'ADMIN') return true;
     if (modulePermissions.length === 0) return true;
     const permission = modulePermissions.find((row) => row.module === item.module);
     return !permission || permission.can_access;

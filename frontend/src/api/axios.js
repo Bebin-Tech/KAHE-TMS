@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { clearRoleSession, getCurrentSession, getStoredSession, updateRoleAccessToken } from '../utils/session';
+import { clearRoleSession, getCurrentSession, getRouteRole, getStoredSession, updateRoleAccessToken } from '../utils/session';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/';
 
@@ -8,7 +8,10 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const current = getCurrentSession();
+  const routeRole = getRouteRole();
+  const current = routeRole
+    ? { role: routeRole, session: getStoredSession(routeRole) }
+    : getCurrentSession();
   if (current?.session?.access) {
     config.headers.Authorization = `Bearer ${current.session.access}`;
     config._sessionRole = current.role;
