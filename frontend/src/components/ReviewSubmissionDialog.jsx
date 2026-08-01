@@ -8,11 +8,21 @@ import {
 import { GetAppRounded } from '@mui/icons-material';
 import api from '../api/axios';
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/';
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/';
 const fileBaseUrl = apiBaseUrl.replace(/\/api\/?$/, '');
 const getFileUrl = (path) => {
   if (!path) return '';
-  if (/^https?:\/\//i.test(path)) return path;
+  if (/^https?:\/\//i.test(path)) {
+    if (!import.meta.env.VITE_API_BASE_URL) {
+      try {
+        const url = new URL(path);
+        return `${url.pathname}${url.search}${url.hash}`;
+      } catch {
+        return path;
+      }
+    }
+    return path;
+  }
   return `${fileBaseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
 };
 

@@ -49,15 +49,20 @@ const HODDashboard = () => {
           Pragma: 'no-cache',
         },
       };
-      const [taskRes, subRes] = await Promise.all([
+      const [assignedTaskRes, fallbackTaskRes, subRes] = await Promise.allSettled([
+        api.get('tasks/assigned-to-me/', requestConfig),
         api.get('tasks/', requestConfig),
         api.get('subtasks/', requestConfig)
       ]);
-      setTasks(taskRes.data);
-      setSubtasks(subRes.data);
+      const assignedData = assignedTaskRes.status === 'fulfilled' ? assignedTaskRes.value.data : [];
+      const fallbackData = fallbackTaskRes.status === 'fulfilled' ? fallbackTaskRes.value.data : [];
+      const subtaskData = subRes.status === 'fulfilled' ? subRes.value.data : [];
+      const assignedTasks = assignedData?.length ? assignedData : fallbackData;
+      setTasks(assignedTasks);
+      setSubtasks(subtaskData);
       setStats({
-        assigned: taskRes.data.length,
-        pendingReview: subRes.data.filter(t => t.status === 'SUBMITTED').length,
+        assigned: assignedTasks.length,
+        pendingReview: subtaskData.filter(t => t.status === 'SUBMITTED').length,
         teamPerformance: '88%'
       });
     } catch (err) {
@@ -69,7 +74,7 @@ const HODDashboard = () => {
     fetchData();
   }, [fetchData]);
 
-  useAutoRefresh(fetchData, 10000, !dialogOpen && !reviewOpen && !submitTask);
+  useAutoRefresh(fetchData, 1000, !dialogOpen && !reviewOpen && !submitTask);
 
   const handleOpenReview = (item, type) => {
     setReviewTask({ ...item, type });
@@ -202,7 +207,7 @@ const HODDashboard = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {tasks.map((task) => (
+                  {tasks.length > 0 ? tasks.map((task) => (
                     <TableRow key={task.id} hover>
                       <TableCell sx={{ fontWeight: 700 }}>
                         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{task.title}</Typography>
@@ -249,7 +254,15 @@ const HODDashboard = () => {
                         </Box>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )) : (
+                    <TableRow>
+                      <TableCell colSpan={4} align="center" sx={{ py: 5 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          No Dean assignments found for this HOD yet.
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>

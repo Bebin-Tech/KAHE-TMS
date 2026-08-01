@@ -46,6 +46,45 @@ const formatDate = (value) => {
   return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
+const FacultyStatusPill = ({ icon, label, value, bg, color }) => (
+  <Box
+    sx={{
+      minWidth: 122,
+      px: 1.25,
+      py: 0.75,
+      borderRadius: 999,
+      bgcolor: bg,
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 0.75,
+      border: '1px solid rgba(255,255,255,0.74)',
+      boxShadow: '0 12px 28px -22px rgba(15,23,42,0.45)',
+    }}
+  >
+    <Avatar
+      sx={{
+        width: 28,
+        height: 28,
+        bgcolor: 'rgba(15,23,42,0.58)',
+        color: '#ffffff',
+      }}
+    >
+      {icon}
+    </Avatar>
+    <Typography
+      variant="body2"
+      sx={{
+        color,
+        fontWeight: 900,
+        lineHeight: 1,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {value} {label}
+    </Typography>
+  </Box>
+);
+
 const FacultyDashboard = () => {
   const [subtasks, setSubtasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -99,7 +138,7 @@ const FacultyDashboard = () => {
 
   const completedCount = subtasks.filter((task) => ['APPROVED_HOD', 'COMPLETED'].includes(task.status)).length;
   const submittedCount = subtasks.filter((task) => task.status === 'SUBMITTED').length;
-  const activeCount = subtasks.length - completedCount;
+  const activeCount = subtasks.filter((task) => !['SUBMITTED', 'APPROVED_HOD', 'COMPLETED'].includes(task.status)).length;
   const progressAverage = subtasks.length
     ? Math.round(subtasks.reduce((total, task) => total + Number(task.progress || 0), 0) / subtasks.length)
     : 0;
@@ -133,10 +172,15 @@ const FacultyDashboard = () => {
                 Review assigned tasks, update progress, and submit completed work for HOD verification.
               </Typography>
             </Box>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
-              <Chip icon={<AssignmentRounded />} label={`${activeCount} active`} sx={{ bgcolor: '#dbeafe', color: '#2563eb', fontWeight: 900, borderRadius: 2 }} />
-              <Chip icon={<PendingActionsRounded />} label={`${submittedCount} in review`} sx={{ bgcolor: '#fff8d9', color: '#8a6f00', fontWeight: 900, borderRadius: 2 }} />
-              <Chip icon={<CheckCircleRounded />} label={`${completedCount} approved`} sx={{ bgcolor: '#ccfbf1', color: '#0f766e', fontWeight: 900, borderRadius: 2 }} />
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1}
+              alignItems={{ xs: 'stretch', sm: 'center' }}
+              sx={{ flexShrink: 0 }}
+            >
+              <FacultyStatusPill icon={<AssignmentRounded sx={{ fontSize: 18 }} />} label="active" value={activeCount} bg="#dbeafe" color="#2563eb" />
+              <FacultyStatusPill icon={<PendingActionsRounded sx={{ fontSize: 18 }} />} label="in review" value={submittedCount} bg="#fff8d9" color="#8a6f00" />
+              <FacultyStatusPill icon={<CheckCircleRounded sx={{ fontSize: 18 }} />} label="approved" value={completedCount} bg="#ccfbf1" color="#0f766e" />
             </Stack>
           </Stack>
         </Box>

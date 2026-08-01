@@ -4,6 +4,7 @@ import CreateTaskDialog from '../components/CreateTaskDialog';
 import CreateSubTaskDialog from '../components/CreateSubTaskDialog';
 import ReviewSubmissionDialog from '../components/ReviewSubmissionDialog';
 import TaskSuccessDialog from '../components/TaskSuccessDialog';
+import useAutoRefresh from '../hooks/useAutoRefresh';
 import {
   Paper, Typography, Box, Button, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow,
@@ -31,11 +32,21 @@ import api from '../api/axios';
 import { getCurrentSession } from '../utils/session';
 import { formatApiError } from '../utils/errors';
 
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api/';
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/';
 const fileBaseUrl = apiBaseUrl.replace(/\/api\/?$/, '');
 const getFileUrl = (path) => {
   if (!path) return '';
-  if (/^https?:\/\//i.test(path)) return path;
+  if (/^https?:\/\//i.test(path)) {
+    if (!import.meta.env.VITE_API_BASE_URL) {
+      try {
+        const url = new URL(path);
+        return `${url.pathname}${url.search}${url.hash}`;
+      } catch {
+        return path;
+      }
+    }
+    return path;
+  }
   return `${fileBaseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
 };
 
@@ -173,6 +184,12 @@ const Tasks = () => {
     fetchData();
     fetchModulePermission();
   }, [fetchData, fetchModulePermission]);
+
+  useAutoRefresh(
+    fetchData,
+    isHod ? 1000 : 5000,
+    !open && !selectedTask && !submitTarget && !facultyAssignmentTask && !reviewOpen && !deleteTarget && !successTask
+  );
 
   const handleEdit = (task) => {
     setEditingTask(task);
