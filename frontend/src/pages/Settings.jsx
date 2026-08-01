@@ -46,6 +46,7 @@ const fallbackModules = [
   { key: 'tasks', label: 'Tasks' },
   { key: 'completed_tasks', label: 'Completed Tasks' },
   { key: 'reports', label: 'Reports' },
+  { key: 'notes', label: 'Notes' },
   { key: 'settings', label: 'Settings' },
   { key: 'user_management', label: 'User Management' },
   { key: 'department_management', label: 'Department Management' },

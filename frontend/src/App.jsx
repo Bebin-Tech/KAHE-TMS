@@ -9,6 +9,7 @@ import UserManagement from './pages/UserManagement.jsx';
 import DepartmentManagement from './pages/DepartmentManagement.jsx';
 import Tasks from './pages/Tasks.jsx';
 import Reports from './pages/Reports.jsx';
+import Notes from './pages/Notes.jsx';
 import Settings from './pages/Settings.jsx';
 import CompleteModule from './pages/CompleteModule.jsx';
 import CompletedTasks from './pages/CompletedTasks.jsx';
@@ -90,6 +91,15 @@ function App() {
           element={
             <ProtectedRoute>
               <Reports />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notes"
+          element={
+            <ProtectedRoute>
+              <Notes />
             </ProtectedRoute>
           }
         />

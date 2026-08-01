@@ -4,11 +4,11 @@ from rest_framework.decorators import action
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.db.models import Count, Exists, OuterRef, Q
 from django.utils import timezone
-from .models import User, Department, Task, SubTask, Submission, TaskReport, Notification, UserModulePermission
+from .models import User, Department, Task, SubTask, Submission, TaskReport, Notification, UserModulePermission, Note
 from .serializers import (
     UserSerializer, CreateUserSerializer, DepartmentSerializer, TaskSerializer, 
     SubTaskSerializer, SubmissionSerializer, TaskReportSerializer, NotificationSerializer,
-    UserModulePermissionSerializer,
+    UserModulePermissionSerializer, NoteSerializer,
     MyTokenObtainPairSerializer
 )
 
@@ -47,6 +47,18 @@ def has_module_delete_access(user, *modules):
         module__in=modules,
         can_delete=True
     ).exists()
+
+
+def has_module_permission(user, module, *fields):
+    if user.role == 'ADMIN':
+        return True
+    if not fields:
+        fields = ('can_access',)
+    query = Q(user=user, module=module)
+    field_query = Q()
+    for field in fields:
+        field_query |= Q(**{field: True})
+    return UserModulePermission.objects.filter(query & field_query).exists()
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -857,6 +869,46 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Notification.objects.filter(user=self.request.user)
+
+
+class NoteViewSet(viewsets.ModelViewSet):
+    queryset = Note.objects.select_related('created_by').filter(is_active=True)
+    serializer_class = NoteSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not has_module_permission(user, 'notes', 'can_access', 'can_view'):
+            return self.queryset.none()
+        if user.role == 'ADMIN':
+            return self.queryset
+        return self.queryset.filter(created_by=user)
+
+    def create(self, request, *args, **kwargs):
+        if not has_module_permission(request.user, 'notes', 'can_edit'):
+            return Response({'error': 'Edit access is required to create notes.'}, status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user, is_active=True)
+
+    def update(self, request, *args, **kwargs):
+        if not has_module_permission(request.user, 'notes', 'can_edit'):
+            return Response({'error': 'Edit access is required to update notes.'}, status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        if not has_module_permission(request.user, 'notes', 'can_edit'):
+            return Response({'error': 'Edit access is required to update notes.'}, status=status.HTTP_403_FORBIDDEN)
+        return super().partial_update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        if not has_module_permission(request.user, 'notes', 'can_delete'):
+            return Response({'error': 'Delete access is required to remove notes.'}, status=status.HTTP_403_FORBIDDEN)
+        instance = self.get_object()
+        instance.is_active = False
+        instance.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class UserModulePermissionViewSet(viewsets.ModelViewSet):

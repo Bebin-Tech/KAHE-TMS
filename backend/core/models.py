@@ -133,6 +133,7 @@ class UserModulePermission(models.Model):
         ('tasks', 'Tasks'),
         ('completed_tasks', 'Completed Tasks'),
         ('reports', 'Reports'),
+        ('notes', 'Notes'),
         ('settings', 'Settings'),
         ('user_management', 'User Management'),
         ('department_management', 'Department Management'),
@@ -153,6 +154,21 @@ class UserModulePermission(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.module}"
+
+class Note(models.Model):
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notes')
+    note_date = models.DateField()
+    content = models.TextField()
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    objects = models.Manager()
+
+    class Meta:
+        ordering = ['-note_date', '-updated_at']
+
+    def __str__(self):
+        return f"{self.created_by.username} - {self.note_date}"
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
