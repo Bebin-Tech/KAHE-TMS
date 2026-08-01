@@ -3,11 +3,14 @@ import DashboardLayout from '../components/DashboardLayout';
 import {
   Typography, Box, Paper, Grid, TextField, MenuItem, Button,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Chip, CircularProgress, Stack, Divider, LinearProgress
+  Chip, CircularProgress, Stack, Divider, LinearProgress,
+  Dialog, DialogTitle, DialogContent, DialogActions, IconButton,
+  Tooltip, Snackbar, Alert
 } from '@mui/material';
-import { AssessmentRounded, AssignmentOutlined, FilterAltOffRounded, RefreshRounded, SearchRounded } from '@mui/icons-material';
+import { AssessmentRounded, AssignmentOutlined, DeleteRounded, FilterAltOffRounded, RefreshRounded, SearchRounded } from '@mui/icons-material';
 import api from '../api/axios';
 import { getCurrentSession } from '../utils/session';
+import { formatApiError } from '../utils/errors';
 
 const statusOptions = [
   'ASSIGNED',
@@ -67,9 +70,15 @@ const Reports = () => {
   const [deanTasks, setDeanTasks] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [users, setUsers] = useState([]);
+  const [modulePermissions, setModulePermissions] = useState([]);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
   const [loading, setLoading] = useState(true);
   const currentRole = getCurrentSession()?.role;
   const isDean = currentRole === 'DEAN';
+  const canDeleteReports = currentRole === 'ADMIN' || modulePermissions.some((permission) => (
+    permission.module === 'reports' && permission.can_delete
+  ));
   const [filters, setFilters] = useState({
     task_name: '',
     dean: '',
@@ -164,6 +173,39 @@ const Reports = () => {
     }
   };
 
+  const fetchModulePermission = async () => {
+    try {
+      const response = await api.get('user-module-permissions/mine/');
+      setModulePermissions(response.data || []);
+    } catch (err) {
+      console.error('Error fetching report permissions:', err);
+      setModulePermissions([]);
+    }
+  };
+
+  const handleDeleteReport = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      await api.delete(`reports/${deleteTarget.id}/`);
+      setReports((prev) => prev.filter((report) => report.id !== deleteTarget.id));
+      setNotification({
+        open: true,
+        severity: 'success',
+        message: 'Report deleted successfully.',
+      });
+      setDeleteTarget(null);
+      await fetchReports();
+    } catch (err) {
+      console.error('Error deleting report:', err);
+      setNotification({
+        open: true,
+        severity: 'error',
+        message: formatApiError(err, 'Failed to delete report.'),
+      });
+    }
+  };
+
   const handleRefresh = async () => {
     setLoading(true);
     try {
@@ -191,6 +233,7 @@ const Reports = () => {
 
   useEffect(() => {
     fetchUsers();
+    fetchModulePermission();
     fetchReports();
   }, [fetchReports]);
 
@@ -515,12 +558,15 @@ const Reports = () => {
               <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Submission / Completion</TableCell>
               <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Rejection / Resubmission</TableCell>
               <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Current Status</TableCell>
+              {canDeleteReports && (
+                <TableCell align="right" sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Actions</TableCell>
+              )}
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={10} align="center" sx={{ py: 8 }}>
+                <TableCell colSpan={canDeleteReports ? 11 : 10} align="center" sx={{ py: 8 }}>
                   <CircularProgress />
                 </TableCell>
               </TableRow>
@@ -572,11 +618,28 @@ const Reports = () => {
                       sx={{ bgcolor: color.bg, color: color.color, fontWeight: 800, borderRadius: '8px' }}
                     />
                   </TableCell>
+                  {canDeleteReports && (
+                    <TableCell align="right">
+                      <Tooltip title="Delete report">
+                        <IconButton
+                          color="error"
+                          onClick={() => setDeleteTarget(report)}
+                          sx={{
+                            border: '1px solid #fecdd3',
+                            bgcolor: '#fff5f5',
+                            '&:hover': { bgcolor: '#fee2e2' },
+                          }}
+                        >
+                          <DeleteRounded fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  )}
                 </TableRow>
               );
             }) : (
               <TableRow>
-                <TableCell colSpan={10} align="center" sx={{ py: 8 }}>
+                <TableCell colSpan={canDeleteReports ? 11 : 10} align="center" sx={{ py: 8 }}>
                   <Typography variant="body1" color="text.secondary">No report entries match the selected filters.</Typography>
                 </TableCell>
               </TableRow>
@@ -584,6 +647,48 @@ const Reports = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 900 }}>Delete Report</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary">
+            Are you sure you want to delete this report entry? This action will remove it from the Report module.
+          </Typography>
+          {deleteTarget && (
+            <Typography variant="subtitle2" sx={{ mt: 2, fontWeight: 900, color: '#0f172a' }}>
+              {deleteTarget.task_name}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5, pt: 1 }}>
+          <Button onClick={() => setDeleteTarget(null)} variant="outlined">
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteReport} variant="contained" color="error" startIcon={<DeleteRounded />}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={3000}
+        onClose={() => setNotification((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          severity={notification.severity}
+          onClose={() => setNotification((prev) => ({ ...prev, open: false }))}
+          sx={{ width: '100%' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </DashboardLayout>
   );
 };

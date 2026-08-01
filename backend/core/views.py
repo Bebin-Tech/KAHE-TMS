@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, mixins
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework_simplejwt.views import TokenObtainPairView
@@ -758,7 +758,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         return queryset.none()
 
 
-class TaskReportViewSet(viewsets.ReadOnlyModelViewSet):
+class TaskReportViewSet(mixins.DestroyModelMixin, viewsets.ReadOnlyModelViewSet):
     queryset = TaskReport.objects.select_related('task', 'subtask', 'user', 'assigned_by', 'rejected_by', 'task__created_by', 'task__assigned_to_hod').filter(
         task__is_active=True
     ).filter(
@@ -810,6 +810,22 @@ class TaskReportViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(action_at__date__lte=date_to)
 
         return queryset
+
+    def destroy(self, request, *args, **kwargs):
+        if not has_module_delete_access(request.user, 'reports'):
+            return Response({'error': 'Delete access is required for the Report module.'}, status=status.HTTP_403_FORBIDDEN)
+
+        report_id = kwargs.get(self.lookup_url_kwarg or self.lookup_field)
+        try:
+            report = TaskReport.objects.get(pk=report_id)
+        except TaskReport.DoesNotExist:
+            return Response({'error': 'Report entry was not found or was already deleted.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.user.role != 'ADMIN' and not self.get_queryset().filter(pk=report.pk).exists():
+            return Response({'error': 'You do not have permission to delete this report entry.'}, status=status.HTTP_403_FORBIDDEN)
+
+        report.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['post'])
     def refresh(self, request):
