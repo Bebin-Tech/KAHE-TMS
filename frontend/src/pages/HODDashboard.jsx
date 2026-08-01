@@ -18,6 +18,7 @@ import {
 import {
   AssignmentRounded,
   AddRounded,
+  AttachFileRounded,
   VisibilityRounded,
   GroupWorkRounded,
   TimerRounded,
@@ -27,11 +28,30 @@ import {
 import api from '../api/axios';
 import { formatApiError } from '../utils/errors';
 
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/';
+const fileBaseUrl = apiBaseUrl.replace(/\/api\/?$/, '');
+const getFileUrl = (path) => {
+  if (!path) return '';
+  if (/^https?:\/\//i.test(path)) {
+    if (!import.meta.env.VITE_API_BASE_URL) {
+      try {
+        const url = new URL(path);
+        return `${url.pathname}${url.search}${url.hash}`;
+      } catch {
+        return path;
+      }
+    }
+    return path;
+  }
+  return `${fileBaseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+};
+
 const HODDashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [subtasks, setSubtasks] = useState([]);
   const [stats, setStats] = useState({ assigned: 0, pendingReview: 0, teamPerformance: '92%' });
   const [selectedTask, setSelectedTask] = useState(null);
+  const [detailTask, setDetailTask] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewTask, setReviewTask] = useState(null);
@@ -74,7 +94,7 @@ const HODDashboard = () => {
     fetchData();
   }, [fetchData]);
 
-  useAutoRefresh(fetchData, 1000, !dialogOpen && !reviewOpen && !submitTask);
+  useAutoRefresh(fetchData, 1000, !dialogOpen && !reviewOpen && !submitTask && !detailTask);
 
   const handleOpenReview = (item, type) => {
     setReviewTask({ ...item, type });
@@ -82,6 +102,11 @@ const HODDashboard = () => {
   };
 
   const handleOpenSubTaskDialog = (task) => {
+    setSelectedTask(task);
+    setDialogOpen(true);
+  };
+
+  const handleAssignFromDetails = (task) => {
     setSelectedTask(task);
     setDialogOpen(true);
   };
@@ -208,7 +233,12 @@ const HODDashboard = () => {
                 </TableHead>
                 <TableBody>
                   {tasks.length > 0 ? tasks.map((task) => (
-                    <TableRow key={task.id} hover>
+                    <TableRow
+                      key={task.id}
+                      hover
+                      onClick={() => setDetailTask(task)}
+                      sx={{ cursor: 'pointer' }}
+                    >
                       <TableCell sx={{ fontWeight: 700 }}>
                         <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{task.title}</Typography>
                         <Typography variant="caption" color="text.secondary">Assigned by Dean: {task.created_by_name}</Typography>
@@ -219,11 +249,25 @@ const HODDashboard = () => {
                       </TableCell>
                       <TableCell align="right">
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, flexWrap: 'wrap' }}>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<VisibilityRounded />}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setDetailTask(task);
+                            }}
+                          >
+                            View
+                          </Button>
                         {['ASSIGNED', 'REJECTED_DEAN'].includes(task.status) && (
                           <Button
                             size="small"
                             variant="outlined"
-                            onClick={() => handleStartWork(task)}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleStartWork(task);
+                            }}
                           >
                             Start Work
                           </Button>
@@ -232,7 +276,10 @@ const HODDashboard = () => {
                           size="small"
                           variant="outlined"
                           startIcon={<AddRounded />}
-                          onClick={() => handleOpenSubTaskDialog(task)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            handleOpenSubTaskDialog(task);
+                          }}
                         >
                           Add Sub-Task
                         </Button>
@@ -242,7 +289,8 @@ const HODDashboard = () => {
                               size="small"
                               variant="contained"
                               disabled={['SUBMITTED_DEAN', 'COMPLETED', 'DEAN_APPROVED'].includes(task.status) || !canSubmitToDean(task)}
-                              onClick={() => {
+                              onClick={(event) => {
+                                event.stopPropagation();
                                 setSubmitTask(task);
                                 setSubmissionContent('');
                               }}
@@ -361,6 +409,143 @@ const HODDashboard = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      <Dialog
+        open={Boolean(detailTask)}
+        onClose={() => setDetailTask(null)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: '18px' } }}
+      >
+        <DialogTitle sx={{ fontWeight: 900 }}>Dean Assignment Details</DialogTitle>
+        <DialogContent dividers>
+          {detailTask && (
+            <Grid container spacing={2.5}>
+              <Grid item xs={12}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="h5" sx={{ fontWeight: 900, color: '#0f172a' }}>
+                      {detailTask.title}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Assigned by Dean: {detailTask.created_by_name || 'Dean'}
+                    </Typography>
+                  </Box>
+                  <Chip label={detailTask.status?.replaceAll('_', ' ') || 'Assigned'} sx={{ fontWeight: 900 }} />
+                </Stack>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, bgcolor: '#f8fbff' }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 900 }}>TASK DESCRIPTION</Typography>
+                  <Typography variant="body2" sx={{ mt: 0.75, whiteSpace: 'pre-line', color: '#334155' }}>
+                    {detailTask.description || 'No description provided.'}
+                  </Typography>
+                </Paper>
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 900 }}>Department</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 800 }}>{detailTask.department_name || 'General'}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 900 }}>Priority</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 800 }}>{detailTask.is_special ? 'Special' : detailTask.priority || 'Medium'}</Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 900 }}>Start Date</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 800 }}>
+                  {detailTask.start_date ? new Date(detailTask.start_date).toLocaleString() : 'Not recorded'}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 900 }}>Deadline</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 800 }}>
+                  {detailTask.deadline ? new Date(detailTask.deadline).toLocaleString() : 'Not scheduled'}
+                </Typography>
+              </Grid>
+
+              {detailTask.attachment && (
+                <Grid item xs={12}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<AttachFileRounded />}
+                    href={getFileUrl(detailTask.attachment)}
+                    target="_blank"
+                    rel="noreferrer"
+                    download
+                    sx={{ bgcolor: '#ffffff', fontWeight: 850 }}
+                  >
+                    Open / Download Attachment
+                  </Button>
+                </Grid>
+              )}
+
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 1 }}>Faculty Sub-Tasks</Typography>
+                <Stack spacing={1}>
+                  {getTaskSubtasks(detailTask.id).length > 0 ? getTaskSubtasks(detailTask.id).map((subtask) => (
+                    <Box key={subtask.id} sx={{ p: 1.5, border: '1px solid #e2e8f0', borderRadius: 2, bgcolor: '#ffffff' }}>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" spacing={1}>
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 900 }}>{subtask.title}</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {subtask.assigned_to_name || 'Faculty'} - {subtask.status?.replaceAll('_', ' ') || 'Assigned'}
+                          </Typography>
+                        </Box>
+                        {subtask.status === 'SUBMITTED' && (
+                          <Button
+                            size="small"
+                            variant="contained"
+                            color="warning"
+                            startIcon={<RateReviewRounded />}
+                            onClick={() => handleOpenReview(subtask, 'subtask')}
+                          >
+                            Review
+                          </Button>
+                        )}
+                      </Stack>
+                    </Box>
+                  )) : (
+                    <Alert severity="info" variant="outlined" sx={{ borderRadius: 2 }}>
+                      No Faculty sub-tasks have been assigned yet. Create a sub-task after reviewing this Dean assignment.
+                    </Alert>
+                  )}
+                </Stack>
+              </Grid>
+            </Grid>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 3, gap: 1, flexWrap: 'wrap' }}>
+          <Button onClick={() => setDetailTask(null)} color="inherit">Close</Button>
+          {detailTask && ['ASSIGNED', 'REJECTED_DEAN'].includes(detailTask.status) && (
+            <Button variant="outlined" onClick={() => handleStartWork(detailTask)}>
+              Start Work
+            </Button>
+          )}
+          {detailTask && (
+            <Button variant="outlined" startIcon={<AddRounded />} onClick={() => handleAssignFromDetails(detailTask)}>
+              Assign Faculty Sub-Task
+            </Button>
+          )}
+          {detailTask && (
+            <Tooltip title={!canSubmitToDean(detailTask) ? 'All Faculty sub-tasks must be approved before submitting to Dean.' : ''}>
+              <span>
+                <Button
+                  variant="contained"
+                  disabled={['SUBMITTED_DEAN', 'COMPLETED', 'DEAN_APPROVED'].includes(detailTask.status) || !canSubmitToDean(detailTask)}
+                  onClick={() => {
+                    setSubmitTask(detailTask);
+                    setSubmissionContent('');
+                  }}
+                >
+                  Submit to Dean
+                </Button>
+              </span>
+            </Tooltip>
+          )}
+        </DialogActions>
+      </Dialog>
 
       {selectedTask && (
         <CreateSubTaskDialog
