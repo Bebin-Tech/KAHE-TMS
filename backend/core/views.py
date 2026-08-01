@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework_simplejwt.views import TokenObtainPairView
-from django.db.models import Count, Q
+from django.db.models import Count, Exists, OuterRef, Q
 from django.utils import timezone
 from .models import User, Department, Task, SubTask, Submission, TaskReport, Notification, UserModulePermission
 from .serializers import (
@@ -180,13 +180,24 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def visible_task_queryset(self):
+        active_subtasks = SubTask.objects.filter(task=OuterRef('pk'), is_active=True)
+        any_subtasks = SubTask.objects.filter(task=OuterRef('pk'))
+        return Task.objects.filter(is_active=True).annotate(
+            has_active_subtasks=Exists(active_subtasks),
+            has_any_subtasks=Exists(any_subtasks)
+        ).exclude(
+            has_any_subtasks=True,
+            has_active_subtasks=False
+        ).order_by('-created_at', '-id')
+
     def get_queryset(self):
         user = self.request.user
         if user.role == 'FACULTY':
             return Task.objects.filter(is_active=True, subtasks__is_active=True, subtasks__assigned_to=user).distinct()
 
-        # Admin, Dean, and HOD only see active tasks
-        base_queryset = Task.objects.filter(is_active=True).order_by('-created_at', '-id')
+        # Admin, Dean, and HOD only see active tasks with active related work.
+        base_queryset = self.visible_task_queryset()
         if user.role == 'ADMIN':
             return base_queryset
         elif user.role == 'DEAN':
@@ -282,11 +293,10 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Only HOD users can access assigned HOD tasks.'}, status=status.HTTP_403_FORBIDDEN)
 
         active_workflow_statuses = ['ASSIGNED', 'IN_PROGRESS', 'REJECTED_DEAN', 'SUBMITTED_HOD', 'HOD_APPROVED']
-        queryset = Task.objects.filter(
+        queryset = self.visible_task_queryset().filter(
             assigned_to_hod=request.user,
-            status__in=active_workflow_statuses,
-            is_active=True
-        ).order_by('-created_at', '-id')
+            status__in=active_workflow_statuses
+        )
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -296,7 +306,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         if request.user.role != 'DEAN':
             return Response({'error': 'Only Dean users can access Dean workflow tasks.'}, status=status.HTTP_403_FORBIDDEN)
 
-        queryset = Task.objects.filter(created_by=request.user).order_by('-created_at', '-id')
+        queryset = self.visible_task_queryset().filter(created_by=request.user)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -319,8 +329,7 @@ class TaskViewSet(viewsets.ModelViewSet):
             task__created_by__role='DEAN',
             status__in=['APPROVED_HOD', 'COMPLETED']
         ).values_list('task_id', flat=True)
-        queryset = Task.objects.filter(
-            is_active=True,
+        queryset = self.visible_task_queryset().filter(
             created_by__role='DEAN'
         ).filter(
             Q(status__in=completed_statuses)
@@ -558,6 +567,12 @@ class SubTaskViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         if not has_module_delete_access(request.user, 'tasks', 'completed_tasks'):
             return Response({'error': 'Delete access is required for the Task module.'}, status=status.HTTP_403_FORBIDDEN)
+
+        if request.user.role == 'DEAN' and instance.task.created_by == request.user:
+            instance.task.is_active = False
+            instance.task.save()
+            instance.task.subtasks.update(is_active=False)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
         instance.is_active = False
         instance.save()

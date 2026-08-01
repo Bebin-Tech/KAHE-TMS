@@ -42,9 +42,16 @@ const HODDashboard = () => {
 
   const fetchData = useCallback(async () => {
     try {
+      const requestConfig = {
+        params: { refresh: Date.now() },
+        headers: {
+          'Cache-Control': 'no-cache',
+          Pragma: 'no-cache',
+        },
+      };
       const [taskRes, subRes] = await Promise.all([
-        api.get('tasks/'),
-        api.get('subtasks/')
+        api.get('tasks/', requestConfig),
+        api.get('subtasks/', requestConfig)
       ]);
       setTasks(taskRes.data);
       setSubtasks(subRes.data);

@@ -86,7 +86,9 @@ const CompletedTasks = () => {
     const recordId = deleteTarget.id.split('-')[1];
 
     try {
-      const endpoint = deleteTarget.type === 'Main Task' ? `tasks/${recordId}/` : `subtasks/${recordId}/`;
+      const endpoint = deleteTarget.type === 'Main Task' || (currentRole === 'DEAN' && deleteTarget.parentTaskId)
+        ? `tasks/${deleteTarget.parentTaskId || recordId}/`
+        : `subtasks/${recordId}/`;
       await api.delete(endpoint);
       setNotification({
         open: true,
@@ -118,6 +120,7 @@ const CompletedTasks = () => {
     })),
     ...approvedFacultyTasks.map((task) => ({
       id: `subtask-${task.id}`,
+      parentTaskId: task.task,
       type: 'Faculty Task',
       title: task.title,
       subtitle: task.task_title ? `Parent task: ${task.task_title}` : 'Faculty work submission',
@@ -230,7 +233,9 @@ const CompletedTasks = () => {
         <DialogTitle sx={{ fontWeight: 900 }}>Delete Completed Task</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary">
-            {`This will remove "${deleteTarget?.title || 'this task'}" from Completed Tasks.`}
+            {currentRole === 'DEAN' && deleteTarget?.parentTaskId
+              ? `This will remove "${deleteTarget?.title || 'this task'}" and its parent Dean assignment for HOD and Faculty users.`
+              : `This will remove "${deleteTarget?.title || 'this task'}" from Completed Tasks.`}
           </Typography>
         </DialogContent>
         <DialogActions sx={{ p: 3, gap: 1 }}>

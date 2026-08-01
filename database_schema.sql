@@ -1,3 +1,4 @@
+-- Active: 1779794660115@@127.0.0.1@3306@tms_db
 -- KAHE Task Management System - MySQL helper script
 --
 -- Django owns the application schema through migrations.
