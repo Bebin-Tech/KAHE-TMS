@@ -105,6 +105,15 @@ function App() {
         />
 
         <Route
+          path="/admin-notes"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN']}>
+              <Notes />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/settings"
           element={
             <ProtectedRoute>

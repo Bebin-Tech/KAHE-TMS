@@ -42,7 +42,9 @@ const formatDate = (value) => {
 };
 
 const Notes = () => {
-  const currentRole = getCurrentSession()?.role;
+  const currentSession = getCurrentSession();
+  const currentUser = currentSession?.session?.user || {};
+  const currentRole = currentUser.role || currentSession?.role;
   const [notes, setNotes] = useState([]);
   const [modulePermissions, setModulePermissions] = useState([]);
   const [loading, setLoading] = useState(true);

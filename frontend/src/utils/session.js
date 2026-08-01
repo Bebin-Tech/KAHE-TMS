@@ -12,6 +12,7 @@ export const ROLE_ROUTES = {
 
 const ROUTE_ROLES = {
   '/admin-dashboard': 'ADMIN',
+  '/admin-notes': 'ADMIN',
   '/user-management': 'ADMIN',
   '/department-management': 'ADMIN',
   '/dean-dashboard': 'DEAN',

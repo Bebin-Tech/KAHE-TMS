@@ -122,7 +122,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     { text: 'Task', icon: <AssignmentOutlined />, path: '/tasks', module: 'tasks' },
     { text: 'Completed Task', icon: <AssignmentTurnedInOutlined />, path: '/completed-tasks', module: 'completed_tasks' },
     { text: 'Report', icon: <AssessmentOutlined />, path: '/reports', module: 'reports' },
-    { text: 'Notes', icon: <NotesOutlined />, path: '/notes', module: 'notes' },
+    { text: 'Notes', icon: <NotesOutlined />, path: user.role === 'ADMIN' ? '/admin-notes' : '/notes', module: 'notes' },
     ...(user.role === 'ADMIN' ? [
       { text: 'User', icon: <PeopleOutlined />, path: '/user-management', module: 'user_management' }
     ] : []),
