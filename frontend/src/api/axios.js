@@ -1,13 +1,24 @@
 import axios from 'axios';
 import { clearRoleSession, getCurrentSession, getRouteRole, getStoredSession, updateRoleAccessToken } from '../utils/session';
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/';
+const localHosts = ['localhost', '127.0.0.1'];
+const defaultBaseURL =
+  typeof window !== 'undefined' && localHosts.includes(window.location.hostname)
+    ? 'http://127.0.0.1:8000/api/'
+    : '/api/';
+const baseURL = import.meta.env.VITE_API_BASE_URL || defaultBaseURL;
+
+const isTokenRequest = (url = '') => /(^|\/)token\/?/.test(url) || url.includes('token/refresh/');
 
 const api = axios.create({
   baseURL: baseURL,
 });
 
 api.interceptors.request.use((config) => {
+  if (isTokenRequest(config.url)) {
+    return config;
+  }
+
   const routeRole = getRouteRole();
   const current = routeRole
     ? { role: routeRole, session: getStoredSession(routeRole) }
@@ -24,8 +35,10 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // If error is 401 (Unauthorized) and we haven't retried yet
-    // OR if the error code is 'token_not_valid'
+    if (!originalRequest || isTokenRequest(originalRequest.url)) {
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       const current = originalRequest._sessionRole
@@ -35,7 +48,6 @@ api.interceptors.response.use(
 
       if (refreshToken) {
         try {
-          // Attempt to get a new access token using a fresh axios instance
           const response = await axios.post(`${baseURL}token/refresh/`, {
             refresh: refreshToken,
           });
@@ -44,12 +56,10 @@ api.interceptors.response.use(
             const newAccessToken = response.data.access;
             updateRoleAccessToken(current.role, newAccessToken);
 
-            // Update the original request with the new token
             originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
             return axios(originalRequest);
           }
         } catch (refreshError) {
-          // If refresh fails, log out the user
           console.error('Refresh token expired or invalid', refreshError);
           clearRoleSession(current.role);
           window.location.href = '/login';
