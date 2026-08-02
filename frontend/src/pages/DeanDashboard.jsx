@@ -97,10 +97,13 @@ const DeanDashboard = () => {
                 background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 54%, #dbeafe 100%)',
                 position: 'relative',
                 overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 boxShadow: '0 24px 62px -42px rgba(37,99,235,0.58), inset 0 1px 0 rgba(255,255,255,0.9)'
               }}
             >
-              <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 980, mx: 'auto', textAlign: 'center' }}>
+              <Box sx={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 980, mx: 'auto', textAlign: 'center' }}>
                 <Typography
                   variant="h3"
                   sx={{ mb: 1, fontSize: { xs: '1.55rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1.12, fontWeight: 800, color: '#0f172a' }}
