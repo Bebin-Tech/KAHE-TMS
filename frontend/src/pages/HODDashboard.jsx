@@ -57,6 +57,7 @@ const HODDashboard = () => {
   const [reviewTask, setReviewTask] = useState(null);
   const [submitTask, setSubmitTask] = useState(null);
   const [submissionContent, setSubmissionContent] = useState('');
+  const [submissionAttachment, setSubmissionAttachment] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
 
@@ -124,11 +125,18 @@ const HODDashboard = () => {
     if (!submitTask) return;
     setSubmitting(true);
     try {
-      await api.post(`tasks/${submitTask.id}/submit_to_dean/`, {
-        content: submissionContent || 'Completed task submitted by HOD for Dean review.'
+      const requestData = new FormData();
+      requestData.append('content', submissionContent || 'Completed task submitted by HOD for Dean review.');
+      if (submissionAttachment) {
+        requestData.append('attachment', submissionAttachment);
+      }
+
+      await api.post(`tasks/${submitTask.id}/submit_to_dean/`, requestData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
       setSubmitTask(null);
       setSubmissionContent('');
+      setSubmissionAttachment(null);
       fetchData();
     } catch (err) {
       console.error('Error submitting task to Dean:', err);
@@ -566,7 +574,10 @@ const HODDashboard = () => {
       )}
       <Dialog
         open={Boolean(submitTask)}
-        onClose={() => setSubmitTask(null)}
+        onClose={() => {
+          setSubmitTask(null);
+          setSubmissionAttachment(null);
+        }}
         maxWidth="sm"
         fullWidth
         PaperProps={{ sx: { borderRadius: '20px' } }}
@@ -585,9 +596,38 @@ const HODDashboard = () => {
             onChange={(e) => setSubmissionContent(e.target.value)}
             placeholder="Summarize the completed work and corrections made..."
           />
+          <Box sx={{ mt: 2.5 }}>
+            <input
+              hidden
+              id="hod-final-submission-attachment"
+              type="file"
+              onChange={(event) => setSubmissionAttachment(event.target.files?.[0] || null)}
+            />
+            <label htmlFor="hod-final-submission-attachment">
+              <Button
+                component="span"
+                variant="outlined"
+                startIcon={<AttachFileRounded />}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
+              >
+                {submissionAttachment ? submissionAttachment.name : 'Attach supporting file'}
+              </Button>
+            </label>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+              Add PDFs, images, documents, spreadsheets, presentations, text, or ZIP files for Dean review.
+            </Typography>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setSubmitTask(null)} color="inherit">Cancel</Button>
+          <Button
+            onClick={() => {
+              setSubmitTask(null);
+              setSubmissionAttachment(null);
+            }}
+            color="inherit"
+          >
+            Cancel
+          </Button>
           <Button
             variant="contained"
             onClick={handleSubmitToDean}

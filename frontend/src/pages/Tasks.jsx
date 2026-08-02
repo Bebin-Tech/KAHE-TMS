@@ -95,6 +95,7 @@ const Tasks = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [submitTarget, setSubmitTarget] = useState(null);
   const [submissionRemarks, setSubmissionRemarks] = useState('');
+  const [submissionAttachment, setSubmissionAttachment] = useState(null);
   const [facultyAssignmentTask, setFacultyAssignmentTask] = useState(null);
   const [reviewTask, setReviewTask] = useState(null);
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -227,6 +228,7 @@ const Tasks = () => {
   const handleOpenSubmitToDean = (task) => {
     setSubmitTarget(task);
     setSubmissionRemarks('');
+    setSubmissionAttachment(null);
   };
 
   const handleSubmitToDean = async () => {
@@ -234,12 +236,19 @@ const Tasks = () => {
 
     setActionLoading(true);
     try {
-      await api.post(`tasks/${submitTarget.id}/submit_to_dean/`, {
-        content: submissionRemarks || 'Verified faculty work submitted by HOD for Dean final review.',
+      const requestData = new FormData();
+      requestData.append('content', submissionRemarks || 'Verified faculty work submitted by HOD for Dean final review.');
+      if (submissionAttachment) {
+        requestData.append('attachment', submissionAttachment);
+      }
+
+      await api.post(`tasks/${submitTarget.id}/submit_to_dean/`, requestData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
       showMessage('Task submitted to Dean for final review.');
       setSubmitTarget(null);
       setSubmissionRemarks('');
+      setSubmissionAttachment(null);
       setSelectedTask(null);
       await fetchData();
     } catch (err) {
@@ -754,7 +763,16 @@ const Tasks = () => {
           )}
         </DialogActions>
       </Dialog>
-      <Dialog open={Boolean(submitTarget)} onClose={() => setSubmitTarget(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
+      <Dialog
+        open={Boolean(submitTarget)}
+        onClose={() => {
+          setSubmitTarget(null);
+          setSubmissionAttachment(null);
+        }}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: '16px' } }}
+      >
         <DialogTitle sx={{ fontWeight: 900 }}>Submit Task to Dean</DialogTitle>
         <DialogContent dividers>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
@@ -769,9 +787,38 @@ const Tasks = () => {
             onChange={(event) => setSubmissionRemarks(event.target.value)}
             placeholder="Summarize the verified Faculty work and any remarks for Dean..."
           />
+          <Box sx={{ mt: 2.5 }}>
+            <input
+              hidden
+              id="task-module-hod-submission-attachment"
+              type="file"
+              onChange={(event) => setSubmissionAttachment(event.target.files?.[0] || null)}
+            />
+            <label htmlFor="task-module-hod-submission-attachment">
+              <Button
+                component="span"
+                variant="outlined"
+                startIcon={<AttachFileRounded />}
+                sx={{ width: { xs: '100%', sm: 'auto' } }}
+              >
+                {submissionAttachment ? submissionAttachment.name : 'Attach supporting file'}
+              </Button>
+            </label>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+              Add PDFs, images, documents, spreadsheets, presentations, text, or ZIP files for Dean review.
+            </Typography>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setSubmitTarget(null)} color="inherit">Cancel</Button>
+          <Button
+            onClick={() => {
+              setSubmitTarget(null);
+              setSubmissionAttachment(null);
+            }}
+            color="inherit"
+          >
+            Cancel
+          </Button>
           <Button variant="contained" startIcon={<SendRounded />} disabled={actionLoading} onClick={handleSubmitToDean}>
             Submit to Dean
           </Button>
