@@ -1,12 +1,7 @@
 import axios from 'axios';
 import { clearRoleSession, getCurrentSession, getRouteRole, getStoredSession, updateRoleAccessToken } from '../utils/session';
 
-const localHosts = ['localhost', '127.0.0.1'];
-const defaultBaseURL =
-  typeof window !== 'undefined' && localHosts.includes(window.location.hostname)
-    ? 'http://127.0.0.1:8000/api/'
-    : '/api/';
-const baseURL = import.meta.env.VITE_API_BASE_URL || defaultBaseURL;
+const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/';
 
 const isTokenRequest = (url = '') => /(^|\/)token\/?/.test(url) || url.includes('token/refresh/');
 
