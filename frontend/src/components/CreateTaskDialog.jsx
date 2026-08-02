@@ -19,8 +19,10 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
   const [fetchingData, setFetchingData] = useState(false);
   const [error, setError] = useState('');
   const [attachment, setAttachment] = useState(null);
+  const [isGroupTask, setIsGroupTask] = useState(false);
   const currentUser = getCurrentSession()?.session?.user;
   const isHodCreate = currentUser?.role === 'HOD' && !task;
+  const canCreateGroupTask = currentUser?.role === 'DEAN' && !task;
 
   const [formData, setFormData] = useState({
     title: '',
@@ -55,6 +57,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
           fetchUsersByDepartment(task.department);
         }
         setAttachment(null);
+        setIsGroupTask(false);
       } else {
         resetForm();
         if (isHodCreate && currentUser?.department) {
@@ -128,6 +131,15 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
     fetchUsersByDepartment(deptId);
   };
 
+  const handleGroupTaskChange = (checked) => {
+    setIsGroupTask(checked);
+    if (checked) {
+      setFormData((current) => ({ ...current, department: '', assigned_to_hod: '' }));
+      setUsers([]);
+      setShowingAllHods(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -165,10 +177,20 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
         if (currentUser?.id) {
           requestData.append('created_by', currentUser.id);
         }
-        const response = await api.post('tasks/', requestData, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        savedTask = response.data;
+        if (isGroupTask && canCreateGroupTask) {
+          const response = await api.post('tasks/group-create/', requestData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+          savedTask = {
+            ...(response.data?.tasks?.[0] || {}),
+            title: `${formData.title} (${response.data?.created_count || 0} HOD assignments)`,
+          };
+        } else {
+          const response = await api.post('tasks/', requestData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+          savedTask = response.data;
+        }
         if (isHodCreate) {
           await api.post('subtasks/', {
             task: savedTask.id,
@@ -208,6 +230,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
     setFacultyUsers([]);
     setShowingAllHods(false);
     setShowingAllFaculty(false);
+    setIsGroupTask(false);
   };
 
   return (
@@ -269,6 +292,27 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
               </Grid>
             ) : (
               <>
+                {canCreateGroupTask && (
+                  <Grid item xs={12}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          checked={isGroupTask}
+                          onChange={(event) => handleGroupTaskChange(event.target.checked)}
+                        />
+                      }
+                      label="Group Task"
+                    />
+                    {isGroupTask && (
+                      <Alert severity="info" sx={{ mt: 1 }}>
+                        This task will be assigned to every active Department HOD at once.
+                      </Alert>
+                    )}
+                  </Grid>
+                )}
+
+                {!isGroupTask && (
+                  <>
                 <Grid item xs={12} sm={6}>
                   <TextField
                     select fullWidth label="Department" required
@@ -303,6 +347,8 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
                     ))}
                   </TextField>
                 </Grid>
+                  </>
+                )}
               </>
             )}
 

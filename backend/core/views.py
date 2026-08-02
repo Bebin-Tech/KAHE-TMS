@@ -2,6 +2,7 @@ from rest_framework import viewsets, permissions, status, mixins
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework_simplejwt.views import TokenObtainPairView
+from django.core.files.base import ContentFile
 from django.db.models import Count, Exists, OuterRef, Q
 from django.utils import timezone
 from .models import User, Department, Task, SubTask, Submission, TaskReport, Notification, UserModulePermission, Note
@@ -267,6 +268,70 @@ class TaskViewSet(viewsets.ModelViewSet):
                 user=task.assigned_to_hod,
                 message=f"Task '{task.title}' has been assigned to you by {task.created_by.get_full_name() or task.created_by.username}."
             )
+
+    @action(detail=False, methods=['post'], url_path='group-create')
+    def group_create(self, request):
+        """Dean creates the same task for every active Department HOD."""
+        if request.user.role not in ['DEAN', 'ADMIN']:
+            return Response({'error': 'Only Dean or Admin users can create group tasks.'}, status=status.HTTP_403_FORBIDDEN)
+
+        hods = User.objects.filter(role='HOD', is_active=True, department__isnull=False).select_related('department')
+        if not hods.exists():
+            return Response({'error': 'No active Department HODs are available for group assignment.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        upload = request.FILES.get('attachment')
+        upload_name = upload.name if upload else None
+        upload_content = upload.read() if upload else None
+        created_tasks = []
+
+        for hod in hods:
+            payload = {
+                'title': request.data.get('title'),
+                'description': request.data.get('description'),
+                'created_by': request.user.id,
+                'assigned_to_hod': hod.id,
+                'department': hod.department_id,
+                'start_date': request.data.get('start_date'),
+                'deadline': request.data.get('deadline'),
+                'priority': request.data.get('priority', 'MEDIUM'),
+                'is_special': request.data.get('is_special', False),
+                'status': 'ASSIGNED',
+            }
+            serializer = self.get_serializer(data=payload)
+            serializer.is_valid(raise_exception=True)
+            task = serializer.save(is_active=True)
+
+            if upload_content is not None:
+                task.attachment.save(upload_name, ContentFile(upload_content), save=True)
+
+            record_task_activity(
+                task=task,
+                user=task.created_by,
+                role=task.created_by.role,
+                status='ASSIGNED',
+                action_performed='Created group task',
+                assigned_by=task.created_by,
+                assigned_at=task.created_at
+            )
+            record_task_activity(
+                task=task,
+                user=hod,
+                role='HOD',
+                status='ASSIGNED',
+                action_performed='Assigned group task to HOD',
+                assigned_by=task.created_by,
+                assigned_at=task.created_at
+            )
+            Notification.objects.create(
+                user=hod,
+                message=f"Group task '{task.title}' has been assigned to you by {task.created_by.get_full_name() or task.created_by.username}."
+            )
+            created_tasks.append(task)
+
+        return Response({
+            'created_count': len(created_tasks),
+            'tasks': self.get_serializer(created_tasks, many=True).data,
+        }, status=status.HTTP_201_CREATED)
 
     def perform_update(self, serializer):
         previous_assignee = self.get_object().assigned_to_hod
