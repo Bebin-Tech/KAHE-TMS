@@ -34,6 +34,21 @@ import { formatApiError } from '../utils/errors';
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/';
 const fileBaseUrl = apiBaseUrl.replace(/\/api\/?$/, '');
+const submitToDeanButtonSx = {
+  bgcolor: 'rgba(34, 197, 94, 0.14)',
+  color: '#15803d',
+  border: '1px solid rgba(34, 197, 94, 0.65)',
+  boxShadow: 'none',
+  '&:hover': {
+    bgcolor: 'rgba(34, 197, 94, 0.22)',
+    boxShadow: 'none',
+  },
+  '&.Mui-disabled': {
+    bgcolor: 'rgba(34, 197, 94, 0.14)',
+    color: 'rgba(21, 128, 61, 0.62)',
+    border: '1px solid rgba(34, 197, 94, 0.45)',
+  },
+};
 const getFileUrl = (path) => {
   if (!path) return '';
   if (/^https?:\/\//i.test(path)) {
@@ -615,7 +630,7 @@ const Tasks = () => {
                       </Button>
                       <Tooltip title={!canSubmitToDean(task) ? 'Assign Faculty and approve submitted Faculty work before sending this task to Dean.' : ''}>
                         <span>
-                          <Button size="small" variant="contained" startIcon={<SendRounded />} disabled={actionLoading || !canSubmitToDean(task)} onClick={() => handleOpenSubmitToDean(task)}>
+                          <Button size="small" variant="contained" startIcon={<SendRounded />} sx={submitToDeanButtonSx} disabled={actionLoading || !canSubmitToDean(task)} onClick={() => handleOpenSubmitToDean(task)}>
                             Submit Dean
                           </Button>
                         </span>
