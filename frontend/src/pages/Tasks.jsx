@@ -37,26 +37,35 @@ const fileBaseUrl = apiBaseUrl.replace(/\/api\/?$/, '');
 const submittedToDeanStatuses = ['SUBMITTED_DEAN', 'COMPLETED', 'DEAN_APPROVED'];
 const getSubmitToDeanButtonSx = (status) => {
   const isSubmitted = submittedToDeanStatuses.includes(status);
-  const color = isSubmitted ? '#b91c1c' : '#15803d';
+  const color = isSubmitted ? '#991b1b' : '#065f46';
   const bg = isSubmitted ? 'rgba(239, 68, 68, 0.14)' : 'rgba(34, 197, 94, 0.14)';
   const hoverBg = isSubmitted ? 'rgba(239, 68, 68, 0.22)' : 'rgba(34, 197, 94, 0.22)';
   const border = isSubmitted ? 'rgba(239, 68, 68, 0.65)' : 'rgba(34, 197, 94, 0.65)';
   const disabledBorder = isSubmitted ? 'rgba(239, 68, 68, 0.45)' : 'rgba(34, 197, 94, 0.45)';
-  const disabledColor = isSubmitted ? 'rgba(185, 28, 28, 0.62)' : 'rgba(21, 128, 61, 0.62)';
+  const disabledColor = isSubmitted ? '#991b1b' : '#065f46';
 
   return {
-    bgcolor: bg,
-    color,
+    bgcolor: `${bg} !important`,
+    backgroundColor: `${bg} !important`,
+    color: `${color} !important`,
+    WebkitTextFillColor: `${color} !important`,
     border: `1px solid ${border}`,
-    boxShadow: 'none',
+    boxShadow: 'none !important',
+    opacity: '1 !important',
+    fontWeight: 900,
+    textTransform: 'none',
     '&:hover': {
-      bgcolor: hoverBg,
-      boxShadow: 'none',
+      bgcolor: `${hoverBg} !important`,
+      backgroundColor: `${hoverBg} !important`,
+      boxShadow: 'none !important',
     },
     '&.Mui-disabled': {
-      bgcolor: bg,
-      color: disabledColor,
+      bgcolor: `${bg} !important`,
+      backgroundColor: `${bg} !important`,
+      color: `${disabledColor} !important`,
+      WebkitTextFillColor: `${disabledColor} !important`,
       border: `1px solid ${disabledBorder}`,
+      opacity: '1 !important',
     },
   };
 };
@@ -642,7 +651,7 @@ const Tasks = () => {
                       <Tooltip title={!canSubmitToDean(task) ? 'Assign Faculty and approve submitted Faculty work before sending this task to Dean.' : ''}>
                         <span>
                           <Button size="small" variant="contained" startIcon={<SendRounded />} sx={getSubmitToDeanButtonSx(task.status)} disabled={actionLoading || !canSubmitToDean(task)} onClick={() => handleOpenSubmitToDean(task)}>
-                            Submit Dean
+                            Submit to Dean
                           </Button>
                         </span>
                       </Tooltip>
