@@ -34,20 +34,31 @@ import { formatApiError } from '../utils/errors';
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/';
 const fileBaseUrl = apiBaseUrl.replace(/\/api\/?$/, '');
-const submitToDeanButtonSx = {
-  bgcolor: 'rgba(34, 197, 94, 0.14)',
-  color: '#15803d',
-  border: '1px solid rgba(34, 197, 94, 0.65)',
-  boxShadow: 'none',
-  '&:hover': {
-    bgcolor: 'rgba(34, 197, 94, 0.22)',
+const submittedToDeanStatuses = ['SUBMITTED_DEAN', 'COMPLETED', 'DEAN_APPROVED'];
+const getSubmitToDeanButtonSx = (status) => {
+  const isSubmitted = submittedToDeanStatuses.includes(status);
+  const color = isSubmitted ? '#b91c1c' : '#15803d';
+  const bg = isSubmitted ? 'rgba(239, 68, 68, 0.14)' : 'rgba(34, 197, 94, 0.14)';
+  const hoverBg = isSubmitted ? 'rgba(239, 68, 68, 0.22)' : 'rgba(34, 197, 94, 0.22)';
+  const border = isSubmitted ? 'rgba(239, 68, 68, 0.65)' : 'rgba(34, 197, 94, 0.65)';
+  const disabledBorder = isSubmitted ? 'rgba(239, 68, 68, 0.45)' : 'rgba(34, 197, 94, 0.45)';
+  const disabledColor = isSubmitted ? 'rgba(185, 28, 28, 0.62)' : 'rgba(21, 128, 61, 0.62)';
+
+  return {
+    bgcolor: bg,
+    color,
+    border: `1px solid ${border}`,
     boxShadow: 'none',
-  },
-  '&.Mui-disabled': {
-    bgcolor: 'rgba(34, 197, 94, 0.14)',
-    color: 'rgba(21, 128, 61, 0.62)',
-    border: '1px solid rgba(34, 197, 94, 0.45)',
-  },
+    '&:hover': {
+      bgcolor: hoverBg,
+      boxShadow: 'none',
+    },
+    '&.Mui-disabled': {
+      bgcolor: bg,
+      color: disabledColor,
+      border: `1px solid ${disabledBorder}`,
+    },
+  };
 };
 const getFileUrl = (path) => {
   if (!path) return '';
@@ -630,7 +641,7 @@ const Tasks = () => {
                       </Button>
                       <Tooltip title={!canSubmitToDean(task) ? 'Assign Faculty and approve submitted Faculty work before sending this task to Dean.' : ''}>
                         <span>
-                          <Button size="small" variant="contained" startIcon={<SendRounded />} sx={submitToDeanButtonSx} disabled={actionLoading || !canSubmitToDean(task)} onClick={() => handleOpenSubmitToDean(task)}>
+                          <Button size="small" variant="contained" startIcon={<SendRounded />} sx={getSubmitToDeanButtonSx(task.status)} disabled={actionLoading || !canSubmitToDean(task)} onClick={() => handleOpenSubmitToDean(task)}>
                             Submit Dean
                           </Button>
                         </span>
@@ -770,7 +781,7 @@ const Tasks = () => {
           {isHod && selectedTask && (
             <Tooltip title={!canSubmitToDean(selectedTask) ? 'All Faculty sub-tasks must be approved before submitting to Dean.' : ''}>
               <span>
-                <Button variant="contained" startIcon={<SendRounded />} disabled={actionLoading || !canSubmitToDean(selectedTask)} onClick={() => handleOpenSubmitToDean(selectedTask)}>
+                <Button variant="contained" startIcon={<SendRounded />} sx={getSubmitToDeanButtonSx(selectedTask.status)} disabled={actionLoading || !canSubmitToDean(selectedTask)} onClick={() => handleOpenSubmitToDean(selectedTask)}>
                   Submit to Dean
                 </Button>
               </span>

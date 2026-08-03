@@ -29,20 +29,31 @@ import { formatApiError } from '../utils/errors';
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/';
 const fileBaseUrl = apiBaseUrl.replace(/\/api\/?$/, '');
-const submitToDeanButtonSx = {
-  bgcolor: 'rgba(34, 197, 94, 0.14)',
-  color: '#15803d',
-  border: '1px solid rgba(34, 197, 94, 0.65)',
-  boxShadow: 'none',
-  '&:hover': {
-    bgcolor: 'rgba(34, 197, 94, 0.22)',
+const submittedToDeanStatuses = ['SUBMITTED_DEAN', 'COMPLETED', 'DEAN_APPROVED'];
+const getSubmitToDeanButtonSx = (status) => {
+  const isSubmitted = submittedToDeanStatuses.includes(status);
+  const color = isSubmitted ? '#b91c1c' : '#15803d';
+  const bg = isSubmitted ? 'rgba(239, 68, 68, 0.14)' : 'rgba(34, 197, 94, 0.14)';
+  const hoverBg = isSubmitted ? 'rgba(239, 68, 68, 0.22)' : 'rgba(34, 197, 94, 0.22)';
+  const border = isSubmitted ? 'rgba(239, 68, 68, 0.65)' : 'rgba(34, 197, 94, 0.65)';
+  const disabledBorder = isSubmitted ? 'rgba(239, 68, 68, 0.45)' : 'rgba(34, 197, 94, 0.45)';
+  const disabledColor = isSubmitted ? 'rgba(185, 28, 28, 0.62)' : 'rgba(21, 128, 61, 0.62)';
+
+  return {
+    bgcolor: bg,
+    color,
+    border: `1px solid ${border}`,
     boxShadow: 'none',
-  },
-  '&.Mui-disabled': {
-    bgcolor: 'rgba(34, 197, 94, 0.14)',
-    color: 'rgba(21, 128, 61, 0.62)',
-    border: '1px solid rgba(34, 197, 94, 0.45)',
-  },
+    '&:hover': {
+      bgcolor: hoverBg,
+      boxShadow: 'none',
+    },
+    '&.Mui-disabled': {
+      bgcolor: bg,
+      color: disabledColor,
+      border: `1px solid ${disabledBorder}`,
+    },
+  };
 };
 const getFileUrl = (path) => {
   if (!path) return '';
@@ -299,8 +310,8 @@ const HODDashboard = () => {
                             <Button
                               size="small"
                               variant="contained"
-                              sx={submitToDeanButtonSx}
-                              disabled={['SUBMITTED_DEAN', 'COMPLETED', 'DEAN_APPROVED'].includes(task.status) || !canSubmitToDean(task)}
+                              sx={getSubmitToDeanButtonSx(task.status)}
+                              disabled={submittedToDeanStatuses.includes(task.status) || !canSubmitToDean(task)}
                               onClick={(event) => {
                                 event.stopPropagation();
                                 setSubmitTask(task);
@@ -519,7 +530,8 @@ const HODDashboard = () => {
               <span>
                 <Button
                   variant="contained"
-                  disabled={['SUBMITTED_DEAN', 'COMPLETED', 'DEAN_APPROVED'].includes(detailTask.status) || !canSubmitToDean(detailTask)}
+                  sx={getSubmitToDeanButtonSx(detailTask.status)}
+                  disabled={submittedToDeanStatuses.includes(detailTask.status) || !canSubmitToDean(detailTask)}
                   onClick={() => {
                     setSubmitTask(detailTask);
                     setSubmissionContent('');
