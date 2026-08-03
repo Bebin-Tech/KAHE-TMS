@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import CreateSubTaskDialog from '../components/CreateSubTaskDialog';
 import ReviewSubmissionDialog from '../components/ReviewSubmissionDialog';
@@ -21,7 +21,6 @@ import {
   AttachFileRounded,
   VisibilityRounded,
   GroupWorkRounded,
-  TimerRounded,
   FactCheckRounded,
   RateReviewRounded
 } from '@mui/icons-material';
@@ -158,17 +157,6 @@ const HODDashboard = () => {
   };
 
   const activeSubtasks = subtasks.filter((subtask) => !['APPROVED_HOD', 'COMPLETED'].includes(subtask.status)).length;
-  const recentActivity = useMemo(() => (
-    [...subtasks]
-      .sort((first, second) => second.id - first.id)
-      .slice(0, 3)
-      .map((subtask) => ({
-        id: subtask.id,
-        title: subtask.title,
-        faculty: subtask.assigned_to_name || 'Faculty',
-        status: subtask.status?.replaceAll('_', ' ') || 'Assigned',
-      }))
-  ), [subtasks]);
 
   const StatCard = ({ title, value, icon, color }) => (
     <Card sx={{ borderRadius: 2, overflow: 'hidden', height: '100%', boxShadow: '0 16px 38px -32px rgba(30,30,44,0.5)' }}>
@@ -325,7 +313,7 @@ const HODDashboard = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} lg={8}>
+        <Grid item xs={12}>
           <Paper sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
             <Box sx={{ p: { xs: 2.25, md: 3 }, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1.5, flexDirection: { xs: 'column', sm: 'row' }, borderBottom: '1px solid', borderColor: 'divider' }}>
               <Box>
@@ -388,32 +376,6 @@ const HODDashboard = () => {
                 </TableBody>
               </Table>
             </TableContainer>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} lg={4}>
-          <Paper sx={{ borderRadius: 2, p: { xs: 2.25, md: 3 }, border: '1px solid', borderColor: 'divider', height: '100%' }}>
-            <Typography variant="h6" sx={{ mb: 3, fontWeight: 900 }}>Department Activity</Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {recentActivity.length > 0 ? recentActivity.map((activity) => (
-                <Box key={activity.id} sx={{ display: 'flex', gap: 2 }}>
-                  <Avatar sx={{ bgcolor: 'secondary.light' }}>{activity.faculty[0]}</Avatar>
-                  <Box>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{activity.faculty}</Typography>
-                    <Typography variant="caption" color="text.secondary">{activity.title}</Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5, color: 'text.secondary' }}>
-                      <TimerRounded sx={{ fontSize: '0.9rem', mr: 0.5 }} />
-                      <Typography variant="caption">{activity.status}</Typography>
-                    </Box>
-                  </Box>
-                </Box>
-              )) : (
-                <Typography variant="body2" color="text.secondary">
-                  No faculty activity recorded yet.
-                </Typography>
-              )}
-            </Box>
-            <Button fullWidth variant="text" sx={{ mt: 4 }}>See All Activity</Button>
           </Paper>
         </Grid>
       </Grid>
