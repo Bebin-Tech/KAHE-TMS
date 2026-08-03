@@ -40,6 +40,7 @@ const getSubmitToDeanButtonSx = (status) => {
   const disabledColor = isSubmitted ? '#991b1b' : '#065f46';
 
   return {
+    background: `${bg} !important`,
     bgcolor: `${bg} !important`,
     backgroundColor: `${bg} !important`,
     color: `${color} !important`,
@@ -50,11 +51,13 @@ const getSubmitToDeanButtonSx = (status) => {
     fontWeight: 900,
     textTransform: 'none',
     '&:hover': {
+      background: `${hoverBg} !important`,
       bgcolor: `${hoverBg} !important`,
       backgroundColor: `${hoverBg} !important`,
       boxShadow: 'none !important',
     },
     '&.Mui-disabled': {
+      background: `${bg} !important`,
       bgcolor: `${bg} !important`,
       backgroundColor: `${bg} !important`,
       color: `${disabledColor} !important`,
