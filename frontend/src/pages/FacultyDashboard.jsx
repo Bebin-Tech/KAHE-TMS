@@ -142,8 +142,6 @@ const FacultyDashboard = () => {
   const progressAverage = subtasks.length
     ? Math.round(subtasks.reduce((total, task) => total + Number(task.progress || 0), 0) / subtasks.length)
     : 0;
-  const completionRate = subtasks.length ? Math.round((completedCount / subtasks.length) * 100) : 0;
-  const nextTask = subtasks.find((task) => !['SUBMITTED', 'APPROVED_HOD', 'COMPLETED'].includes(task.status));
 
   return (
     <DashboardLayout title="My Assignments">
@@ -209,7 +207,7 @@ const FacultyDashboard = () => {
       </Grid>
 
       <Grid container spacing={{ xs: 2, md: 3 }}>
-        <Grid item xs={12} lg={8}>
+        <Grid item xs={12}>
           <Paper sx={{ borderRadius: 3, border: '1px solid #d8e3f0', overflow: 'hidden', bgcolor: '#ffffff', boxShadow: '0 22px 58px -46px rgba(15,23,42,0.55)' }}>
             <Box sx={{ p: { xs: 2.25, md: 3 }, borderBottom: '1px solid #e7edf5' }}>
               <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a' }}>My Task List</Typography>
@@ -298,32 +296,6 @@ const FacultyDashboard = () => {
           </Paper>
         </Grid>
 
-        <Grid item xs={12} lg={4}>
-          <Stack spacing={2.5}>
-            <Paper sx={{ p: { xs: 2.25, md: 3 }, borderRadius: 3, border: '1px solid #c9ece8', bgcolor: '#ffffff', boxShadow: '0 22px 58px -48px rgba(15,23,42,0.55)' }}>
-              <Typography variant="h6" sx={{ mb: 1, fontWeight: 900, color: '#0f172a' }}>Progress Summary</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                {completedCount} of {subtasks.length} assigned tasks are approved or completed.
-              </Typography>
-              <Box>
-                <Typography variant="caption" sx={{ fontWeight: 900, color: 'text.secondary' }}>Completion Rate</Typography>
-                <Typography variant="h3" sx={{ fontWeight: 900, color: '#0f172a' }}>{completionRate}%</Typography>
-                <LinearProgress variant="determinate" value={completionRate} sx={{ mt: 1, height: 9, borderRadius: 5 }} />
-              </Box>
-            </Paper>
-
-            <Paper sx={{ p: { xs: 2.25, md: 3 }, borderRadius: 3, border: '1px solid #d8e3f0', bgcolor: '#ffffff' }}>
-              <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', mb: 1 }}>Next Action</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {nextTask
-                  ? `Continue "${nextTask.title}" or submit your completed work for HOD review.`
-                  : subtasks.length
-                    ? 'All available work is submitted or approved.'
-                    : 'New assignments from your HOD will appear here.'}
-              </Typography>
-            </Paper>
-          </Stack>
-        </Grid>
       </Grid>
 
       <SubmitWorkDialog
