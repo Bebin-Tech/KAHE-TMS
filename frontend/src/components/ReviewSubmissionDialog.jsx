@@ -53,6 +53,7 @@ const ReviewSubmissionDialog = ({ open, onClose, task, onProcessed }) => {
 
   useEffect(() => {
     if (open && task) {
+      setFeedback('');
       fetchSubmission();
     }
   }, [fetchSubmission, open, task]);

@@ -815,7 +815,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         queryset = Submission.objects.filter(
             Q(task__isnull=True) | Q(task__is_active=True),
             Q(subtask__isnull=True) | Q(subtask__is_active=True, subtask__task__is_active=True)
-        )
+        ).order_by('submitted_at', 'id')
 
         subtask_id = self.request.query_params.get('subtask')
         task_id = self.request.query_params.get('task')

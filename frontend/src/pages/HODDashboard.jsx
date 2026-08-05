@@ -107,6 +107,7 @@ const HODDashboard = () => {
   const [stats, setStats] = useState({ assigned: 0, pendingReview: 0, teamPerformance: '92%' });
   const [selectedTask, setSelectedTask] = useState(null);
   const [detailTask, setDetailTask] = useState(null);
+  const [detailSubtask, setDetailSubtask] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [reviewTask, setReviewTask] = useState(null);
@@ -150,7 +151,7 @@ const HODDashboard = () => {
     fetchData();
   }, [fetchData]);
 
-  useAutoRefresh(fetchData, 1000, !dialogOpen && !reviewOpen && !submitTask && !detailTask);
+  useAutoRefresh(fetchData, 1000, !dialogOpen && !reviewOpen && !submitTask && !detailTask && !detailSubtask);
 
   const handleOpenReview = (item, type) => {
     setReviewTask({ ...item, type });
@@ -479,6 +480,7 @@ const HODDashboard = () => {
                           <Tooltip title="View task">
                             <IconButton
                               size="small"
+                              onClick={() => setDetailSubtask(task)}
                               sx={{
                                 width: 36,
                                 height: 36,
@@ -514,6 +516,88 @@ const HODDashboard = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      <Dialog
+        open={Boolean(detailSubtask)}
+        onClose={() => setDetailSubtask(null)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: '18px' } }}
+      >
+        <DialogTitle sx={{ fontWeight: 900 }}>Faculty Task Details</DialogTitle>
+        <DialogContent dividers>
+          {detailSubtask && (
+            <Stack spacing={2.25}>
+              <Box>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 900 }}>TASK TITLE</Typography>
+                <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a' }}>
+                  {detailSubtask.title}
+                </Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 900 }}>DESCRIPTION</Typography>
+                <Typography variant="body2" sx={{ mt: 0.75, whiteSpace: 'pre-line', color: '#334155' }}>
+                  {detailSubtask.description || 'No description provided.'}
+                </Typography>
+              </Box>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 900 }}>ASSIGNED TO</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 850 }}>{detailSubtask.assigned_to_name || 'Faculty'}</Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 900 }}>STATUS</Typography>
+                  <Box sx={{ mt: 0.5 }}>
+                    {(() => {
+                      const statusStyle = getFacultyStatusStyle(detailSubtask.status);
+                      return (
+                        <Chip
+                          label={statusStyle.label}
+                          size="small"
+                          sx={{
+                            bgcolor: statusStyle.bg,
+                            color: statusStyle.color,
+                            border: `1px solid ${statusStyle.border}`,
+                            fontWeight: 900,
+                          }}
+                        />
+                      );
+                    })()}
+                  </Box>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 900 }}>DEADLINE</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 850 }}>
+                    {detailSubtask.deadline ? new Date(detailSubtask.deadline).toLocaleString() : 'Not scheduled'}
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 900 }}>PROGRESS</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 850 }}>
+                    {detailSubtask.progress || 0}%
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button onClick={() => setDetailSubtask(null)} color="inherit">Close</Button>
+          {detailSubtask?.status === 'SUBMITTED' && (
+            <Button
+              variant="outlined"
+              startIcon={<RateReviewRounded />}
+              onClick={() => {
+                handleOpenReview(detailSubtask, 'subtask');
+                setDetailSubtask(null);
+              }}
+              sx={{ fontWeight: 900, textTransform: 'none' }}
+            >
+              Review
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         open={Boolean(detailTask)}
