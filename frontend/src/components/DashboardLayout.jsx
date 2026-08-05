@@ -204,10 +204,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
         </Paper>
       </Box>
 
-      <Typography variant="caption" sx={{ px: 1.5, mb: 1.25, color: '#64748b', fontWeight: 800, letterSpacing: '0.08em' }}>
-        WORKSPACE
-      </Typography>
-      <List sx={{ px: 0 }}>
+      <List sx={{ px: 0, mt: 0.5 }}>
         {modulePermissions === null && (
           <Typography variant="caption" sx={{ display: 'block', px: 1.5, py: 1, color: '#667085', fontWeight: 700 }}>
             Loading access...

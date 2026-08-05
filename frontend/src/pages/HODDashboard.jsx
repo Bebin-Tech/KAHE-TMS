@@ -30,6 +30,24 @@ import { formatApiError } from '../utils/errors';
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/';
 const fileBaseUrl = apiBaseUrl.replace(/\/api\/?$/, '');
 const submittedToDeanStatuses = ['SUBMITTED_DEAN', 'COMPLETED', 'DEAN_APPROVED'];
+const facultyStatusStyles = {
+  ASSIGNED: { label: 'Assigned', bg: '#eaf3ff', color: '#1d4ed8', border: '#bfdbfe' },
+  IN_PROGRESS: { label: 'In Progress', bg: '#fff8d9', color: '#8a6f00', border: '#fde68a' },
+  SUBMITTED: { label: 'Submitted', bg: '#fff3df', color: '#b45309', border: '#fed7aa' },
+  APPROVED_HOD: { label: 'Approved', bg: '#e8f7f6', color: '#0f766e', border: '#99f6e4' },
+  COMPLETED: { label: 'Completed', bg: '#e8f7f6', color: '#0f766e', border: '#99f6e4' },
+  REJECTED_HOD: { label: 'Rework', bg: '#fff1f2', color: '#be123c', border: '#fecdd3' },
+};
+
+const getFacultyStatusStyle = (status) => (
+  facultyStatusStyles[status] || {
+    label: status?.replaceAll('_', ' ') || 'Pending',
+    bg: '#f1f5f9',
+    color: '#475569',
+    border: '#e2e8f0',
+  }
+);
+
 const getSubmitToDeanButtonSx = (status) => {
   const isSubmitted = submittedToDeanStatuses.includes(status);
   const color = isSubmitted ? '#991b1b' : '#065f46';
@@ -353,65 +371,143 @@ const HODDashboard = () => {
         </Grid>
 
         <Grid item xs={12}>
-          <Paper sx={{ borderRadius: 2, overflow: 'hidden', border: '1px solid', borderColor: 'divider' }}>
-            <Box sx={{ p: { xs: 2.25, md: 3 }, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1.5, flexDirection: { xs: 'column', sm: 'row' }, borderBottom: '1px solid', borderColor: 'divider' }}>
+          <Paper
+            elevation={0}
+            sx={{
+              borderRadius: 3,
+              overflow: 'hidden',
+              border: '1px solid #d8e3f0',
+              bgcolor: '#ffffff',
+              boxShadow: '0 22px 58px -46px rgba(15,23,42,0.55)',
+            }}
+          >
+            <Box
+              sx={{
+                p: { xs: 2.25, md: 3 },
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: { xs: 'flex-start', sm: 'center' },
+                gap: 1.5,
+                flexDirection: { xs: 'column', sm: 'row' },
+                borderBottom: '1px solid #e7edf5',
+                bgcolor: '#ffffff',
+              }}
+            >
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: 900 }}>Faculty Work Queue</Typography>
-                <Typography variant="body2" color="text.secondary">Sub-tasks assigned and returned by faculty.</Typography>
+                <Typography variant="h5" sx={{ fontWeight: 900, fontSize: { xs: '1.25rem', md: '1.45rem' }, color: '#0f172a' }}>
+                  Faculty Work Queue
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#53657d', mt: 0.35 }}>
+                  Sub-tasks assigned and returned by faculty.
+                </Typography>
               </Box>
-              <Button size="small" variant="outlined" sx={{ borderRadius: '8px', alignSelf: { xs: 'flex-start', sm: 'center' } }}>View All</Button>
+              <Chip
+                label={`${subtasks.length} faculty tasks`}
+                sx={{ bgcolor: '#eef6ff', color: '#1d4ed8', fontWeight: 900, borderRadius: 1.5 }}
+              />
             </Box>
-            <TableContainer>
-              <Table sx={{ minWidth: 680 }}>
-                <TableHead sx={{ bgcolor: '#f4f9ff' }}>
+            <TableContainer sx={{ overflowX: 'auto' }}>
+              <Table sx={{ minWidth: 760 }}>
+                <TableHead sx={{ bgcolor: '#f8fbff' }}>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 700 }}>Faculty Task</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Assigned To</TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
+                    <TableCell sx={{ fontWeight: 900, color: '#334155', letterSpacing: '0.04em' }}>FACULTY TASK</TableCell>
+                    <TableCell sx={{ fontWeight: 900, color: '#334155', letterSpacing: '0.04em' }}>ASSIGNED TO</TableCell>
+                    <TableCell sx={{ fontWeight: 900, color: '#334155', letterSpacing: '0.04em' }}>STATUS</TableCell>
+                    <TableCell align="right" sx={{ fontWeight: 900, color: '#334155', letterSpacing: '0.04em' }}>ACTIONS</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {subtasks.map((task) => (
-                    <TableRow key={task.id} hover>
-                      <TableCell>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{task.title}</Typography>
-                        <Typography variant="caption" color="text.secondary">Assigned by: {task.created_by_name || 'HOD'}</Typography>
+                  {subtasks.length > 0 ? subtasks.map((task) => {
+                    const statusStyle = getFacultyStatusStyle(task.status);
+
+                    return (
+                    <TableRow
+                      key={task.id}
+                      hover
+                      sx={{
+                        '&:last-child td': { borderBottom: 0 },
+                        '&:hover': { bgcolor: '#f8fbff' },
+                      }}
+                    >
+                      <TableCell sx={{ py: 2.15 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#0f172a' }}>{task.title}</Typography>
+                        <Typography variant="caption" sx={{ color: '#64748b' }}>Assigned by: {task.created_by_name || 'HOD'}</Typography>
                       </TableCell>
                       <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Avatar sx={{ width: 24, height: 24, fontSize: '0.7rem', bgcolor: 'primary.light' }}>
-                            {task.assigned_to_name?.[0]}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+                          <Avatar sx={{ width: 34, height: 34, fontSize: '0.85rem', bgcolor: '#e0f2fe', color: '#0369a1', fontWeight: 900 }}>
+                            {(task.assigned_to_name?.[0] || 'F').toUpperCase()}
                           </Avatar>
-                          <Typography variant="caption" sx={{ ml: 1, fontWeight: 600 }}>{task.assigned_to_name}</Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 850, color: '#0f172a' }}>{task.assigned_to_name || 'Faculty'}</Typography>
                         </Box>
                       </TableCell>
                       <TableCell>
                         <Chip
-                          label={task.status}
+                          label={statusStyle.label}
                           size="small"
-                          color={task.status === 'SUBMITTED' ? 'warning' : task.status === 'COMPLETED' ? 'success' : 'default'}
-                          sx={{ borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700 }}
+                          sx={{
+                            bgcolor: statusStyle.bg,
+                            color: statusStyle.color,
+                            border: `1px solid ${statusStyle.border}`,
+                            borderRadius: 1.5,
+                            fontSize: '0.75rem',
+                            fontWeight: 900,
+                            minWidth: 94,
+                          }}
                         />
                       </TableCell>
                       <TableCell align="right">
                         {task.status === 'SUBMITTED' ? (
                           <Button
                             size="small"
-                            variant="contained"
-                            color="warning"
+                            variant="outlined"
                             startIcon={<RateReviewRounded />}
                             onClick={() => handleOpenReview(task, 'subtask')}
-                            sx={{ textTransform: 'none', fontWeight: 700 }}
+                            sx={{
+                              textTransform: 'none',
+                              fontWeight: 900,
+                              borderRadius: 1.5,
+                              color: '#b45309',
+                              borderColor: '#f59e0b',
+                              bgcolor: '#fff7ed',
+                              '&:hover': { bgcolor: '#ffedd5', borderColor: '#d97706' },
+                            }}
                           >
                             Review
                           </Button>
                         ) : (
-                          <IconButton size="small"><VisibilityRounded fontSize="small" /></IconButton>
+                          <Tooltip title="View task">
+                            <IconButton
+                              size="small"
+                              sx={{
+                                width: 36,
+                                height: 36,
+                                border: '1px solid #d8e3f0',
+                                color: '#475569',
+                                bgcolor: '#ffffff',
+                                '&:hover': { bgcolor: '#f1f5f9', color: '#1d4ed8' },
+                              }}
+                            >
+                              <VisibilityRounded fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
                         )}
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  }) : (
+                    <TableRow>
+                      <TableCell colSpan={4} align="center" sx={{ py: 7 }}>
+                        <FactCheckRounded sx={{ fontSize: 42, color: '#94a3b8', mb: 1 }} />
+                        <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#0f172a' }}>
+                          No faculty work assigned yet
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#64748b' }}>
+                          Faculty sub-tasks will appear here after assignment.
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>
