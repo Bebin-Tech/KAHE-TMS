@@ -23,8 +23,14 @@ body {
 }
 
 html {
+  min-height: 100%;
   scrollbar-gutter: stable;
   -webkit-text-size-adjust: 100%;
+}
+
+body,
+#root {
+  min-height: 100%;
 }
 
 a {
@@ -52,12 +58,36 @@ canvas {
 
 .MuiTableContainer-root {
   max-width: 100%;
-  overflow-x: auto;
+  overflow-x: auto !important;
   -webkit-overflow-scrolling: touch;
 }
 
 .MuiTableContainer-root table {
   white-space: nowrap;
+}
+
+.MuiDialog-paper {
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
+}
+
+.MuiDialogContent-root {
+  overflow-wrap: anywhere;
+}
+
+.MuiButton-root {
+  min-width: 0;
+  text-align: center;
+}
+
+.MuiButton-root .MuiButton-startIcon,
+.MuiButton-root .MuiButton-endIcon {
+  flex-shrink: 0;
+}
+
+.MuiChip-label,
+.MuiTypography-root {
+  overflow-wrap: anywhere;
 }
 
 .MuiPaper-root,
@@ -73,11 +103,12 @@ canvas {
   .MuiDialog-paper {
     margin: 12px !important;
     width: calc(100% - 24px) !important;
-    max-height: calc(100% - 24px) !important;
+    max-height: calc(100dvh - 24px) !important;
   }
 
   .MuiButton-root {
     min-height: 42px;
+    white-space: normal;
   }
 
   .MuiTableContainer-root {

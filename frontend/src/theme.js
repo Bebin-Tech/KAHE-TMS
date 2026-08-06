@@ -109,6 +109,7 @@ const theme = createTheme({
           color: '#0f172a',
           fontFeatureSettings: '"kern", "liga", "calt"',
           textRendering: 'optimizeLegibility',
+          overflowX: 'hidden',
         },
         '::selection': {
           backgroundColor: '#bfdbfe',
@@ -116,6 +117,9 @@ const theme = createTheme({
         },
         'button, input, textarea, select, table': {
           fontFamily: academicFontFamily,
+        },
+        '#root': {
+          minHeight: '100vh',
         },
       },
     },
@@ -129,8 +133,15 @@ const theme = createTheme({
           borderRadius: 8,
           lineHeight: 1.35,
           minHeight: 42,
+          minWidth: 0,
+          textAlign: 'center',
+          whiteSpace: 'normal',
+          overflowWrap: 'anywhere',
           boxShadow: 'none',
           transition: 'transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease',
+          '& .MuiButton-startIcon, & .MuiButton-endIcon': {
+            flexShrink: 0,
+          },
           '&:hover': {
             transform: 'translateY(-1px)',
           },
@@ -161,6 +172,7 @@ const theme = createTheme({
         root: {
           border: '1px solid #e2e8f0',
           borderRadius: 10,
+          maxWidth: '100%',
           boxShadow: '0 18px 42px -34px rgba(15, 23, 42, 0.38)',
         },
       },
@@ -170,6 +182,7 @@ const theme = createTheme({
         root: {
           backgroundImage: 'none',
           borderRadius: 10,
+          maxWidth: '100%',
           boxShadow: '0 18px 42px -34px rgba(15, 23, 42, 0.34)',
         },
       },
@@ -188,6 +201,7 @@ const theme = createTheme({
           borderRadius: 10,
           overflowX: 'auto',
           WebkitOverflowScrolling: 'touch',
+          maxWidth: '100%',
         },
       },
     },
@@ -197,6 +211,7 @@ const theme = createTheme({
           borderBottomColor: '#e2e8f0',
           paddingTop: 15,
           paddingBottom: 15,
+          verticalAlign: 'middle',
         },
         head: {
           color: '#475569',
@@ -247,6 +262,8 @@ const theme = createTheme({
       styleOverrides: {
         paper: {
           borderRadius: 12,
+          maxWidth: 'calc(100vw - 32px)',
+          maxHeight: 'calc(100dvh - 32px)',
         },
       },
     },

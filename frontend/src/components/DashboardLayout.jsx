@@ -303,7 +303,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   );
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', width: '100%', maxWidth: '100vw', overflowX: 'hidden', bgcolor: 'background.default' }}>
       {!hideSidebar && (
         <Drawer
           variant={isMobile ? "temporary" : "permanent"}
@@ -325,7 +325,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
         </Drawer>
       )}
 
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, maxWidth: '100%', overflowX: 'hidden' }}>
         {/* Top Navbar */}
         <AppBar
           position="sticky"
@@ -346,7 +346,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
               px: { xs: 1.25, sm: 2, md: 4 },
               py: { xs: 0.85, sm: 0 },
               gap: { xs: 1, sm: 2 },
-              flexWrap: 'nowrap'
+              flexWrap: { xs: 'wrap', sm: 'nowrap' }
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.75, sm: 2 }, minWidth: 0, flex: '1 1 auto' }}>
@@ -362,7 +362,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                 <Typography
                   variant="h6"
                   noWrap
-                  sx={{ fontWeight: 800, color: 'text.primary', lineHeight: 1.2, fontSize: { xs: '0.98rem', sm: '1.25rem' }, maxWidth: { xs: '48vw', sm: 'none' } }}
+                  sx={{ fontWeight: 800, color: 'text.primary', lineHeight: 1.2, fontSize: { xs: '0.98rem', sm: '1.25rem' }, maxWidth: { xs: '64vw', sm: 'none' } }}
                 >
                   {title || 'Dashboard'}
                 </Typography>
@@ -518,6 +518,9 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             pt: { xs: 1.5, sm: 2, md: 3.5 },
             pb: { xs: 4, md: 6 },
             minWidth: 0,
+            width: '100%',
+            maxWidth: '100%',
+            overflowX: 'hidden',
           }}
         >
           {children}
