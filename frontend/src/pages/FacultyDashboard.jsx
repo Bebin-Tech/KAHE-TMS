@@ -302,10 +302,6 @@ const FacultyDashboard = () => {
                                 Due {formatDate(task.deadline)}
                               </Typography>
                             </Stack>
-                            <Box>
-                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 800 }}>Parent task</Typography>
-                              <Typography variant="body2" sx={{ fontWeight: 850, color: '#0f172a' }}>{task.task_title || 'Department assignment'}</Typography>
-                            </Box>
                             <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
                               <Typography variant="caption" sx={{ fontWeight: 850, color: '#475569' }}>Work Completion</Typography>
                               <Typography variant="caption" sx={{ fontWeight: 900, color: '#0f172a' }}>{task.progress || 0}%</Typography>
