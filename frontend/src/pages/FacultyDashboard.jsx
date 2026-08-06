@@ -9,7 +9,6 @@ import {
   Button,
   Chip,
   CircularProgress,
-  Divider,
   Grid,
   LinearProgress,
   Paper,
@@ -209,9 +208,23 @@ const FacultyDashboard = () => {
       <Grid container spacing={{ xs: 2, md: 3 }}>
         <Grid item xs={12}>
           <Paper sx={{ borderRadius: 3, border: '1px solid #d8e3f0', overflow: 'hidden', bgcolor: '#ffffff', boxShadow: '0 22px 58px -46px rgba(15,23,42,0.55)' }}>
-            <Box sx={{ p: { xs: 2.25, md: 3 }, borderBottom: '1px solid #e7edf5' }}>
-              <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a' }}>My Task List</Typography>
-              <Typography variant="body2" color="text.secondary">Submit completed work or keep progress current for HOD review.</Typography>
+            <Box
+              sx={{
+                p: { xs: 2.25, md: 3 },
+                borderBottom: '1px solid #e7edf5',
+                bgcolor: '#f8fbff'
+              }}
+            >
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between">
+                <Box>
+                  <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a' }}>My Task List</Typography>
+                  <Typography variant="body2" color="text.secondary">Submit completed work or keep progress current for HOD review.</Typography>
+                </Box>
+                <Chip
+                  label={`${subtasks.length} ${subtasks.length === 1 ? 'task' : 'tasks'}`}
+                  sx={{ bgcolor: '#eaf3ff', color: '#1d4ed8', fontWeight: 900, borderRadius: 1.5 }}
+                />
+              </Stack>
             </Box>
 
             {subtasks.length === 0 ? (
@@ -221,58 +234,94 @@ const FacultyDashboard = () => {
                 </Alert>
               </Box>
             ) : (
-              <Stack divider={<Divider />}>
+              <Stack spacing={1.6} sx={{ p: { xs: 2, md: 2.5 } }}>
                 {subtasks.map((task) => {
                   const status = getStatusStyle(task.status);
                   const isLocked = ['SUBMITTED', 'APPROVED_HOD', 'COMPLETED'].includes(task.status);
                   return (
-                    <Box key={task.id} sx={{ p: { xs: 2, md: 2.5 }, '&:hover': { bgcolor: '#f8fbff' } }}>
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'flex-start' }}>
-                        <Avatar sx={{ bgcolor: status.bg, color: status.color, width: 48, height: 48, flexShrink: 0 }}>
-                          {['APPROVED_HOD', 'COMPLETED'].includes(task.status) ? <FactCheckRounded /> : <AssignmentRounded />}
-                        </Avatar>
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }}>
+                    <Paper
+                      key={task.id}
+                      elevation={0}
+                      sx={{
+                        p: { xs: 1.65, md: 2 },
+                        borderRadius: 2.5,
+                        border: '1px solid #dbe7f5',
+                        bgcolor: '#ffffff',
+                        boxShadow: '0 16px 40px -36px rgba(15,23,42,0.55)',
+                        transition: 'background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease',
+                        '&:hover': {
+                          bgcolor: '#fbfdff',
+                          borderColor: '#bfdbfe',
+                          boxShadow: '0 20px 48px -38px rgba(37,99,235,0.42)',
+                        },
+                      }}
+                    >
+                      <Grid container spacing={2} alignItems="center">
+                        <Grid item xs={12} md={5}>
+                          <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                            <Box
+                              sx={{
+                                width: 56,
+                                minHeight: 86,
+                                borderRadius: 2,
+                                bgcolor: status.bg,
+                                color: status.color,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: '1px solid rgba(15,23,42,0.04)',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <Avatar sx={{ bgcolor: '#ffffff', color: status.color, width: 36, height: 36, boxShadow: '0 12px 24px -20px rgba(15,23,42,0.45)' }}>
+                                {['APPROVED_HOD', 'COMPLETED'].includes(task.status) ? <FactCheckRounded /> : <AssignmentRounded />}
+                              </Avatar>
+                            </Box>
                             <Box sx={{ minWidth: 0 }}>
-                              <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', lineHeight: 1.25 }}>{task.title}</Typography>
-                              <Typography variant="caption" color="primary" sx={{ fontWeight: 850 }}>
+                              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5, flexWrap: 'wrap' }}>
+                                <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', lineHeight: 1.2 }}>
+                                  {task.title}
+                                </Typography>
+                                <Chip label={status.label} size="small" sx={{ bgcolor: status.bg, color: status.color, fontWeight: 900, borderRadius: 1.5 }} />
+                              </Stack>
+                              <Typography variant="caption" color="primary" sx={{ display: 'block', fontWeight: 850 }}>
                                 Assigned by HOD: {task.created_by_name || 'HOD'}
                               </Typography>
+                              <Typography variant="body2" color="text.secondary" sx={{ mt: 1, whiteSpace: 'pre-line' }}>
+                                {task.description || 'No description provided.'}
+                              </Typography>
                             </Box>
-                            <Chip label={status.label} size="small" sx={{ bgcolor: status.bg, color: status.color, fontWeight: 900, borderRadius: 1.5 }} />
                           </Stack>
+                        </Grid>
 
-                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, mb: 2, whiteSpace: 'pre-line' }}>
-                            {task.description}
-                          </Typography>
-
-                          <Grid container spacing={1.5} sx={{ mb: 2 }}>
-                            <Grid item xs={12} sm={6}>
-                              <Stack direction="row" spacing={1} alignItems="center">
-                                <CalendarMonthRounded sx={{ color: '#64748b', fontSize: 18 }} />
-                                <Typography variant="caption" color="text.secondary">Due {formatDate(task.deadline)}</Typography>
-                              </Stack>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                              <Typography variant="caption" color="text.secondary">Parent task: {task.task_title || 'Department assignment'}</Typography>
-                            </Grid>
-                          </Grid>
-
-                          <Box sx={{ mb: 2.25 }}>
+                        <Grid item xs={12} md={4}>
+                          <Stack spacing={1.25}>
+                            <Stack direction="row" spacing={1} alignItems="center" sx={{ color: '#475569' }}>
+                              <CalendarMonthRounded sx={{ fontSize: 18 }} />
+                              <Typography variant="body2" sx={{ fontWeight: 850 }}>
+                                Due {formatDate(task.deadline)}
+                              </Typography>
+                            </Stack>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 800 }}>Parent task</Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 850, color: '#0f172a' }}>{task.task_title || 'Department assignment'}</Typography>
+                            </Box>
                             <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
                               <Typography variant="caption" sx={{ fontWeight: 850, color: '#475569' }}>Work Completion</Typography>
                               <Typography variant="caption" sx={{ fontWeight: 900, color: '#0f172a' }}>{task.progress || 0}%</Typography>
                             </Stack>
                             <LinearProgress variant="determinate" value={task.progress || 0} sx={{ height: 9, borderRadius: 5, bgcolor: '#e6edf5' }} />
-                          </Box>
+                          </Stack>
+                        </Grid>
 
-                          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
+                        <Grid item xs={12} md={3}>
+                          <Stack direction={{ xs: 'column', sm: 'row', md: 'column' }} spacing={1.1} alignItems="stretch">
                             <Button
                               variant="contained"
                               startIcon={<CloudUploadRounded />}
                               onClick={() => handleOpenSubmit(task)}
                               disabled={isLocked}
-                              sx={{ minWidth: 170, fontWeight: 850 }}
+                              sx={{ fontWeight: 850 }}
                             >
                               {task.status === 'SUBMITTED' ? 'Submitted' : task.status === 'APPROVED_HOD' ? 'Approved' : 'Submit Work'}
                             </Button>
@@ -281,14 +330,14 @@ const FacultyDashboard = () => {
                               startIcon={<HistoryRounded />}
                               onClick={() => handleUpdateProgress(task.id, task.progress || 0)}
                               disabled={task.progress === 100 || isLocked}
-                              sx={{ minWidth: 170, fontWeight: 850, bgcolor: '#ffffff' }}
+                              sx={{ fontWeight: 850, bgcolor: '#ffffff' }}
                             >
                               Update Progress
                             </Button>
                           </Stack>
-                        </Box>
-                      </Stack>
-                    </Box>
+                        </Grid>
+                      </Grid>
+                    </Paper>
                   );
                 })}
               </Stack>
