@@ -72,17 +72,25 @@ const LoginPage = () => {
 
   return (
     <Box
-      className="min-h-screen flex flex-col items-center justify-center p-4"
       sx={{
+        minHeight: '100dvh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         bgcolor: '#f4f7fb',
-        py: { xs: 3, sm: 4 },
+        p: { xs: 2, sm: 3 },
         background: 'linear-gradient(135deg, #f8fafc 0%, #eef6ff 48%, #f4f7fb 100%)'
       }}
     >
       <Paper
         elevation={0}
-        className="w-full max-w-[400px] flex flex-col items-center bg-white"
         sx={{
+          width: '100%',
+          maxWidth: 420,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          bgcolor: '#ffffff',
           p: { xs: 3, sm: 4 },
           mx: 'auto',
           borderRadius: 3,
