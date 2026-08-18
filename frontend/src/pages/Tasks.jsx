@@ -708,50 +708,161 @@ const Tasks = () => {
         onClose={() => setSuccessTask(null)}
         taskTitle={successTask?.title}
       />
-      <Dialog open={Boolean(selectedTask)} onClose={() => setSelectedTask(null)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
-        <DialogTitle sx={{ fontWeight: 900 }}>Task Details</DialogTitle>
-        <DialogContent dividers>
+      <Dialog
+        open={Boolean(selectedTask)}
+        onClose={() => setSelectedTask(null)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            overflow: 'hidden',
+            boxShadow: '0 30px 80px -46px rgba(15,23,42,0.55)',
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            p: 0,
+            borderBottom: '1px solid #e2e8f0',
+            bgcolor: '#f8fbff',
+          }}
+        >
+          <Box sx={{ p: { xs: 2.25, md: 3 }, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Avatar sx={{ bgcolor: '#dbeafe', color: '#2563eb', width: 44, height: 44 }}>
+              <AssignmentOutlined />
+            </Avatar>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', lineHeight: 1.2 }}>
+                Task Details
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Review assignment information, timeline, attachments, and faculty progress.
+              </Typography>
+            </Box>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 0, bgcolor: '#f4f7fb' }}>
           {selectedTask && (
-            <Grid container spacing={2.5}>
-              <Grid item xs={12}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} alignItems={{ xs: 'flex-start', sm: 'center' }}>
-                  <Typography variant="h5" sx={{ fontWeight: 900, color: '#0f172a', flex: 1 }}>{selectedTask.title}</Typography>
-                  {getPriorityChip(selectedTask.priority, selectedTask.is_special)}
-                  {getStatusChip(selectedTask.status)}
+            <Box sx={{ p: { xs: 2.25, md: 3 } }}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: { xs: 2, md: 2.5 },
+                  mb: 2.5,
+                  borderRadius: 3,
+                  border: '1px solid #dbe7f5',
+                  bgcolor: '#ffffff',
+                  background: 'linear-gradient(135deg, #ffffff 0%, #f8fbff 100%)',
+                }}
+              >
+                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'stretch', md: 'flex-start' }}>
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography variant="overline" sx={{ color: '#2563eb', fontWeight: 900 }}>
+                      Assignment overview
+                    </Typography>
+                    <Typography variant="h4" sx={{ mt: 0.25, fontWeight: 900, color: '#0f172a', lineHeight: 1.12, fontSize: { xs: '1.55rem', md: '2rem' } }}>
+                      {selectedTask.title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, whiteSpace: 'pre-line', maxWidth: 780 }}>
+                      {selectedTask.description || 'No description provided.'}
+                    </Typography>
+                  </Box>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap justifyContent={{ xs: 'flex-start', md: 'flex-end' }}>
+                    {getPriorityChip(selectedTask.priority, selectedTask.is_special)}
+                    {getStatusChip(selectedTask.status)}
+                  </Stack>
                 </Stack>
+                <Box sx={{ mt: 2.5 }}>
+                  <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 900, color: '#475569' }}>Current Progress</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: 900, color: '#0f172a' }}>{getProgressValue(selectedTask)}%</Typography>
+                  </Stack>
+                  <LinearProgress variant="determinate" value={getProgressValue(selectedTask)} sx={{ height: 9, borderRadius: 999, bgcolor: '#e2e8f0' }} />
+                </Box>
+              </Paper>
+
+              <Grid container spacing={2}>
+                {[
+                  { label: 'Department', value: selectedTask.department_name || 'General' },
+                  { label: 'Assigned By', value: selectedTask.created_by_name || 'Dean' },
+                  { label: 'Start Date', value: selectedTask.start_date ? new Date(selectedTask.start_date).toLocaleString() : 'Not recorded' },
+                  { label: 'Due Date', value: selectedTask.deadline ? new Date(selectedTask.deadline).toLocaleString() : 'Not scheduled' },
+                ].map((item) => (
+                  <Grid item xs={12} sm={6} key={item.label}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        height: '100%',
+                        borderRadius: 2.5,
+                        border: '1px solid #dbe7f5',
+                        bgcolor: '#ffffff',
+                      }}
+                    >
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 900, mb: 0.65 }}>
+                        {item.label}
+                      </Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 900, color: '#0f172a' }}>
+                        {item.value}
+                      </Typography>
+                    </Paper>
+                  </Grid>
+                ))}
               </Grid>
-              <Grid item xs={12}>
-                <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-line' }}>{selectedTask.description}</Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>Department</Typography>
-                <Typography variant="body2" sx={{ fontWeight: 800 }}>{selectedTask.department_name || 'General'}</Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>Assigned By</Typography>
-                <Typography variant="body2" sx={{ fontWeight: 800 }}>{selectedTask.created_by_name || 'Dean'}</Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>Start Date</Typography>
-                <Typography variant="body2" sx={{ fontWeight: 800 }}>{selectedTask.start_date ? new Date(selectedTask.start_date).toLocaleString() : 'N/A'}</Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>Due Date</Typography>
-                <Typography variant="body2" sx={{ fontWeight: 800 }}>{selectedTask.deadline ? new Date(selectedTask.deadline).toLocaleString() : 'N/A'}</Typography>
-              </Grid>
+
               {selectedTask.attachment && (
-                <Grid item xs={12}>
-                  <Button variant="outlined" startIcon={<AttachFileRounded />} href={getFileUrl(selectedTask.attachment)} target="_blank" rel="noreferrer" download>
-                    Open / Download Attachment
+                <Paper
+                  elevation={0}
+                  sx={{
+                    mt: 2,
+                    p: 2,
+                    borderRadius: 2.5,
+                    border: '1px solid #bfdbfe',
+                    bgcolor: '#eff6ff',
+                    display: 'flex',
+                    gap: 1.5,
+                    alignItems: { xs: 'stretch', sm: 'center' },
+                    justifyContent: 'space-between',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                  }}
+                >
+                  <Stack direction="row" spacing={1.25} alignItems="center">
+                    <Avatar sx={{ bgcolor: '#dbeafe', color: '#2563eb' }}>
+                      <AttachFileRounded />
+                    </Avatar>
+                    <Box>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>Attached Document</Typography>
+                      <Typography variant="caption" color="text.secondary">Open or download the supporting file.</Typography>
+                    </Box>
+                  </Stack>
+                  <Button variant="contained" startIcon={<AttachFileRounded />} href={getFileUrl(selectedTask.attachment)} target="_blank" rel="noreferrer" download>
+                    Open / Download
                   </Button>
-                </Grid>
+                </Paper>
               )}
+
               {selectedTask.subtasks?.length > 0 && (
-                <Grid item xs={12}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 900, mb: 1 }}>Faculty Sub-Tasks</Typography>
-                  <Stack spacing={1}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    mt: 2,
+                    p: 2,
+                    borderRadius: 2.5,
+                    border: '1px solid #dbe7f5',
+                    bgcolor: '#ffffff',
+                  }}
+                >
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} sx={{ mb: 1.5 }}>
+                    <Box>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>Faculty Sub-Tasks</Typography>
+                      <Typography variant="body2" color="text.secondary">Assigned faculty work linked to this task.</Typography>
+                    </Box>
+                    <Chip label={`${selectedTask.subtasks.length} total`} sx={{ bgcolor: '#f1f5f9', color: '#475569', fontWeight: 900 }} />
+                  </Stack>
+                  <Stack spacing={1.25}>
                     {selectedTask.subtasks.map((subtask) => (
-                      <Box key={subtask.id} sx={{ p: 1.5, border: '1px solid #e2e8f0', borderRadius: 2, bgcolor: '#f8fafc' }}>
+                      <Box key={subtask.id} sx={{ p: 1.6, border: '1px solid #e2e8f0', borderRadius: 2, bgcolor: '#f8fafc' }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1.5, flexDirection: { xs: 'column', sm: 'row' } }}>
                           <Box>
                             <Typography variant="body2" sx={{ fontWeight: 900 }}>{subtask.title}</Typography>
@@ -768,12 +879,12 @@ const Tasks = () => {
                       </Box>
                     ))}
                   </Stack>
-                </Grid>
+                </Paper>
               )}
-            </Grid>
+            </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 3, gap: 1, flexWrap: 'wrap' }}>
+        <DialogActions sx={{ p: { xs: 2, md: 2.5 }, gap: 1, flexWrap: 'wrap', borderTop: '1px solid #e2e8f0', bgcolor: '#ffffff' }}>
           <Button onClick={() => setSelectedTask(null)} color="inherit">Close</Button>
           {isHod && selectedTask && canStartTask(selectedTask) && (
             <Button variant="outlined" startIcon={<PlayArrowRounded />} disabled={actionLoading} onClick={() => handleStartWork(selectedTask)}>
