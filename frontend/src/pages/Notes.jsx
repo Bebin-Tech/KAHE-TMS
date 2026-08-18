@@ -356,10 +356,29 @@ const Notes = () => {
         }}
       >
         <form onSubmit={handleSave}>
-          <DialogTitle sx={{ fontWeight: 900, px: 2.5, py: 2 }}>
-            {editingNote ? 'Edit Note' : 'Create Note'}
+          <DialogTitle
+            sx={{
+              px: 2.5,
+              py: 2,
+              bgcolor: '#f8fbff',
+              borderBottom: '1px solid #e2e8f0',
+            }}
+          >
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Avatar sx={{ width: 40, height: 40, bgcolor: '#dbeafe', color: '#2563eb' }}>
+                <NotesRounded />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', lineHeight: 1.2 }}>
+                  {editingNote ? 'Edit Note' : 'Create Note'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                  Add dated work, events, or reminders.
+                </Typography>
+              </Box>
+            </Stack>
           </DialogTitle>
-          <DialogContent dividers sx={{ px: 2.5, py: 2 }}>
+          <DialogContent sx={{ px: 2.5, py: 2.25, bgcolor: '#ffffff' }}>
             <Stack spacing={1.6}>
               <TextField
                 label="Date"
@@ -371,7 +390,30 @@ const Notes = () => {
                 InputLabelProps={{ shrink: true }}
                 value={formData.note_date}
                 onChange={(event) => setFormData((current) => ({ ...current, note_date: event.target.value }))}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: '#f8fbff',
+                    fontWeight: 800,
+                  },
+                }}
               />
+              <Box
+                sx={{
+                  px: 1.35,
+                  py: 1,
+                  borderRadius: 2,
+                  bgcolor: '#f0fdfa',
+                  border: '1px solid #ccfbf1',
+                  display: 'flex',
+                  gap: 1,
+                  alignItems: 'center',
+                }}
+              >
+                <NotificationsActiveRounded sx={{ color: '#0f766e', fontSize: 18 }} />
+                <Typography variant="caption" sx={{ color: '#0f766e', fontWeight: 800 }}>
+                  You will be reminded automatically on the selected date.
+                </Typography>
+              </Box>
               <TextField
                 label="Note Content"
                 required
@@ -382,12 +424,25 @@ const Notes = () => {
                 value={formData.content}
                 onChange={(event) => setFormData((current) => ({ ...current, content: event.target.value }))}
                 placeholder="Event, function, important task, or daily work..."
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: '#fbfdff',
+                    alignItems: 'flex-start',
+                  },
+                }}
               />
             </Stack>
           </DialogContent>
-          <DialogActions sx={{ px: 2.5, py: 2, gap: 1 }}>
-            <Button onClick={() => { setDialogOpen(false); setEditingNote(null); }} color="inherit">Cancel</Button>
-            <Button type="submit" variant="contained" disabled={saving}>
+          <DialogActions sx={{ px: 2.5, py: 2, gap: 1.25, bgcolor: '#f8fbff', borderTop: '1px solid #e2e8f0' }}>
+            <Button
+              onClick={() => { setDialogOpen(false); setEditingNote(null); }}
+              variant="outlined"
+              color="inherit"
+              sx={{ bgcolor: '#ffffff', minWidth: 100 }}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" variant="contained" disabled={saving} sx={{ minWidth: 124 }}>
               {saving ? <CircularProgress size={22} color="inherit" /> : editingNote ? 'Update Note' : 'Save Note'}
             </Button>
           </DialogActions>
