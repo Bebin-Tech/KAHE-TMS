@@ -344,20 +344,30 @@ const Notes = () => {
           setDialogOpen(false);
           setEditingNote(null);
         }}
-        maxWidth="sm"
+        maxWidth={false}
         fullWidth
-        PaperProps={{ sx: { borderRadius: '18px' } }}
+        PaperProps={{
+          sx: {
+            width: { xs: 'calc(100vw - 24px)', sm: 620 },
+            maxWidth: 'calc(100vw - 24px)',
+            borderRadius: 3,
+            overflow: 'hidden',
+          },
+        }}
       >
         <form onSubmit={handleSave}>
-          <DialogTitle sx={{ fontWeight: 900 }}>{editingNote ? 'Edit Note' : 'Create Note'}</DialogTitle>
-          <DialogContent dividers>
-            <Stack spacing={2.25} sx={{ pt: 0.5 }}>
+          <DialogTitle sx={{ fontWeight: 900, px: 2.5, py: 2 }}>
+            {editingNote ? 'Edit Note' : 'Create Note'}
+          </DialogTitle>
+          <DialogContent dividers sx={{ px: 2.5, py: 2 }}>
+            <Stack spacing={1.6}>
               <TextField
                 label="Date"
                 type="date"
                 required
                 fullWidth
-                helperText="The app will remind you on this date when you log in or use the system."
+                size="small"
+                helperText="Reminder will appear on this date."
                 InputLabelProps={{ shrink: true }}
                 value={formData.note_date}
                 onChange={(event) => setFormData((current) => ({ ...current, note_date: event.target.value }))}
@@ -367,14 +377,15 @@ const Notes = () => {
                 required
                 fullWidth
                 multiline
-                minRows={6}
+                minRows={4}
+                maxRows={6}
                 value={formData.content}
                 onChange={(event) => setFormData((current) => ({ ...current, content: event.target.value }))}
-                placeholder="Example: Department event, function preparation, important follow-up, or daily work routine..."
+                placeholder="Event, function, important task, or daily work..."
               />
             </Stack>
           </DialogContent>
-          <DialogActions sx={{ p: 2.5 }}>
+          <DialogActions sx={{ px: 2.5, py: 2, gap: 1 }}>
             <Button onClick={() => { setDialogOpen(false); setEditingNote(null); }} color="inherit">Cancel</Button>
             <Button type="submit" variant="contained" disabled={saving}>
               {saving ? <CircularProgress size={22} color="inherit" /> : editingNote ? 'Update Note' : 'Save Note'}
