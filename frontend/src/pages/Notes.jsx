@@ -5,6 +5,7 @@ import {
   Avatar,
   Box,
   Button,
+  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -24,6 +25,7 @@ import {
   CalendarMonthRounded,
   DeleteRounded,
   EditRounded,
+  NotificationsActiveRounded,
   NotesRounded,
   VisibilityRounded,
 } from '@mui/icons-material';
@@ -32,6 +34,8 @@ import { getCurrentSession, getStoredSession, setActiveRole } from '../utils/ses
 import { formatApiError } from '../utils/errors';
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+const isTodayNote = (note) => note.note_date === today();
 
 const formatDate = (value) => {
   if (!value) return 'No date';
@@ -76,6 +80,7 @@ const Notes = () => {
   const canEdit = currentRole === 'ADMIN' || Boolean(notesPermission?.can_edit);
   const canCreate = canEdit;
   const canDelete = currentRole === 'ADMIN' || Boolean(notesPermission?.can_delete);
+  const dueTodayCount = notes.filter(isTodayNote).length;
 
   const showMessage = (message, severity = 'success') => {
     setNotification({ open: true, severity, message });
@@ -210,19 +215,31 @@ const Notes = () => {
               Notes
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Save dated notes, review them later, and remove anything you no longer need.
+              Save events, functions, important tasks, and daily work by date. Notes scheduled for today will automatically remind you in the app.
             </Typography>
           </Box>
-          {canCreate && (
-            <Button
-              variant="contained"
-              startIcon={<AddRounded />}
-              onClick={handleOpenCreate}
-              sx={{ alignSelf: { xs: 'stretch', md: 'center' }, minWidth: 160 }}
-            >
-              Create Note
-            </Button>
-          )}
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} alignItems={{ xs: 'stretch', sm: 'center' }}>
+            <Chip
+              icon={<NotificationsActiveRounded />}
+              label={`${dueTodayCount} due today`}
+              sx={{
+                bgcolor: dueTodayCount ? '#ccfbf1' : '#f1f5f9',
+                color: dueTodayCount ? '#0f766e' : '#64748b',
+                fontWeight: 900,
+                justifyContent: 'center',
+              }}
+            />
+            {canCreate && (
+              <Button
+                variant="contained"
+                startIcon={<AddRounded />}
+                onClick={handleOpenCreate}
+                sx={{ alignSelf: { xs: 'stretch', md: 'center' }, minWidth: 160 }}
+              >
+                Create Note
+              </Button>
+            )}
+          </Stack>
         </Stack>
       </Paper>
 
@@ -238,15 +255,17 @@ const Notes = () => {
         </Paper>
       ) : (
         <Grid container spacing={2.5}>
-          {notes.map((note) => (
+          {notes.map((note) => {
+            const dueToday = isTodayNote(note);
+            return (
             <Grid item xs={12} md={6} lg={4} key={note.id}>
               <Paper
                 sx={{
                   height: '100%',
                   p: 2.25,
                   borderRadius: 2,
-                  border: '1px solid #d8e3f0',
-                  bgcolor: '#ffffff',
+                  border: dueToday ? '1px solid #5eead4' : '1px solid #d8e3f0',
+                  bgcolor: dueToday ? '#f0fdfa' : '#ffffff',
                   cursor: 'pointer',
                   boxShadow: '0 18px 48px -42px rgba(15,23,42,0.5)',
                   '&:hover': { borderColor: '#9cc7fb', bgcolor: '#f8fbff' },
@@ -254,13 +273,22 @@ const Notes = () => {
                 onClick={() => setSelectedNote(note)}
               >
                 <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                  <Avatar sx={{ bgcolor: '#eaf3ff', color: '#237dba' }}>
-                    <CalendarMonthRounded />
+                  <Avatar sx={{ bgcolor: dueToday ? '#ccfbf1' : '#eaf3ff', color: dueToday ? '#0f766e' : '#237dba' }}>
+                    {dueToday ? <NotificationsActiveRounded /> : <CalendarMonthRounded />}
                   </Avatar>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#0f172a' }}>
-                      {formatDate(note.note_date)}
-                    </Typography>
+                    <Stack direction="row" spacing={1} alignItems="center" sx={{ flexWrap: 'wrap' }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#0f172a' }}>
+                        {formatDate(note.note_date)}
+                      </Typography>
+                      {dueToday && (
+                        <Chip
+                          label="Reminder today"
+                          size="small"
+                          sx={{ bgcolor: '#ccfbf1', color: '#0f766e', fontWeight: 900, borderRadius: 1.5 }}
+                        />
+                      )}
+                    </Stack>
                     {currentRole === 'ADMIN' && (
                       <Typography variant="caption" color="text.secondary">
                         Created by {note.created_by_name || 'User'}
@@ -305,7 +333,8 @@ const Notes = () => {
                 </Stack>
               </Paper>
             </Grid>
-          ))}
+            );
+          })}
         </Grid>
       )}
 
@@ -328,6 +357,7 @@ const Notes = () => {
                 type="date"
                 required
                 fullWidth
+                helperText="The app will remind you on this date when you log in or use the system."
                 InputLabelProps={{ shrink: true }}
                 value={formData.note_date}
                 onChange={(event) => setFormData((current) => ({ ...current, note_date: event.target.value }))}
@@ -340,7 +370,7 @@ const Notes = () => {
                 minRows={6}
                 value={formData.content}
                 onChange={(event) => setFormData((current) => ({ ...current, content: event.target.value }))}
-                placeholder="Type the note details here..."
+                placeholder="Example: Department event, function preparation, important follow-up, or daily work routine..."
               />
             </Stack>
           </DialogContent>

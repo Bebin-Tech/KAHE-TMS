@@ -26,6 +26,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { clearRoleSession, getCurrentSession, setActiveRole, setRouteRole } from '../utils/session';
 import api from '../api/axios';
+import NoteReminder from './NoteReminder';
 
 const drawerWidth = 292;
 const permissionCachePrefix = 'tms_module_permissions';
@@ -525,6 +526,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
         >
           {children}
         </Box>
+        {!hideSidebar && <NoteReminder />}
       </Box>
     </Box>
   );

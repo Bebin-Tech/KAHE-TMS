@@ -949,6 +949,18 @@ class NoteViewSet(viewsets.ModelViewSet):
             return self.queryset
         return self.queryset.filter(created_by=user)
 
+    @action(detail=False, methods=['get'], url_path='due-today')
+    def due_today(self, request):
+        if not has_module_permission(request.user, 'notes', 'can_access', 'can_view'):
+            return Response([], status=status.HTTP_200_OK)
+
+        queryset = self.queryset.filter(
+            created_by=request.user,
+            note_date=timezone.localdate()
+        ).order_by('-updated_at', '-id')
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def create(self, request, *args, **kwargs):
         if not has_module_permission(request.user, 'notes', 'can_edit'):
             return Response({'error': 'Edit access is required to create notes.'}, status=status.HTTP_403_FORBIDDEN)
