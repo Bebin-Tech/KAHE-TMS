@@ -1001,16 +1001,54 @@ const Tasks = () => {
           }}
         />
       )}
-      <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
-        <DialogTitle sx={{ fontWeight: 800 }}>Delete Task</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary">
-            {`Delete "${deleteTarget?.title || 'this task'}"? It will no longer appear in active task lists.`}
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            overflow: 'hidden',
+            boxShadow: '0 28px 76px -46px rgba(15,23,42,0.62)',
+          },
+        }}
+      >
+        <DialogTitle sx={{ p: 0 }}>
+          <Box sx={{ p: 2.5, display: 'flex', gap: 1.5, alignItems: 'center', bgcolor: '#fff7f7', borderBottom: '1px solid #fee2e2' }}>
+            <Avatar sx={{ bgcolor: '#fee2e2', color: '#dc2626', width: 46, height: 46 }}>
+              <ErrorOutlineRounded />
+            </Avatar>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', lineHeight: 1.2 }}>
+                Delete Task
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                This action removes the task from active lists.
+              </Typography>
+            </Box>
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ p: 2.5, bgcolor: '#ffffff' }}>
+          <Paper elevation={0} sx={{ p: 1.75, borderRadius: 2, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 900, mb: 0.5 }}>
+              Task
+            </Typography>
+            <Typography variant="subtitle1" sx={{ fontWeight: 900, color: '#0f172a', overflowWrap: 'anywhere' }}>
+              {deleteTarget?.title || 'This task'}
+            </Typography>
+          </Paper>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1.75 }}>
+            Are you sure you want to delete this task? It will no longer appear for assigned users.
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setDeleteTarget(null)} color="inherit">Cancel</Button>
-          <Button onClick={handleDelete} color="error" variant="contained">Delete</Button>
+        <DialogActions sx={{ px: 2.5, py: 2, gap: 1.25, bgcolor: '#f8fbff', borderTop: '1px solid #e2e8f0' }}>
+          <Button onClick={() => setDeleteTarget(null)} variant="outlined" color="inherit" sx={{ bgcolor: '#ffffff', minWidth: 104 }}>
+            Cancel
+          </Button>
+          <Button onClick={handleDelete} color="error" variant="contained" startIcon={<DeleteRounded />} sx={{ minWidth: 112 }}>
+            Delete
+          </Button>
         </DialogActions>
       </Dialog>
       <Snackbar

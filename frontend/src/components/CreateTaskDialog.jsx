@@ -234,23 +234,54 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: '16px' } }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth={false}
+      fullWidth
+      PaperProps={{
+        sx: {
+          width: { xs: 'calc(100vw - 24px)', md: 820 },
+          maxWidth: 'calc(100vw - 24px)',
+          borderRadius: 3,
+          overflow: 'hidden',
+        },
+      }}
+    >
       <form onSubmit={handleSubmit}>
-        <DialogTitle sx={{ fontWeight: 800, fontSize: '1.5rem', color: 'primary.main', pb: 1 }}>
-          {task ? 'Edit Task Assignment' : 'Create New Task Assignment'}
+        <DialogTitle sx={{ px: 2.5, py: 2, bgcolor: '#f8fbff', borderBottom: '1px solid #e2e8f0' }}>
+          <Typography variant="h6" sx={{ fontWeight: 900, color: '#1d4ed8', lineHeight: 1.2 }}>
+            {task ? 'Edit Task Assignment' : 'Create Task'}
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+            Add assignment details, owner, dates, priority, and optional files.
+          </Typography>
         </DialogTitle>
-        <DialogContent dividers sx={{ pt: 3 }}>
-          {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+        <DialogContent
+          dividers
+          sx={{
+            px: 2.5,
+            py: 2,
+            maxHeight: 'calc(100dvh - 190px)',
+            bgcolor: '#ffffff',
+            '& .MuiFormHelperText-root': {
+              mx: 0,
+              mt: 0.5,
+              fontSize: '0.72rem',
+            },
+          }}
+        >
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
           {isHodCreate && !currentUser?.department && (
-            <Alert severity="warning" sx={{ mb: 3 }}>
+            <Alert severity="warning" sx={{ mb: 2 }}>
               Your HOD account is not linked to a department. Please ask Admin to assign your department before creating Faculty tasks.
             </Alert>
           )}
 
-          <Grid container spacing={3}>
+          <Grid container spacing={2}>
             <Grid item xs={12}>
               <TextField
-                fullWidth label="Task Name" required
+                fullWidth label="Task Name" required size="small"
                 value={formData.title}
                 onChange={(e) => setFormData({...formData, title: e.target.value})}
                 placeholder="Enter a descriptive task name"
@@ -259,7 +290,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
 
             <Grid item xs={12}>
               <TextField
-                fullWidth label="Task Description" multiline rows={4} required
+                fullWidth label="Task Description" multiline rows={2} required size="small"
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
                 placeholder="Describe the task requirements in detail"
@@ -269,7 +300,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
             {isHodCreate ? (
               <Grid item xs={12} sm={6}>
                 <TextField
-                  select fullWidth label="Assign to Faculty" required
+                  select fullWidth label="Assign to Faculty" required size="small"
                   value={formData.assigned_to_faculty}
                   onChange={(e) => setFormData({...formData, assigned_to_faculty: e.target.value})}
                   disabled={!currentUser?.department || fetchingData}
@@ -294,17 +325,21 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
               <>
                 {canCreateGroupTask && (
                   <Grid item xs={12}>
-                    <FormControlLabel
-                      control={
-                        <Checkbox
-                          checked={isGroupTask}
-                          onChange={(event) => handleGroupTaskChange(event.target.checked)}
-                        />
-                      }
-                      label="Group Task"
-                    />
+                    <Box sx={{ px: 1.25, py: 0.75, border: '1px solid #dbe7f5', borderRadius: 2, bgcolor: isGroupTask ? '#eff6ff' : '#f8fbff' }}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            size="small"
+                            checked={isGroupTask}
+                            onChange={(event) => handleGroupTaskChange(event.target.checked)}
+                          />
+                        }
+                        label="Group Task"
+                        sx={{ m: 0, '& .MuiFormControlLabel-label': { fontWeight: 800 } }}
+                      />
+                    </Box>
                     {isGroupTask && (
-                      <Alert severity="info" sx={{ mt: 1 }}>
+                      <Alert severity="info" sx={{ mt: 1, py: 0.5 }}>
                         This task will be assigned to every active Department HOD at once.
                       </Alert>
                     )}
@@ -315,7 +350,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
                   <>
                 <Grid item xs={12} sm={6}>
                   <TextField
-                    select fullWidth label="Department" required
+                    select fullWidth label="Department" required size="small"
                     value={formData.department}
                     onChange={(e) => handleDepartmentChange(e.target.value)}
                     disabled={fetchingData}
@@ -328,7 +363,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
 
                 <Grid item xs={12} sm={6}>
                   <TextField
-                    select fullWidth label="Assign to HOD" required
+                    select fullWidth label="Assign to HOD" required size="small"
                     value={formData.assigned_to_hod}
                     onChange={(e) => setFormData({...formData, assigned_to_hod: e.target.value})}
                     disabled={!formData.department || fetchingData}
@@ -354,7 +389,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
 
             <Grid item xs={12} sm={6}>
               <TextField
-                fullWidth label="Start Date" type="datetime-local" required
+                fullWidth label="Start Date" type="datetime-local" required size="small"
                 InputLabelProps={{ shrink: true }}
                 value={formData.start_date}
                 onChange={(e) => setFormData({...formData, start_date: e.target.value})}
@@ -363,7 +398,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
 
             <Grid item xs={12} sm={6}>
               <TextField
-                fullWidth label="Due Date" type="datetime-local" required
+                fullWidth label="Due Date" type="datetime-local" required size="small"
                 InputLabelProps={{ shrink: true }}
                 value={formData.deadline}
                 onChange={(e) => setFormData({...formData, deadline: e.target.value})}
@@ -373,7 +408,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
             {task && (
             <Grid item xs={12} sm={4}>
               <TextField
-                select fullWidth label="Task Status"
+                select fullWidth label="Task Status" size="small"
                 value={formData.status}
                 onChange={(e) => setFormData({...formData, status: e.target.value})}
               >
@@ -389,7 +424,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
 
             <Grid item xs={12} sm={task ? 4 : 6}>
               <TextField
-                select fullWidth label="Priority"
+                select fullWidth label="Priority" size="small"
                 value={formData.priority}
                 onChange={(e) => setFormData({...formData, priority: e.target.value})}
               >
@@ -401,15 +436,19 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
             </Grid>
 
             <Grid item xs={12} sm={task ? 4 : 6} sx={{ display: 'flex', alignItems: 'center' }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.is_special}
-                    onChange={(e) => setFormData({...formData, is_special: e.target.checked})}
-                  />
-                }
-                label="Special Task"
-              />
+              <Box sx={{ width: '100%', px: 1.25, py: 0.75, border: '1px solid #dbe7f5', borderRadius: 2, bgcolor: formData.is_special ? '#fff8d9' : '#f8fbff' }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={formData.is_special}
+                      onChange={(e) => setFormData({...formData, is_special: e.target.checked})}
+                    />
+                  }
+                  label="Special Task"
+                  sx={{ m: 0, '& .MuiFormControlLabel-label': { fontWeight: 800 } }}
+                />
+              </Box>
             </Grid>
 
             <Grid item xs={12}>
@@ -423,7 +462,7 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
               <label htmlFor="task-attachment-upload">
                 <Box
                   sx={{
-                    p: 2.5,
+                    p: 1.5,
                     border: '1.5px dashed #b7d5fb',
                     borderRadius: 2,
                     bgcolor: '#f8fafc',
@@ -445,11 +484,11 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
                         {attachment ? attachment.name : 'Upload supporting file'}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        PDFs, images, documents, spreadsheets, presentations, text, or ZIP files
+                        PDF, image, document, spreadsheet, presentation, text, or ZIP
                       </Typography>
                     </Box>
                   </Box>
-                  <Button component="span" variant="outlined" startIcon={<AttachFileRounded />}>
+                  <Button component="span" variant="outlined" size="small" startIcon={<AttachFileRounded />}>
                     Choose File
                   </Button>
                 </Box>
@@ -462,13 +501,13 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions sx={{ p: 3, bgcolor: '#f8fafc' }}>
-          <Button onClick={onClose} color="inherit" sx={{ fontWeight: 700 }}>Cancel</Button>
+        <DialogActions sx={{ px: 2.5, py: 1.75, bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0', gap: 1 }}>
+          <Button onClick={onClose} variant="outlined" color="inherit" sx={{ bgcolor: '#ffffff', fontWeight: 800, minWidth: 100 }}>Cancel</Button>
           <Button
             type="submit"
             variant="contained"
             disabled={loading || fetchingData || (isHodCreate && (!currentUser?.department || !formData.assigned_to_faculty))}
-            sx={{ px: 4, py: 1.2, borderRadius: '12px', fontWeight: 700, textTransform: 'none' }}
+            sx={{ px: 2.5, minWidth: 128, fontWeight: 850, textTransform: 'none' }}
           >
             {loading ? <CircularProgress size={24} color="inherit" /> : (task ? 'Update Task' : 'Create Task')}
           </Button>
