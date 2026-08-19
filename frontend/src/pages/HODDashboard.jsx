@@ -26,6 +26,7 @@ import {
 } from '@mui/icons-material';
 import api from '../api/axios';
 import { formatApiError } from '../utils/errors';
+import { getCurrentSession } from '../utils/session';
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/';
 const fileBaseUrl = apiBaseUrl.replace(/\/api\/?$/, '');
@@ -102,6 +103,7 @@ const getFileUrl = (path) => {
 };
 
 const HODDashboard = () => {
+  const currentUser = getCurrentSession()?.session?.user || {};
   const [tasks, setTasks] = useState([]);
   const [subtasks, setSubtasks] = useState([]);
   const [stats, setStats] = useState({ assigned: 0, pendingReview: 0, teamPerformance: '92%' });
@@ -214,22 +216,49 @@ const HODDashboard = () => {
   };
 
   const activeSubtasks = subtasks.filter((subtask) => !['APPROVED_HOD', 'COMPLETED'].includes(subtask.status)).length;
+  const readyForDean = tasks.filter((task) => canSubmitToDean(task)).length;
+  const departmentName = currentUser.department_name
+    || tasks.find((task) => task.department_name)?.department_name
+    || subtasks.find((subtask) => subtask.department_name)?.department_name
+    || 'your department';
 
-  const StatCard = ({ title, value, icon, color }) => (
-    <Card sx={{ borderRadius: 2, overflow: 'hidden', height: '100%', boxShadow: '0 16px 38px -32px rgba(30,30,44,0.5)' }}>
-      <CardContent sx={{ p: 2.5, display: 'flex', alignItems: 'center' }}>
+  const StatCard = ({ title, value, helper, icon, color }) => (
+    <Card
+      sx={{
+        borderRadius: 2.5,
+        overflow: 'hidden',
+        height: '100%',
+        border: '1px solid #dbe5ef',
+        boxShadow: '0 18px 42px -36px rgba(30,30,44,0.5)',
+        transition: 'transform 180ms ease, box-shadow 180ms ease',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          boxShadow: '0 22px 52px -38px rgba(30,30,44,0.65)',
+        },
+      }}
+    >
+      <CardContent sx={{ p: 2.25, display: 'flex', alignItems: 'center', gap: 1.75 }}>
         <Box sx={{
-          p: 1.5, borderRadius: 2,
-          bgcolor: `${color}15`, color: color, mr: 2
+          width: 52,
+          height: 52,
+          borderRadius: 2,
+          bgcolor: `${color}15`,
+          color,
+          display: 'grid',
+          placeItems: 'center',
+          flexShrink: 0,
         }}>
           {icon}
         </Box>
-        <Box>
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 850, textTransform: 'uppercase', letterSpacing: 0.4 }}>
             {title}
           </Typography>
-          <Typography variant="h5" sx={{ fontWeight: 800 }}>
+          <Typography variant="h4" sx={{ fontWeight: 900, lineHeight: 1.05, mt: 0.25 }}>
             {value}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 650 }}>
+            {helper}
           </Typography>
         </Box>
       </CardContent>
@@ -238,30 +267,78 @@ const HODDashboard = () => {
 
   return (
     <DashboardLayout title="Department Overview">
-      <Paper elevation={0} sx={{ mb: 3, p: { xs: 2.5, md: 3 }, borderRadius: 2, border: '1px solid #dbe5ef', bgcolor: '#ffffff' }}>
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems={{ xs: 'stretch', md: 'center' }} justifyContent="space-between">
-          <Box>
-            <Typography variant="overline" sx={{ color: '#1f7f79', fontWeight: 900 }}>HOD command center</Typography>
-            <Typography variant="h4" sx={{ mb: 1, fontWeight: 900, fontSize: { xs: '1.5rem', sm: '2rem' } }}>
-              Department task control
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Assign faculty work, validate submissions, and prepare completed tasks for Dean review.
-            </Typography>
-          </Box>
-          <Chip label={`${stats.pendingReview} pending reviews`} sx={{ alignSelf: { xs: 'flex-start', md: 'center' }, bgcolor: '#fff8d9', color: '#8a6f00', fontWeight: 900 }} />
-        </Stack>
+      <Paper
+        elevation={0}
+        sx={{
+          mb: 3,
+          p: { xs: 2.5, sm: 3, md: 4 },
+          minHeight: { xs: 185, md: 235 },
+          borderRadius: 3,
+          border: '1px solid #b7d5fb',
+          bgcolor: '#eaf3ff',
+          background: 'linear-gradient(135deg, #eaf3ff 0%, #f8fbff 55%, #dbeeff 100%)',
+          position: 'relative',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 24px 62px -42px rgba(35,125,186,0.58), inset 0 1px 0 rgba(255,255,255,0.9)',
+        }}
+      >
+        <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 980, mx: 'auto', textAlign: 'center' }}>
+          <Typography variant="overline" sx={{ color: '#1f7f79', fontWeight: 900, letterSpacing: 1.4 }}>
+            HOD command center
+          </Typography>
+          <Typography
+            variant="h3"
+            sx={{ mt: 0.5, mb: 1.25, fontSize: { xs: '1.7rem', sm: '2.25rem', md: '2.75rem' }, lineHeight: 1.08, fontWeight: 900, color: '#0f172a' }}
+          >
+            Department task control
+          </Typography>
+          <Typography variant="body1" sx={{ color: '#42546b', fontWeight: 750 }}>
+            Assign faculty work, validate submissions, and prepare completed tasks for Dean review.
+          </Typography>
+        </Box>
+        <Box sx={{ display: { xs: 'none', sm: 'block' }, position: 'absolute', right: -58, bottom: -76, width: 250, height: 250, border: '38px solid rgba(59,143,243,0.22)', borderRadius: '50%' }} />
+        <Box sx={{ display: { xs: 'none', md: 'block' }, position: 'absolute', right: 84, top: 32, width: 96, height: 96, border: '18px solid rgba(52,177,170,0.22)', borderRadius: '50%' }} />
       </Paper>
 
       <Grid container spacing={2.5} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={4}>
-          <StatCard title="Assigned Tasks" value={stats.assigned} icon={<AssignmentRounded />} color="#2563eb" />
+        <Grid item xs={12} sm={6} lg={3}>
+          <StatCard
+            title="Dean assignments"
+            value={stats.assigned}
+            helper={`Routed to ${departmentName}`}
+            icon={<AssignmentRounded />}
+            color="#2563eb"
+          />
         </Grid>
-        <Grid item xs={12} md={4}>
-          <StatCard title="Sub-Tasks Active" value={activeSubtasks} icon={<GroupWorkRounded />} color="#0f172a" />
+        <Grid item xs={12} sm={6} lg={3}>
+          <StatCard
+            title="Faculty work"
+            value={activeSubtasks}
+            helper="Subtasks currently with faculty"
+            icon={<GroupWorkRounded />}
+            color="#0f172a"
+          />
         </Grid>
-        <Grid item xs={12} md={4}>
-          <StatCard title="Pending Review" value={stats.pendingReview} icon={<FactCheckRounded />} color="#34B1AA" />
+        <Grid item xs={12} sm={6} lg={3}>
+          <StatCard
+            title="To review"
+            value={stats.pendingReview}
+            helper="Faculty submissions waiting"
+            icon={<RateReviewRounded />}
+            color="#b45309"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} lg={3}>
+          <StatCard
+            title="Ready for Dean"
+            value={readyForDean}
+            helper="Verified work ready to submit"
+            icon={<FactCheckRounded />}
+            color="#34B1AA"
+          />
         </Grid>
       </Grid>
 
