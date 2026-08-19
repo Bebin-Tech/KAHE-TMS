@@ -84,15 +84,8 @@ const CreateTaskDialog = ({ open, onClose, onTaskCreated, task = null }) => {
     setFetchingData(true);
     try {
       const response = await api.get(`users/hods/?department=${deptId}`);
-      if (response.data.length > 0) {
-        setUsers(response.data);
-        setShowingAllHods(false);
-        return;
-      }
-
-      const fallbackResponse = await api.get('users/hods/');
-      setUsers(fallbackResponse.data);
-      setShowingAllHods(fallbackResponse.data.length > 0);
+      setUsers(response.data || []);
+      setShowingAllHods(false);
     } catch (err) {
       setUsers([]);
       setShowingAllHods(false);
