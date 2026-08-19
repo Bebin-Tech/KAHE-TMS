@@ -151,8 +151,8 @@ const AdminDashboard = () => {
           <Grid item xs={12}>
             <Paper
               sx={{
-                p: { xs: 2.25, sm: 3, md: 4 },
-                minHeight: { xs: 190, sm: 230, md: 290 },
+                p: { xs: 2, sm: 2.75, md: 3.25 },
+                minHeight: { xs: 165, sm: 205, md: 245 },
                 borderRadius: 3,
                 border: '1px solid #b7d5fb',
                 color: '#122033',
@@ -174,8 +174,8 @@ const AdminDashboard = () => {
                   Real-time academic task coordination and reporting
                 </Typography>
               </Box>
-              <Box sx={{ display: { xs: 'none', sm: 'block' }, position: 'absolute', right: -70, bottom: -90, width: 300, height: 300, border: '44px solid rgba(59,143,243,0.22)', borderRadius: '50%' }} />
-              <Box sx={{ display: { xs: 'none', md: 'block' }, position: 'absolute', right: 92, top: 36, width: 116, height: 116, border: '22px solid rgba(52,177,170,0.22)', borderRadius: '50%' }} />
+              <Box sx={{ display: { xs: 'none', sm: 'block' }, position: 'absolute', right: -58, bottom: -76, width: 250, height: 250, border: '38px solid rgba(59,143,243,0.22)', borderRadius: '50%' }} />
+              <Box sx={{ display: { xs: 'none', md: 'block' }, position: 'absolute', right: 84, top: 32, width: 96, height: 96, border: '18px solid rgba(52,177,170,0.22)', borderRadius: '50%' }} />
             </Paper>
           </Grid>
         </Grid>
