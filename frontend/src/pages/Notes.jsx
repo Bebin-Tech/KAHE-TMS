@@ -383,23 +383,31 @@ const Notes = () => {
           </DialogTitle>
           <DialogContent sx={{ px: 2.5, py: 2.25, bgcolor: '#ffffff' }}>
             <Stack spacing={1.6}>
-              <TextField
-                label="Date"
-                type="date"
-                required
-                fullWidth
-                size="small"
-                helperText="Select a date for this note."
-                InputLabelProps={{ shrink: true }}
-                value={formData.note_date}
-                onChange={(event) => setFormData((current) => ({ ...current, note_date: event.target.value }))}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    bgcolor: '#f8fbff',
-                    fontWeight: 800,
-                  },
-                }}
-              />
+              <Box>
+                <Typography variant="caption" sx={{ display: 'block', mb: 0.75, color: '#475569', fontWeight: 900 }}>
+                  Date *
+                </Typography>
+                <TextField
+                  type="date"
+                  required
+                  fullWidth
+                  size="small"
+                  helperText="Select a date for this note."
+                  value={formData.note_date}
+                  onChange={(event) => setFormData((current) => ({ ...current, note_date: event.target.value }))}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: '#f8fbff',
+                      fontWeight: 800,
+                    },
+                    '& input': {
+                      minWidth: 0,
+                      fontWeight: 900,
+                      letterSpacing: 0,
+                    },
+                  }}
+                />
+              </Box>
               <FormControlLabel
                 control={(
                   <Checkbox
