@@ -5,12 +5,14 @@ import {
   Avatar,
   Box,
   Button,
+  Checkbox,
   Chip,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   Grid,
   IconButton,
   Paper,
@@ -35,7 +37,7 @@ import { formatApiError } from '../utils/errors';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-const isTodayNote = (note) => note.note_date === today();
+const isTodayAlert = (note) => note.note_date === today() && Boolean(note.reminder_enabled);
 
 const formatDate = (value) => {
   if (!value) return 'No date';
@@ -68,7 +70,7 @@ const Notes = () => {
   const [editingNote, setEditingNote] = useState(null);
   const [selectedNote, setSelectedNote] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [formData, setFormData] = useState({ note_date: today(), content: '' });
+  const [formData, setFormData] = useState({ note_date: today(), content: '', reminder_enabled: false });
   const [saving, setSaving] = useState(false);
   const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
 
@@ -80,7 +82,7 @@ const Notes = () => {
   const canEdit = currentRole === 'ADMIN' || Boolean(notesPermission?.can_edit);
   const canCreate = canEdit;
   const canDelete = currentRole === 'ADMIN' || Boolean(notesPermission?.can_delete);
-  const dueTodayCount = notes.filter(isTodayNote).length;
+  const dueTodayCount = notes.filter(isTodayAlert).length;
 
   const showMessage = (message, severity = 'success') => {
     setNotification({ open: true, severity, message });
@@ -122,7 +124,7 @@ const Notes = () => {
 
   const handleOpenCreate = () => {
     setEditingNote(null);
-    setFormData({ note_date: today(), content: '' });
+    setFormData({ note_date: today(), content: '', reminder_enabled: false });
     setDialogOpen(true);
   };
 
@@ -131,6 +133,7 @@ const Notes = () => {
     setFormData({
       note_date: note.note_date || today(),
       content: note.content || '',
+      reminder_enabled: Boolean(note.reminder_enabled),
     });
     setSelectedNote(null);
     setDialogOpen(true);
@@ -215,13 +218,13 @@ const Notes = () => {
               Notes
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Save events, functions, important tasks, and daily work by date. Notes scheduled for today will automatically remind you in the app.
+              Save events, functions, important tasks, and daily work by date. Turn on the alert only for notes that need a reminder.
             </Typography>
           </Box>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} alignItems={{ xs: 'stretch', sm: 'center' }}>
             <Chip
               icon={<NotificationsActiveRounded />}
-              label={`${dueTodayCount} due today`}
+              label={`${dueTodayCount} alert${dueTodayCount === 1 ? '' : 's'} today`}
               sx={{
                 bgcolor: dueTodayCount ? '#ccfbf1' : '#f1f5f9',
                 color: dueTodayCount ? '#0f766e' : '#64748b',
@@ -256,7 +259,7 @@ const Notes = () => {
       ) : (
         <Grid container spacing={2.5}>
           {notes.map((note) => {
-            const dueToday = isTodayNote(note);
+            const dueToday = isTodayAlert(note);
             return (
             <Grid item xs={12} md={6} lg={4} key={note.id}>
               <Paper
@@ -283,7 +286,7 @@ const Notes = () => {
                       </Typography>
                       {dueToday && (
                         <Chip
-                          label="Reminder today"
+                          label="Alert today"
                           size="small"
                           sx={{ bgcolor: '#ccfbf1', color: '#0f766e', fontWeight: 900, borderRadius: 1.5 }}
                         />
@@ -373,7 +376,7 @@ const Notes = () => {
                   {editingNote ? 'Edit Note' : 'Create Note'}
                 </Typography>
                 <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                  Add dated work, events, or reminders.
+                  Add dated work, events, or optional alerts.
                 </Typography>
               </Box>
             </Stack>
@@ -386,7 +389,7 @@ const Notes = () => {
                 required
                 fullWidth
                 size="small"
-                helperText="Reminder will appear on this date."
+                helperText="Select a date for this note."
                 InputLabelProps={{ shrink: true }}
                 value={formData.note_date}
                 onChange={(event) => setFormData((current) => ({ ...current, note_date: event.target.value }))}
@@ -397,7 +400,29 @@ const Notes = () => {
                   },
                 }}
               />
-              <Box
+              <FormControlLabel
+                control={(
+                  <Checkbox
+                    checked={Boolean(formData.reminder_enabled)}
+                    onChange={(event) => setFormData((current) => ({ ...current, reminder_enabled: event.target.checked }))}
+                  />
+                )}
+                label="Enable alert for this note"
+                sx={{
+                  m: 0,
+                  px: 1.2,
+                  py: 0.5,
+                  borderRadius: 2,
+                  border: '1px solid #dbe7f5',
+                  bgcolor: formData.reminder_enabled ? '#f0fdfa' : '#f8fbff',
+                  '& .MuiFormControlLabel-label': {
+                    fontWeight: 850,
+                    color: formData.reminder_enabled ? '#0f766e' : '#475569',
+                  },
+                }}
+              />
+              {formData.reminder_enabled && (
+                <Box
                 sx={{
                   px: 1.35,
                   py: 1,
@@ -411,9 +436,10 @@ const Notes = () => {
               >
                 <NotificationsActiveRounded sx={{ color: '#0f766e', fontSize: 18 }} />
                 <Typography variant="caption" sx={{ color: '#0f766e', fontWeight: 800 }}>
-                  You will be reminded automatically on the selected date.
+                  Alert will appear on the selected date.
                 </Typography>
               </Box>
+              )}
               <TextField
                 label="Note Content"
                 required
@@ -449,34 +475,88 @@ const Notes = () => {
         </form>
       </Dialog>
 
-      <Dialog open={Boolean(selectedNote)} onClose={() => setSelectedNote(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '18px' } }}>
-        <DialogTitle sx={{ fontWeight: 900 }}>Note Details</DialogTitle>
-        <DialogContent dividers>
+      <Dialog
+        open={Boolean(selectedNote)}
+        onClose={() => setSelectedNote(null)}
+        maxWidth={false}
+        fullWidth
+        PaperProps={{
+          sx: {
+            width: { xs: 'calc(100vw - 24px)', sm: 620 },
+            maxWidth: 'calc(100vw - 24px)',
+            borderRadius: 3,
+            overflow: 'hidden',
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            px: 2.5,
+            py: 2,
+            bgcolor: '#f8fbff',
+            borderBottom: '1px solid #e2e8f0',
+          }}
+        >
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Avatar sx={{ width: 40, height: 40, bgcolor: '#dbeafe', color: '#2563eb' }}>
+              <NotesRounded />
+            </Avatar>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', lineHeight: 1.2 }}>
+                Note Details
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                Review the saved reminder note.
+              </Typography>
+            </Box>
+          </Stack>
+        </DialogTitle>
+        <DialogContent sx={{ px: 2.5, py: 2.25, bgcolor: '#ffffff' }}>
           {selectedNote && (
-            <Stack spacing={2}>
-              <Box>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 900 }}>Date</Typography>
-                <Typography variant="h6" sx={{ fontWeight: 900 }}>{formatDate(selectedNote.note_date)}</Typography>
-              </Box>
+            <Stack spacing={1.6}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 1.6,
+                  borderRadius: 2,
+                  bgcolor: isTodayAlert(selectedNote) ? '#f0fdfa' : '#f8fbff',
+                  border: isTodayAlert(selectedNote) ? '1px solid #ccfbf1' : '1px solid #dbe7f5',
+                }}
+              >
+                <Stack direction="row" spacing={1.25} alignItems="center">
+                  <Avatar sx={{ bgcolor: isTodayAlert(selectedNote) ? '#ccfbf1' : '#dbeafe', color: isTodayAlert(selectedNote) ? '#0f766e' : '#2563eb' }}>
+                    {isTodayAlert(selectedNote) ? <NotificationsActiveRounded /> : <CalendarMonthRounded />}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 900 }}>Date</Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', lineHeight: 1.2 }}>
+                      {formatDate(selectedNote.note_date)}
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: selectedNote.reminder_enabled ? '#0f766e' : '#64748b', fontWeight: 800 }}>
+                      {selectedNote.reminder_enabled ? 'Alert enabled' : 'No alert enabled'}
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Paper>
               {currentRole === 'ADMIN' && (
                 <Box>
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 900 }}>Created By</Typography>
                   <Typography variant="body2" sx={{ fontWeight: 800 }}>{selectedNote.created_by_name || 'User'}</Typography>
                 </Box>
               )}
-              <Box>
-                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 900 }}>Content</Typography>
-                <Typography variant="body2" sx={{ mt: 0.75, whiteSpace: 'pre-line', color: '#334155' }}>
+              <Paper elevation={0} sx={{ p: 1.75, borderRadius: 2, border: '1px solid #dbe7f5', bgcolor: '#fbfdff' }}>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 900, mb: 0.75 }}>Content</Typography>
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-line', color: '#334155', lineHeight: 1.7 }}>
                   {selectedNote.content}
                 </Typography>
-              </Box>
+              </Paper>
             </Stack>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 2.5 }}>
-          <Button onClick={() => setSelectedNote(null)} color="inherit">Close</Button>
+        <DialogActions sx={{ px: 2.5, py: 2, gap: 1.25, bgcolor: '#f8fbff', borderTop: '1px solid #e2e8f0' }}>
+          <Button onClick={() => setSelectedNote(null)} variant="outlined" color="inherit" sx={{ bgcolor: '#ffffff', minWidth: 100 }}>Close</Button>
           {canEdit && selectedNote && (
-            <Button variant="outlined" startIcon={<EditRounded />} onClick={() => handleOpenEdit(selectedNote)}>
+            <Button variant="outlined" startIcon={<EditRounded />} onClick={() => handleOpenEdit(selectedNote)} sx={{ bgcolor: '#ffffff', minWidth: 100 }}>
               Edit
             </Button>
           )}

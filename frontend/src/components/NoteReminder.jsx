@@ -108,10 +108,10 @@ const NoteReminder = () => {
           </Avatar>
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a' }}>
-              Notes Reminder
+              Note Alert
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              You have {dueNotes.length} note{dueNotes.length === 1 ? '' : 's'} scheduled for today.
+              You have {dueNotes.length} enabled alert{dueNotes.length === 1 ? '' : 's'} for today.
             </Typography>
           </Box>
         </Box>

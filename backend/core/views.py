@@ -956,7 +956,8 @@ class NoteViewSet(viewsets.ModelViewSet):
 
         queryset = self.queryset.filter(
             created_by=request.user,
-            note_date=timezone.localdate()
+            note_date=timezone.localdate(),
+            reminder_enabled=True
         ).order_by('-updated_at', '-id')
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
