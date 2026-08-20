@@ -83,8 +83,18 @@ except ImportError:
 WSGI_APPLICATION = 'tms_project.wsgi.application'
 
 DB_ENGINE = os.environ.get('DB_ENGINE', '').lower()
+SQLITE_PATH = os.environ.get('SQLITE_PATH')
 
-if dj_database_url and os.environ.get('DATABASE_URL'):
+if SQLITE_PATH and DB_ENGINE not in {'postgres', 'postgresql', 'mysql'}:
+    sqlite_path = Path(SQLITE_PATH)
+    sqlite_path.parent.mkdir(parents=True, exist_ok=True)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': sqlite_path,
+        }
+    }
+elif dj_database_url and os.environ.get('DATABASE_URL'):
     ssl_required = os.environ.get('DATABASE_SSL', 'True') == 'True'
     DATABASES = {
         'default': dj_database_url.config(
@@ -108,7 +118,7 @@ elif DB_ENGINE == 'mysql' or os.environ.get('MYSQL_DATABASE'):
         }
     }
 else:
-    sqlite_path = Path(os.environ.get('SQLITE_PATH', BASE_DIR / 'db.sqlite3'))
+    sqlite_path = Path(BASE_DIR / 'db.sqlite3')
     sqlite_path.parent.mkdir(parents=True, exist_ok=True)
     DATABASES = {
         'default': {
