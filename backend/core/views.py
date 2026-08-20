@@ -837,6 +837,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
 class TaskReportViewSet(mixins.DestroyModelMixin, viewsets.ReadOnlyModelViewSet):
     queryset = TaskReport.objects.select_related('task', 'subtask', 'user', 'assigned_by', 'rejected_by', 'task__created_by', 'task__assigned_to_hod').filter(
+        is_active=True,
         task__is_active=True
     ).filter(
         Q(subtask__isnull=True) | Q(subtask__is_active=True)
@@ -901,7 +902,8 @@ class TaskReportViewSet(mixins.DestroyModelMixin, viewsets.ReadOnlyModelViewSet)
         if request.user.role != 'ADMIN' and not self.get_queryset().filter(pk=report.pk).exists():
             return Response({'error': 'You do not have permission to delete this report entry.'}, status=status.HTTP_403_FORBIDDEN)
 
-        report.delete()
+        report.is_active = False
+        report.save(update_fields=['is_active', 'updated_at'])
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['post'])
@@ -928,12 +930,18 @@ class DepartmentViewSet(viewsets.ModelViewSet):
 
 
 class NotificationViewSet(viewsets.ModelViewSet):
-    queryset = Notification.objects.all()
+    queryset = Notification.objects.filter(is_active=True)
     serializer_class = NotificationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user)
+        return Notification.objects.filter(user=self.request.user, is_active=True)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.is_active = False
+        instance.save(update_fields=['is_active'])
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class NoteViewSet(viewsets.ModelViewSet):
