@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 from datetime import timedelta
-from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -84,14 +83,6 @@ except ImportError:
 WSGI_APPLICATION = 'tms_project.wsgi.application'
 
 DB_ENGINE = os.environ.get('DB_ENGINE', '').lower()
-IS_RENDER = os.environ.get('RENDER') == 'true'
-HAS_DATABASE_CONFIG = bool(os.environ.get('DATABASE_URL') or os.environ.get('MYSQL_DATABASE') or DB_ENGINE == 'mysql')
-
-if IS_RENDER and not HAS_DATABASE_CONFIG:
-    raise ImproperlyConfigured(
-        'DATABASE_URL is required on Render. Add the PostgreSQL Internal Database URL '
-        'to the backend service environment variables.'
-    )
 
 if dj_database_url and os.environ.get('DATABASE_URL'):
     ssl_required = os.environ.get('DATABASE_SSL', 'True') == 'True'
@@ -117,10 +108,12 @@ elif DB_ENGINE == 'mysql' or os.environ.get('MYSQL_DATABASE'):
         }
     }
 else:
+    sqlite_path = Path(os.environ.get('SQLITE_PATH', BASE_DIR / 'db.sqlite3'))
+    sqlite_path.parent.mkdir(parents=True, exist_ok=True)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'NAME': sqlite_path,
         }
     }
 

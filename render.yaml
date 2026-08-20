@@ -1,8 +1,3 @@
-databases:
-  - name: kahe-tms-db
-    databaseName: tms_db
-    user: bebin
-
 services:
   - type: web
     name: kahe-tms
@@ -10,23 +5,19 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /login
     disk:
-      name: uploaded-media
-      mountPath: /app/backend/media
+      name: kahe-tms-data
+      mountPath: /app/backend/persistent
       sizeGB: 1
     envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: kahe-tms-db
-          property: connectionString
       - key: DJANGO_SETTINGS_MODULE
         value: tms_project.settings
       - key: DEBUG
         value: "False"
       - key: ALLOWED_HOSTS
         value: kahe-tms.onrender.com,localhost,127.0.0.1
+      - key: SQLITE_PATH
+        value: /app/backend/persistent/db.sqlite3
       - key: MEDIA_ROOT
-        value: /app/backend/media
-      - key: DATABASE_SSL
-        value: "True"
+        value: /app/backend/persistent/media
       - key: SECRET_KEY
         generateValue: true
