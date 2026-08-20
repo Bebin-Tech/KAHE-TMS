@@ -4,21 +4,14 @@ databases:
     user: bebin
 
 services:
-  # Backend service
   - type: web
-    name: kahe-tms-backend
-    env: python
-    buildCommand: |
-      cd backend
-      pip install -r requirements.txt
-      python manage.py migrate
-      python manage.py collectstatic --noinput
-    startCommand: |
-      cd backend
-      gunicorn tms_project.wsgi:application
+    name: kahe-tms
+    env: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /login
     disk:
       name: uploaded-media
-      mountPath: /opt/render/project/src/backend/media
+      mountPath: /app/backend/media
       sizeGB: 1
     envVars:
       - key: DATABASE_URL
@@ -27,30 +20,13 @@ services:
           property: connectionString
       - key: DJANGO_SETTINGS_MODULE
         value: tms_project.settings
-      - key: PYTHON_VERSION
-        value: 3.10.0
       - key: DEBUG
         value: "False"
       - key: ALLOWED_HOSTS
-        value: kahe-tms-backend.onrender.com,localhost,127.0.0.1
+        value: kahe-tms.onrender.com,localhost,127.0.0.1
       - key: MEDIA_ROOT
-        value: /opt/render/project/src/backend/media
+        value: /app/backend/media
+      - key: DATABASE_SSL
+        value: "True"
       - key: SECRET_KEY
         generateValue: true
-
-  # Frontend service
-  - type: web
-    name: kahe-tms-frontend
-    env: static
-    buildCommand: |
-      cd frontend
-      npm ci
-      npm run build
-    staticPublishPath: frontend/dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      - key: VITE_API_BASE_URL
-        value: https://kahe-tms-backend.onrender.com/api/

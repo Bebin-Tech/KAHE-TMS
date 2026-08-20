@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from datetime import timedelta
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -56,11 +57,13 @@ MIDDLEWARE += [
 ]
 
 ROOT_URLCONF = 'tms_project.urls'
+FRONTEND_DIST = BASE_DIR.parent / 'frontend' / 'dist'
+FRONTEND_ASSETS = FRONTEND_DIST / 'assets'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [FRONTEND_DIST],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -81,6 +84,14 @@ except ImportError:
 WSGI_APPLICATION = 'tms_project.wsgi.application'
 
 DB_ENGINE = os.environ.get('DB_ENGINE', '').lower()
+IS_RENDER = os.environ.get('RENDER') == 'true'
+HAS_DATABASE_CONFIG = bool(os.environ.get('DATABASE_URL') or os.environ.get('MYSQL_DATABASE') or DB_ENGINE == 'mysql')
+
+if IS_RENDER and not HAS_DATABASE_CONFIG:
+    raise ImproperlyConfigured(
+        'DATABASE_URL is required on Render. Add the PostgreSQL Internal Database URL '
+        'to the backend service environment variables.'
+    )
 
 if dj_database_url and os.environ.get('DATABASE_URL'):
     ssl_required = os.environ.get('DATABASE_SSL', 'True') == 'True'
@@ -147,8 +158,9 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [('assets', FRONTEND_ASSETS)] if FRONTEND_ASSETS.exists() else []
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'

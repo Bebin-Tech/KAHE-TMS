@@ -6,6 +6,8 @@ venv/
 .env
 db.sqlite3
 media/
+staticfiles/
+backend/staticfiles/
 
 # Node
 node_modules/
