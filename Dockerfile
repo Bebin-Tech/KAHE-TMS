@@ -2,7 +2,7 @@ FROM node:20-bookworm-slim AS frontend-builder
 
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm install --no-audit --no-fund
 COPY frontend/ ./
 ENV VITE_API_BASE_URL=/api/
 ENV VITE_BASE_PATH=/static/
