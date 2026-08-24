@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import useAutoRefresh from '../hooks/useAutoRefresh';
+import TextAnimate from '../components/TextAnimate';
 import {
   Avatar,
   Box,
@@ -168,10 +169,10 @@ const AdminDashboard = () => {
                   variant="h3"
                   sx={{ mb: 1, fontSize: { xs: '1.55rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1.12, fontWeight: 800, color: '#0f172a' }}
                 >
-                  Karpagam Academy of Higher Education - Workflow
+                  <TextAnimate delay={0.1}>Karpagam Academy of Higher Education - Workflow</TextAnimate>
                 </Typography>
                 <Typography variant="body1" sx={{ color: '#42546b', fontWeight: 750 }}>
-                  Real-time academic task coordination and reporting
+                  <TextAnimate delay={0.45} stagger={0.018}>Real-time academic task coordination and reporting</TextAnimate>
                 </Typography>
               </Box>
               <Box sx={{ display: { xs: 'none', sm: 'block' }, position: 'absolute', right: -58, bottom: -76, width: 250, height: 250, border: '38px solid rgba(59,143,243,0.22)', borderRadius: '50%' }} />

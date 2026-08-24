@@ -3,6 +3,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import CreateSubTaskDialog from '../components/CreateSubTaskDialog';
 import ReviewSubmissionDialog from '../components/ReviewSubmissionDialog';
 import useAutoRefresh from '../hooks/useAutoRefresh';
+import TextAnimate from '../components/TextAnimate';
 import {
   Grid, Paper, Typography, Box, Button,
   Table, TableBody, TableCell, TableContainer,
@@ -287,16 +288,16 @@ const HODDashboard = () => {
       >
         <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 980, mx: 'auto', textAlign: 'center' }}>
           <Typography variant="overline" sx={{ color: '#1f7f79', fontWeight: 900, letterSpacing: 1.4 }}>
-            HOD command center
+            <TextAnimate delay={0.1} stagger={0.035}>HOD command center</TextAnimate>
           </Typography>
           <Typography
             variant="h3"
             sx={{ mt: 0.5, mb: 1.25, fontSize: { xs: '1.7rem', sm: '2.25rem', md: '2.75rem' }, lineHeight: 1.08, fontWeight: 900, color: '#0f172a' }}
           >
-            Department task control
+            <TextAnimate delay={0.35}>Department task control</TextAnimate>
           </Typography>
           <Typography variant="body1" sx={{ color: '#42546b', fontWeight: 750 }}>
-            Assign faculty work, validate submissions, and prepare completed tasks for Dean review.
+            <TextAnimate delay={0.8} stagger={0.014}>Assign faculty work, validate submissions, and prepare completed tasks for Dean review.</TextAnimate>
           </Typography>
         </Box>
         <Box sx={{ display: { xs: 'none', sm: 'block' }, position: 'absolute', right: -58, bottom: -76, width: 250, height: 250, border: '38px solid rgba(59,143,243,0.22)', borderRadius: '50%' }} />

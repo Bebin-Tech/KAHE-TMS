@@ -95,6 +95,41 @@ canvas {
   background-clip: padding-box;
 }
 
+.text-animate-blur-up {
+  display: inline;
+}
+
+.text-animate-word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.text-animate-character {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(10px);
+  transform: translateY(18px);
+  animation: textBlurInUp 720ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, filter, transform;
+}
+
+@keyframes textBlurInUp {
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-animate-character {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    animation: none;
+  }
+}
+
 @media (max-width: 600px) {
   body {
     background-color: #f4f7fb;

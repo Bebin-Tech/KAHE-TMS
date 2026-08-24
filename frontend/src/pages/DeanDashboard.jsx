@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import useAutoRefresh from '../hooks/useAutoRefresh';
+import TextAnimate from '../components/TextAnimate';
 import {
   Avatar,
   Box,
@@ -108,13 +109,13 @@ const DeanDashboard = () => {
                   variant="h3"
                   sx={{ mb: 1, fontSize: { xs: '1.55rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1.12, fontWeight: 800, color: '#0f172a' }}
                 >
-                  Karpagam Academy of Higher Education
+                  <TextAnimate delay={0.1}>Karpagam Academy of Higher Education</TextAnimate>
                 </Typography>
                 <Typography
                   variant="h4"
                   sx={{ color: '#1d4ed8', fontWeight: 900, fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.85rem' }, lineHeight: 1.12 }}
                 >
-                  Welcome Back, Dean
+                  <TextAnimate delay={0.45} stagger={0.035}>Welcome Back, Dean</TextAnimate>
                 </Typography>
               </Box>
               <Box sx={{ display: { xs: 'none', sm: 'block' }, position: 'absolute', right: -70, bottom: -90, width: 300, height: 300, border: '44px solid rgba(37,99,235,0.18)', borderRadius: '50%' }} />
