@@ -5,35 +5,26 @@ const TextAnimate = ({
   as: Component = 'span',
   className = '',
   delay = 0.12,
-  stagger = 0.025,
+  stagger = 0.08,
   ...props
 }) => {
   const text = String(children ?? '');
-  let index = 0;
+  const words = text.split(' ');
 
   return (
     <Component
-      className={`text-animate-blur-up ${className}`.trim()}
+      className={`text-animate-spotlight ${className}`.trim()}
       aria-label={text}
       {...props}
     >
-      {text.split(' ').map((word, wordIndex, words) => (
+      {words.map((word, wordIndex) => (
         <React.Fragment key={`${word}-${wordIndex}`}>
-          <span className="text-animate-word" aria-hidden="true">
-            {[...word].map((character) => {
-              const characterIndex = index;
-              index += 1;
-
-              return (
-                <span
-                  className="text-animate-character"
-                  style={{ animationDelay: `${delay + characterIndex * stagger}s` }}
-                  key={`${character}-${characterIndex}`}
-                >
-                  {character}
-                </span>
-              );
-            })}
+          <span
+            className="text-animate-word"
+            aria-hidden="true"
+            style={{ animationDelay: `${delay + wordIndex * stagger}s` }}
+          >
+            <span className="text-animate-word-inner">{word}</span>
           </span>
           {wordIndex < words.length - 1 ? ' ' : null}
         </React.Fragment>
