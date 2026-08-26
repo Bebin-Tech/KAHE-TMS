@@ -107,7 +107,7 @@ const HODDashboard = () => {
   const currentUser = getCurrentSession()?.session?.user || {};
   const [tasks, setTasks] = useState([]);
   const [subtasks, setSubtasks] = useState([]);
-  const [stats, setStats] = useState({ assigned: 0, pendingReview: 0, teamPerformance: '92%' });
+  const [stats, setStats] = useState({ assigned: 0, pendingReview: 0 });
   const [selectedTask, setSelectedTask] = useState(null);
   const [detailTask, setDetailTask] = useState(null);
   const [detailSubtask, setDetailSubtask] = useState(null);
@@ -129,21 +129,18 @@ const HODDashboard = () => {
           Pragma: 'no-cache',
         },
       };
-      const [assignedTaskRes, fallbackTaskRes, subRes] = await Promise.allSettled([
+      const [assignedTaskRes, subRes] = await Promise.allSettled([
         api.get('tasks/assigned-to-me/', requestConfig),
-        api.get('tasks/', requestConfig),
         api.get('subtasks/', requestConfig)
       ]);
       const assignedData = assignedTaskRes.status === 'fulfilled' ? assignedTaskRes.value.data : [];
-      const fallbackData = fallbackTaskRes.status === 'fulfilled' ? fallbackTaskRes.value.data : [];
       const subtaskData = subRes.status === 'fulfilled' ? subRes.value.data : [];
-      const assignedTasks = assignedData?.length ? assignedData : fallbackData;
+      const assignedTasks = assignedData || [];
       setTasks(assignedTasks);
       setSubtasks(subtaskData);
       setStats({
         assigned: assignedTasks.length,
         pendingReview: subtaskData.filter(t => t.status === 'SUBMITTED').length,
-        teamPerformance: '88%'
       });
     } catch (err) {
       console.error('Error fetching HOD data:', err);

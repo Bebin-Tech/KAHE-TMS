@@ -9,4 +9,5 @@ def deployment_bootstrap():
         return
 
     call_command('migrate', interactive=False, verbosity=0)
-    call_command('seed_initial_data', verbosity=0)
+    if os.environ.get('AUTO_SEED_DATA') == '1':
+        call_command('seed_initial_data', verbosity=0)

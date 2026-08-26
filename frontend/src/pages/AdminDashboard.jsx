@@ -230,7 +230,7 @@ const AdminDashboard = () => {
               </Button>
             </Box>
             <Stack spacing={0}>
-              {(recentTasks.length ? recentTasks : [{ id: 'empty', title: loading ? 'Loading task activity...' : 'No tasks created yet', department_name: 'Create a task to begin tracking workflow', status: 'ASSIGNED' }]).map((task) => {
+              {recentTasks.length > 0 ? recentTasks.map((task) => {
                 const config = statusConfig[task.status] || statusConfig.ASSIGNED;
                 return (
                   <Box
@@ -266,7 +266,17 @@ const AdminDashboard = () => {
                     </Box>
                   </Box>
                 );
-              })}
+              }) : (
+                <Box sx={{ py: 6, px: 2, textAlign: 'center' }}>
+                  <AssignmentOutlined sx={{ color: '#94a3b8', fontSize: 42, mb: 1 }} />
+                  <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#0f172a' }}>
+                    {loading ? 'Loading task activity...' : 'No task activity available'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Real-time task activity will appear here after records are available.
+                  </Typography>
+                </Box>
+              )}
             </Stack>
           </Paper>
         </Grid>

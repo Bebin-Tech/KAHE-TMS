@@ -26,6 +26,5 @@ WORKDIR /app/backend
 EXPOSE 10000
 
 CMD python manage.py migrate \
-    && python manage.py seed_initial_data \
     && python manage.py collectstatic --noinput \
     && gunicorn tms_project.wsgi:application --bind 0.0.0.0:${PORT:-10000}

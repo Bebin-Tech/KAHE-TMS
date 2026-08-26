@@ -432,7 +432,7 @@ const Tasks = () => {
                   <Chip label={`${taskTotals.pendingReview} for review`} sx={{ bgcolor: '#dbeafe', color: '#2563eb', fontWeight: 800 }} />
                 </Box>
                 <Stack divider={<Box sx={{ borderTop: '1px solid #edf2f7' }} />}>
-                  {(recentTasks.length ? recentTasks : [{ id: 'empty-recent', title: 'No tasks assigned yet', department_name: 'Create a task to begin tracking workflow', status: 'ASSIGNED', deadline: null }]).map((task) => {
+                  {recentTasks.length > 0 ? recentTasks.map((task) => {
                     const progress = getProgressValue(task);
                     return (
                       <Box key={task.id} sx={{ p: { xs: 2, md: 2.5 }, display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -456,7 +456,15 @@ const Tasks = () => {
                         </Box>
                       </Box>
                     );
-                  })}
+                  }) : (
+                    <Box sx={{ py: 6, px: 2, textAlign: 'center' }}>
+                      <AssignmentOutlined sx={{ color: '#94a3b8', fontSize: 42, mb: 1 }} />
+                      <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>No task flow data available</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Real-time Dean task activity will appear here after tasks are created.
+                      </Typography>
+                    </Box>
+                  )}
                 </Stack>
               </Paper>
             </Grid>
@@ -544,7 +552,7 @@ const Tasks = () => {
                     <ErrorOutlineRounded sx={{ color: 'text.secondary' }} />
                   </Box>
                   <Stack spacing={2.25}>
-                    {(deadlineFocus.length ? deadlineFocus : [{ id: 'empty-deadline', title: 'No active deadlines', deadline: null, department_name: 'All clear' }]).map((task) => {
+                    {deadlineFocus.length > 0 ? deadlineFocus.map((task) => {
                       const isOverdue = task.deadline && new Date(task.deadline) < new Date();
                       return (
                         <Box key={task.id}>
@@ -565,7 +573,15 @@ const Tasks = () => {
                           )}
                         </Box>
                       );
-                    })}
+                    }) : (
+                      <Box sx={{ py: 4, textAlign: 'center' }}>
+                        <ErrorOutlineRounded sx={{ color: '#94a3b8', fontSize: 36, mb: 1 }} />
+                        <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>No active deadlines</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Deadline data will appear here from active tasks.
+                        </Typography>
+                      </Box>
+                    )}
                   </Stack>
                 </Paper>
               </Stack>

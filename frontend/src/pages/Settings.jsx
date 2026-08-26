@@ -41,17 +41,6 @@ const permissionFields = [
   { key: 'can_delete', label: 'Delete' },
 ];
 
-const fallbackModules = [
-  { key: 'dashboard', label: 'Dashboard' },
-  { key: 'tasks', label: 'Tasks' },
-  { key: 'completed_tasks', label: 'Completed Tasks' },
-  { key: 'reports', label: 'Reports' },
-  { key: 'notes', label: 'Notes' },
-  { key: 'settings', label: 'Settings' },
-  { key: 'user_management', label: 'User Management' },
-  { key: 'department_management', label: 'Department Management' },
-];
-
 const createPermissionRow = (module) => ({
   module: module.key,
   module_label: module.label,
@@ -88,7 +77,7 @@ const permissionSwitchSx = {
 const Settings = () => {
   const currentUser = getCurrentSession()?.session?.user || {};
   const [users, setUsers] = useState([]);
-  const [modules, setModules] = useState(fallbackModules);
+  const [modules, setModules] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [permissionRows, setPermissionRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -126,7 +115,7 @@ const Settings = () => {
       ]);
       const activeUsers = usersRes.data.filter((user) => user.is_active);
       setUsers(activeUsers);
-      setModules(modulesRes.data.length ? modulesRes.data : fallbackModules);
+      setModules(modulesRes.data || []);
       if (activeUsers.length > 0) setSelectedUserId((current) => current || activeUsers[0].id);
     } catch (err) {
       console.error('Error loading access management data:', err);
