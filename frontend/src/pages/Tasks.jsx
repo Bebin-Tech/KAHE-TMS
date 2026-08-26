@@ -1004,49 +1004,104 @@ const Tasks = () => {
       <Dialog
         open={Boolean(deleteTarget)}
         onClose={() => setDeleteTarget(null)}
-        maxWidth="xs"
-        fullWidth
+        maxWidth={false}
         PaperProps={{
           sx: {
-            borderRadius: 3,
+            width: { xs: 'calc(100vw - 28px)', sm: 740 },
+            maxWidth: '740px !important',
+            borderRadius: 4,
             overflow: 'hidden',
-            boxShadow: '0 28px 76px -46px rgba(15,23,42,0.62)',
+            bgcolor: '#ffffff',
+            boxShadow: '0 28px 80px -46px rgba(15,23,42,0.7)',
           },
         }}
       >
         <DialogTitle sx={{ p: 0 }}>
-          <Box sx={{ p: 2.5, display: 'flex', gap: 1.5, alignItems: 'center', bgcolor: '#fff7f7', borderBottom: '1px solid #fee2e2' }}>
-            <Avatar sx={{ bgcolor: '#fee2e2', color: '#dc2626', width: 46, height: 46 }}>
+          <Box
+            sx={{
+              px: { xs: 2.25, sm: 3 },
+              pt: { xs: 3, sm: 3.5 },
+              pb: 2,
+              textAlign: 'center',
+              background: 'linear-gradient(180deg, #fff7f7 0%, #ffffff 100%)',
+            }}
+          >
+            <Avatar
+              sx={{
+                mx: 'auto',
+                mb: 1.5,
+                bgcolor: '#fee2e2',
+                color: '#dc2626',
+                width: 58,
+                height: 58,
+                boxShadow: '0 16px 30px -22px rgba(220,38,38,0.9)',
+              }}
+            >
               <ErrorOutlineRounded />
             </Avatar>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', lineHeight: 1.2 }}>
-                Delete Task
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                This action removes the task from active lists.
-              </Typography>
-            </Box>
+            <Typography variant="h5" sx={{ fontWeight: 950, color: '#0f172a', lineHeight: 1.15 }}>
+              Delete Task
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 0.75, color: '#64748b', fontWeight: 650 }}>
+              This task will be removed from active lists for assigned users.
+            </Typography>
           </Box>
         </DialogTitle>
-        <DialogContent sx={{ p: 2.5, bgcolor: '#ffffff' }}>
-          <Paper elevation={0} sx={{ p: 1.75, borderRadius: 2, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
+        <DialogContent sx={{ px: { xs: 2.25, sm: 3 }, pb: 2.5, pt: 0, bgcolor: '#ffffff' }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              borderRadius: 2.5,
+              border: '1px solid #fee2e2',
+              bgcolor: '#fffafa',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.85)',
+            }}
+          >
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 900, mb: 0.5 }}>
               Task
             </Typography>
-            <Typography variant="subtitle1" sx={{ fontWeight: 900, color: '#0f172a', overflowWrap: 'anywhere' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 950, color: '#0f172a', overflowWrap: 'anywhere', lineHeight: 1.35 }}>
               {deleteTarget?.title || 'This task'}
             </Typography>
           </Paper>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1.75 }}>
-            Are you sure you want to delete this task? It will no longer appear for assigned users.
+          <Typography variant="body2" sx={{ mt: 1.75, color: '#64748b', lineHeight: 1.6 }}>
+            Are you sure you want to continue? This action cannot be undone from the task list.
           </Typography>
         </DialogContent>
-        <DialogActions sx={{ px: 2.5, py: 2, gap: 1.25, bgcolor: '#f8fbff', borderTop: '1px solid #e2e8f0' }}>
-          <Button onClick={() => setDeleteTarget(null)} variant="outlined" color="inherit" sx={{ bgcolor: '#ffffff', minWidth: 104 }}>
+        <DialogActions
+          sx={{
+            px: { xs: 2.25, sm: 3 },
+            pb: { xs: 2.5, sm: 3 },
+            pt: 0.5,
+            gap: 1.25,
+            justifyContent: 'center',
+            bgcolor: '#ffffff',
+          }}
+        >
+          <Button
+            onClick={() => setDeleteTarget(null)}
+            variant="outlined"
+            color="inherit"
+            sx={{ minWidth: 120, borderRadius: 2, bgcolor: '#ffffff', fontWeight: 900, py: 1.15 }}
+          >
             Cancel
           </Button>
-          <Button onClick={handleDelete} color="error" variant="contained" startIcon={<DeleteRounded />} sx={{ minWidth: 112 }}>
+          <Button
+            onClick={handleDelete}
+            color="error"
+            variant="contained"
+            startIcon={<DeleteRounded />}
+            sx={{
+              minWidth: 120,
+              borderRadius: 2,
+              py: 1.15,
+              fontWeight: 900,
+              bgcolor: '#dc2626',
+              boxShadow: '0 16px 30px -20px rgba(220,38,38,0.85)',
+              '&:hover': { bgcolor: '#b91c1c', boxShadow: '0 18px 34px -20px rgba(185,28,28,0.9)' },
+            }}
+          >
             Delete
           </Button>
         </DialogActions>
