@@ -164,15 +164,33 @@ const AdminDashboard = () => {
                 boxShadow: '0 24px 62px -42px rgba(35,125,186,0.58), inset 0 1px 0 rgba(255,255,255,0.9)'
               }}
             >
-              <Box sx={{ position: 'relative', zIndex: 1, maxWidth: 980, mx: 'auto', textAlign: 'center' }}>
+              <Box sx={{ position: 'relative', zIndex: 1, width: '100%', px: { xs: 1, md: 3 }, textAlign: 'center' }}>
                 <Typography
                   variant="h3"
-                  sx={{ mb: 1, fontSize: { xs: '1.55rem', sm: '2rem', md: '2.5rem' }, lineHeight: 1.12, fontWeight: 800, color: '#0f172a' }}
+                  sx={{
+                    mb: 1,
+                    mx: 'auto',
+                    fontSize: { xs: '1.35rem', sm: '1.85rem', md: '2.05rem', lg: '2.35rem' },
+                    lineHeight: 1.12,
+                    fontWeight: 800,
+                    color: '#0f172a',
+                    textAlign: 'center',
+                    whiteSpace: { xs: 'normal', md: 'nowrap' },
+                  }}
                 >
                   <TextAnimate delay={0.1}>Karpagam Academy of Higher Education - Workflow</TextAnimate>
                 </Typography>
-                <Typography variant="body1" sx={{ color: '#42546b', fontWeight: 750 }}>
-                  <TextAnimate delay={0.45} stagger={0.018}>Real-time academic task coordination and reporting</TextAnimate>
+                <Typography
+                  variant="h4"
+                  sx={{
+                    color: '#1d4ed8',
+                    fontWeight: 900,
+                    fontSize: { xs: '1.45rem', sm: '1.9rem', md: '2.35rem' },
+                    lineHeight: 1.12,
+                    textAlign: 'center',
+                  }}
+                >
+                  <TextAnimate delay={0.45} stagger={0.035}>Welcome Back, Admin</TextAnimate>
                 </Typography>
               </Box>
               <Box sx={{ display: { xs: 'none', sm: 'block' }, position: 'absolute', right: -58, bottom: -76, width: 250, height: 250, border: '38px solid rgba(59,143,243,0.22)', borderRadius: '50%' }} />
