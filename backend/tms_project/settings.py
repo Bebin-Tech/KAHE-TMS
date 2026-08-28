@@ -17,10 +17,18 @@ try:
 except ImportError:
     pass
 
+def env_bool(name, default=False):
+    return os.environ.get(name, str(default)).strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
 # Security Settings from Environment
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key')
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+DEBUG = env_bool('DEBUG')
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+    if host.strip()
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -95,7 +103,7 @@ if SQLITE_PATH and DB_ENGINE not in {'postgres', 'postgresql', 'mysql'}:
         }
     }
 elif dj_database_url and os.environ.get('DATABASE_URL'):
-    ssl_required = os.environ.get('DATABASE_SSL', 'True') == 'True'
+    ssl_required = env_bool('DATABASE_SSL', True)
     DATABASES = {
         'default': dj_database_url.config(
             conn_max_age=600,
@@ -171,4 +179,3 @@ MEDIA_ROOT = Path(os.environ.get('MEDIA_ROOT', BASE_DIR / 'media'))
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-ALLOWED_HOSTS = ['*']

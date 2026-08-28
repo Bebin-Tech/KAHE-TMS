@@ -186,9 +186,9 @@ http://127.0.0.1:5173/
 
 ## Environment Configuration
 
-### Backend Environment Variables
+### Shared Environment File
 
-The backend reads configuration from environment variables in `backend/tms_project/settings.py`.
+Create a `.env` file in the repository root. The backend reads this file through `python-dotenv`, and the frontend build reads the same file through Vite.
 
 Common variables:
 
@@ -196,7 +196,11 @@ Common variables:
 SECRET_KEY=replace-with-a-secure-secret-key
 DEBUG=True
 ALLOWED_HOSTS=localhost,127.0.0.1
-DATABASE_URL=postgresql://user:password@host:port/database
+SQLITE_PATH=backend/db.sqlite3
+MEDIA_ROOT=backend/media
+VITE_API_BASE_URL=/api/
+VITE_DEV_API_URL=http://127.0.0.1:8000
+VITE_BASE_PATH=/
 ```
 
 Notes:
@@ -205,6 +209,7 @@ Notes:
 - To use MySQL without `DATABASE_URL`, set the MySQL variables below.
 - For production, set `DEBUG=False`.
 - For production, replace wildcard hosts and open CORS settings with the exact frontend and backend domains.
+- Keep real API keys and secrets only in `.env`; use `.env.example` as the safe template for GitHub.
 
 MySQL configuration:
 
@@ -224,19 +229,13 @@ cd backend
 python manage.py migrate
 ```
 
-### Frontend Environment Variables
-
-Create `frontend/.env` for local development if needed:
-
-```env
-VITE_API_BASE_URL=http://127.0.0.1:8000/api/
-```
-
-For deployment, point this value to the hosted backend API:
+For separate frontend/backend deployment, point this value to the hosted backend API:
 
 ```env
 VITE_API_BASE_URL=https://your-backend-domain.com/api/
 ```
+
+If the frontend is deployed separately, for example on Vercel, this value must be set in the frontend hosting environment variables. If it is left as `/api/`, the login page will call the frontend domain instead of the Django backend.
 
 ## Database and Migrations
 

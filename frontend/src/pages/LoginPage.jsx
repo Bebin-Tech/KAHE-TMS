@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/axios';
+import api, { baseURL } from '../api/axios';
 import { redirectPathForUser, saveRoleSession } from '../utils/session';
 import {
   Box,
@@ -60,6 +60,9 @@ const LoginPage = () => {
         setError('Connection failed. Please check if the server is running.');
       } else if (err.response.status === 401) {
         setError('Invalid username/email or password.');
+      } else if (err.response.status === 404) {
+        const apiTarget = baseURL.startsWith('http') ? baseURL : `${window.location.origin}${baseURL}`;
+        setError(`Login API not found at ${apiTarget}. Please check the backend URL and API routing.`);
       } else if (err.response.data?.detail) {
         setError(err.response.data.detail);
       } else {

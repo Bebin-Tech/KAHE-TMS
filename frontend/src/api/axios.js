@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { clearRoleSession, getCurrentSession, getRouteRole, getStoredSession, updateRoleAccessToken } from '../utils/session';
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/';
+export const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/';
 
 const isTokenRequest = (url = '') => /(^|\/)token\/?/.test(url) || url.includes('token/refresh/');
 
