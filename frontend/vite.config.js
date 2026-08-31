@@ -15,8 +15,21 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    envDir: rootEnvDir,
     base: env.VITE_BASE_PATH || '/',
     server: {
+      proxy: {
+        '/api': {
+          target: devApiUrl,
+          changeOrigin: true,
+        },
+        '/media': {
+          target: devApiUrl,
+          changeOrigin: true,
+        },
+      },
+    },
+    preview: {
       proxy: {
         '/api': {
           target: devApiUrl,
