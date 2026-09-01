@@ -434,61 +434,55 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           PaperProps={{
             sx: {
               width: '100%',
-              maxWidth: 380,
-              borderRadius: '20px',
-              p: { xs: 2.5, sm: 3 },
-              bgcolor: '#ffffff',
-              border: '1px solid #e2e8f0',
-              boxShadow: '0 20px 40px -15px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(226, 232, 240, 0.6)'
+              maxWidth: 360,
+              borderRadius: 3,
+              p: { xs: 2, sm: 2.5 },
+              boxShadow: '0 26px 70px -42px rgba(15,23,42,0.45)'
             }
           }}
         >
           <DialogTitle sx={{ p: 0, textAlign: 'center' }}>
             <Box
               sx={{
-                width: 64,
-                height: 64,
+                width: 82,
+                height: 82,
                 mx: 'auto',
-                mb: 2,
+                mb: 2.25,
                 borderRadius: '50%',
-                bgcolor: '#fef2f2',
-                border: '1px solid #fee2e2',
-                color: '#ef4444',
+                bgcolor: '#fff1f2',
+                color: '#dc2626',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s ease-in-out'
+                justifyContent: 'center'
               }}
             >
-              <LogoutRounded sx={{ fontSize: 28 }} />
+              <LogoutRounded sx={{ fontSize: 36 }} />
             </Box>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', letterSpacing: '-0.01em', mb: 0.5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 900, color: '#111827' }}>
               Logout
             </Typography>
           </DialogTitle>
-          <DialogContent sx={{ px: 0, py: 0.5, pb: 3 }}>
-            <Typography variant="body2" sx={{ color: '#64748b', textAlign: 'center', fontWeight: 500, lineHeight: 1.5 }}>
+          <DialogContent sx={{ px: 0, pt: 1, pb: 2.5 }}>
+            <Typography variant="body2" color="text.secondary" align="center" sx={{ fontWeight: 650 }}>
               Are you sure you want to log out?
             </Typography>
           </DialogContent>
           <DialogActions sx={{ p: 0, gap: 1.5 }}>
             <Button
               onClick={() => setLogoutDialogOpen(false)}
-              variant="outlined"
+              variant="contained"
               fullWidth
               sx={{
-                minHeight: 44,
-                borderRadius: '12px',
-                borderColor: '#e2e8f0',
-                color: '#475569',
-                fontWeight: 600,
-                textTransform: 'none',
-                fontSize: '0.925rem',
-                bgcolor: '#ffffff',
+                minHeight: 48,
+                bgcolor: '#f7f7f8',
+                background: '#f7f7f8',
+                color: '#4b4f58',
+                fontWeight: 900,
+                boxShadow: 'none',
                 '&:hover': {
-                  bgcolor: '#f8fafc',
-                  borderColor: '#cbd5e1',
-                  color: '#1e293b'
+                  bgcolor: '#eeeeef',
+                  background: '#eeeeef',
+                  boxShadow: 'none'
                 }
               }}
             >
@@ -497,20 +491,18 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             <Button
               onClick={handleLogout}
               variant="contained"
-              disableElevation
               fullWidth
               sx={{
-                minHeight: 44,
-                borderRadius: '12px',
-                bgcolor: '#ef4444',
+                minHeight: 48,
+                bgcolor: '#e9353d',
+                background: '#e9353d',
                 color: '#ffffff',
-                fontWeight: 600,
-                textTransform: 'none',
-                fontSize: '0.925rem',
-                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.25)',
+                fontWeight: 900,
+                boxShadow: '0 12px 24px -18px rgba(233,53,61,0.85)',
                 '&:hover': {
-                  bgcolor: '#dc2626',
-                  boxShadow: '0 6px 16px rgba(220, 38, 38, 0.35)'
+                  bgcolor: '#d92f36',
+                  background: '#d92f36',
+                  boxShadow: '0 14px 28px -20px rgba(217,47,54,0.9)'
                 }
               }}
             >

@@ -201,6 +201,7 @@ MEDIA_ROOT=backend/media
 VITE_API_BASE_URL=/api/
 VITE_DEV_API_URL=http://127.0.0.1:8000
 VITE_BASE_PATH=/
+GROK_API_KEY=your_grok_api_key_here
 ```
 
 Notes:
@@ -210,6 +211,7 @@ Notes:
 - For production, set `DEBUG=False`.
 - For production, replace wildcard hosts and open CORS settings with the exact frontend and backend domains.
 - Keep real API keys and secrets only in `.env`; use `.env.example` as the safe template for GitHub.
+- Backend Grok API requests should read the key through `settings.GROK_API_KEY` or the shared helper in `backend/core/grok_client.py`.
 
 MySQL configuration:
 

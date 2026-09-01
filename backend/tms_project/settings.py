@@ -29,6 +29,7 @@ ALLOWED_HOSTS = [
     for host in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
     if host.strip()
 ]
+GROK_API_KEY = os.environ.get('GROK_API_KEY') or os.environ.get('GROQ_API_KEY', '')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
