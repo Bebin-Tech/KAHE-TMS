@@ -253,50 +253,50 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
         )}
         <Collapse in={homeOpen && modulePermissions !== null} timeout="auto" unmountOnExit>
           <List disablePadding sx={{ pl: 1.5, ml: 1, borderLeft: '1px solid #e2e8f0' }}>
-        {menuItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <ListItem key={item.text} disablePadding sx={{ mb: 0.6 }}>
-              <ListItemButton
-                disableRipple
-                onClick={() => handleNavigate(item.path)}
-                sx={{
-                  position: 'relative',
-                  overflow: 'hidden',
-                  borderRadius: 2,
-                  bgcolor: isActive ? '#eff6ff' : 'transparent',
-                  color: '#0f172a',
-                  border: isActive ? '1px solid rgba(37,99,235,0.22)' : '1px solid transparent',
-                  transition: 'background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease',
-                  boxShadow: isActive ? '0 14px 28px -24px rgba(37,99,235,0.7)' : 'none',
-                  '&:hover': {
-                    bgcolor: isActive ? '#eff6ff' : '#f8fafc',
-                    borderColor: isActive ? 'rgba(37,99,235,0.35)' : '#dbe4ef',
-                    boxShadow: '0 16px 34px -28px rgba(15,23,42,0.42)'
-                  },
-                  py: 1.05,
-                  pl: 1.25
-                }}
-              >
-                <ListItemIcon sx={{
-                  color: isActive ? '#2563eb' : '#64748b',
-                  minWidth: '38px',
-                  transition: 'color 180ms ease',
-                  '& svg': { fontSize: '1.35rem' }
-                }}>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.text}
-                  primaryTypographyProps={{
-                    fontSize: '0.835rem',
-                    fontWeight: isActive ? 760 : 680,
-                  }}
-                />
-              </ListItemButton>
-            </ListItem>
-          );
-        })}
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <ListItem key={item.text} disablePadding sx={{ mb: 0.6 }}>
+                  <ListItemButton
+                    disableRipple
+                    onClick={() => handleNavigate(item.path)}
+                    sx={{
+                      position: 'relative',
+                      overflow: 'hidden',
+                      borderRadius: 2,
+                      bgcolor: isActive ? '#eff6ff' : 'transparent',
+                      color: '#0f172a',
+                      border: isActive ? '1px solid rgba(37,99,235,0.22)' : '1px solid transparent',
+                      transition: 'background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease',
+                      boxShadow: isActive ? '0 14px 28px -24px rgba(37,99,235,0.7)' : 'none',
+                      '&:hover': {
+                        bgcolor: isActive ? '#eff6ff' : '#f8fafc',
+                        borderColor: isActive ? 'rgba(37,99,235,0.35)' : '#dbe4ef',
+                        boxShadow: '0 16px 34px -28px rgba(15,23,42,0.42)'
+                      },
+                      py: 1.05,
+                      pl: 1.25
+                    }}
+                  >
+                    <ListItemIcon sx={{
+                      color: isActive ? '#2563eb' : '#64748b',
+                      minWidth: '38px',
+                      transition: 'color 180ms ease',
+                      '& svg': { fontSize: '1.35rem' }
+                    }}>
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText
+                      primary={item.text}
+                      primaryTypographyProps={{
+                        fontSize: '0.835rem',
+                        fontWeight: isActive ? 760 : 680,
+                      }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
           </List>
         </Collapse>
       </List>
@@ -426,6 +426,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           </Toolbar>
         </AppBar>
 
+        {/* Minimalist Logout Confirmation Modal */}
         <Dialog
           open={logoutDialogOpen}
           onClose={() => setLogoutDialogOpen(false)}
@@ -434,55 +435,61 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           PaperProps={{
             sx: {
               width: '100%',
-              maxWidth: 360,
-              borderRadius: 3,
-              p: { xs: 2, sm: 2.5 },
-              boxShadow: '0 26px 70px -42px rgba(15,23,42,0.45)'
+              maxWidth: 380,
+              borderRadius: '20px',
+              p: { xs: 2.5, sm: 3 },
+              bgcolor: '#ffffff',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 20px 40px -15px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(226, 232, 240, 0.6)'
             }
           }}
         >
           <DialogTitle sx={{ p: 0, textAlign: 'center' }}>
             <Box
               sx={{
-                width: 82,
-                height: 82,
+                width: 64,
+                height: 64,
                 mx: 'auto',
-                mb: 2.25,
+                mb: 2,
                 borderRadius: '50%',
-                bgcolor: '#fff1f2',
-                color: '#dc2626',
+                bgcolor: '#fef2f2',
+                border: '1px solid #fee2e2',
+                color: '#ef4444',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                transition: 'all 0.2s ease-in-out'
               }}
             >
-              <LogoutRounded sx={{ fontSize: 36 }} />
+              <LogoutRounded sx={{ fontSize: 28 }} />
             </Box>
-            <Typography variant="h6" sx={{ fontWeight: 900, color: '#111827' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a', letterSpacing: '-0.01em', mb: 0.5 }}>
               Logout
             </Typography>
           </DialogTitle>
-          <DialogContent sx={{ px: 0, pt: 1, pb: 2.5 }}>
-            <Typography variant="body2" color="text.secondary" align="center" sx={{ fontWeight: 650 }}>
+          <DialogContent sx={{ px: 0, py: 0.5, pb: 3 }}>
+            <Typography variant="body2" sx={{ color: '#64748b', textAlign: 'center', fontWeight: 500, lineHeight: 1.5 }}>
               Are you sure you want to log out?
             </Typography>
           </DialogContent>
           <DialogActions sx={{ p: 0, gap: 1.5 }}>
             <Button
               onClick={() => setLogoutDialogOpen(false)}
-              variant="contained"
+              variant="outlined"
               fullWidth
               sx={{
-                minHeight: 48,
-                bgcolor: '#f7f7f8',
-                background: '#f7f7f8',
-                color: '#4b4f58',
-                fontWeight: 900,
-                boxShadow: 'none',
+                minHeight: 44,
+                borderRadius: '12px',
+                borderColor: '#e2e8f0',
+                color: '#475569',
+                fontWeight: 600,
+                textTransform: 'none',
+                fontSize: '0.925rem',
+                bgcolor: '#ffffff',
                 '&:hover': {
-                  bgcolor: '#eeeeef',
-                  background: '#eeeeef',
-                  boxShadow: 'none'
+                  bgcolor: '#f8fafc',
+                  borderColor: '#cbd5e1',
+                  color: '#1e293b'
                 }
               }}
             >
@@ -491,18 +498,20 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             <Button
               onClick={handleLogout}
               variant="contained"
+              disableElevation
               fullWidth
               sx={{
-                minHeight: 48,
-                bgcolor: '#e9353d',
-                background: '#e9353d',
+                minHeight: 44,
+                borderRadius: '12px',
+                bgcolor: '#ef4444',
                 color: '#ffffff',
-                fontWeight: 900,
-                boxShadow: '0 12px 24px -18px rgba(233,53,61,0.85)',
+                fontWeight: 600,
+                textTransform: 'none',
+                fontSize: '0.925rem',
+                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.25)',
                 '&:hover': {
-                  bgcolor: '#d92f36',
-                  background: '#d92f36',
-                  boxShadow: '0 14px 28px -20px rgba(217,47,54,0.9)'
+                  bgcolor: '#dc2626',
+                  boxShadow: '0 6px 16px rgba(220, 38, 38, 0.35)'
                 }
               }}
             >
@@ -533,4 +542,3 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
 };
 
 export default DashboardLayout;
-
