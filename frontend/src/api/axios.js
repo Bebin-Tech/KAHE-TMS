@@ -2,23 +2,10 @@ import axios from 'axios';
 import { clearRoleSession, getCurrentSession, getRouteRole, getStoredSession, updateRoleAccessToken } from '../utils/session';
 
 const configuredBaseURL = import.meta.env.VITE_API_BASE_URL || '/api/';
-const devApiURL = import.meta.env.VITE_DEV_API_URL || 'http://127.0.0.1:8000';
 
 const ensureTrailingSlash = (value) => (value.endsWith('/') ? value : `${value}/`);
 
 const resolveBaseURL = () => {
-  if (/^https?:\/\//i.test(configuredBaseURL)) {
-    return ensureTrailingSlash(configuredBaseURL);
-  }
-
-  const localFrontendPort = typeof window !== 'undefined' && ['5173', '5174'].includes(window.location.port);
-
-  if (localFrontendPort && devApiURL) {
-    const apiHost = devApiURL.replace(/\/+$/, '');
-    const apiPath = configuredBaseURL.startsWith('/') ? configuredBaseURL : `/${configuredBaseURL}`;
-    return ensureTrailingSlash(`${apiHost}${apiPath}`);
-  }
-
   return ensureTrailingSlash(configuredBaseURL);
 };
 

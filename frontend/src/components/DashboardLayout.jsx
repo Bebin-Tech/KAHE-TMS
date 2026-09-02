@@ -5,7 +5,7 @@ import {
   ListItemIcon, ListItemText, Avatar,
   useTheme, useMediaQuery, Paper,
   Dialog, DialogTitle, DialogContent, DialogActions, Button,
-  Collapse
+  Collapse, Tooltip
 } from '@mui/material';
 import {
   DashboardOutlined,
@@ -28,8 +28,10 @@ import { clearRoleSession, getCurrentSession, setActiveRole, setRouteRole } from
 import api from '../api/axios';
 import NoteReminder from './NoteReminder';
 
-const drawerWidth = 292;
+const drawerExpandedWidth = 292;
+const drawerCollapsedWidth = 76;
 const permissionCachePrefix = 'tms_module_permissions';
+let sidebarHoverActive = false;
 
 const getPermissionCacheKey = (user) => (
   user?.id && user?.role ? `${permissionCachePrefix}:${user.id}:${user.role}` : ''
@@ -56,7 +58,8 @@ const writeCachedPermissions = (user, permissions) => {
 const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [open, setOpen] = useState(!isMobile);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(sidebarHoverActive);
   const [homeOpen, setHomeOpen] = useState(true);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const navigate = useNavigate();
@@ -67,9 +70,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const userRole = user.role;
   const [modulePermissions, setModulePermissions] = useState(() => readCachedPermissions(user));
 
-  useEffect(() => {
-    setOpen(!isMobile);
-  }, [isMobile]);
+  const isExpanded = isMobile ? true : isHovered;
 
   useEffect(() => {
     let isMounted = true;
@@ -97,7 +98,17 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     };
   }, [userId, userRole]);
 
-  const handleDrawerToggle = () => setOpen(!open);
+  const handleDrawerToggle = () => setMobileOpen((prev) => !prev);
+  const handleSidebarMouseEnter = () => {
+    if (isMobile) return;
+    sidebarHoverActive = true;
+    setIsHovered(true);
+  };
+  const handleSidebarMouseLeave = () => {
+    if (isMobile) return;
+    sidebarHoverActive = false;
+    setIsHovered(false);
+  };
   const handleHomeToggle = () => setHomeOpen((current) => !current);
   const handleNavigate = (path) => {
     if (user.role) {
@@ -105,7 +116,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
       setRouteRole(path, user.role);
     }
     navigate(path);
-    if (isMobile) setOpen(false);
+    if (isMobile) setMobileOpen(false);
   };
   const handleLogoutClick = () => {
     setLogoutDialogOpen(true);
@@ -142,8 +153,30 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const isHomeActive = menuItems.some((item) => location.pathname === item.path);
 
   const drawer = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: '#ffffff', color: '#0f172a', px: { xs: 1.5, sm: 2 } }}>
-      <Box sx={{ py: { xs: 2.25, sm: 3 }, px: 1, display: 'flex', alignItems: 'center', gap: 1.4 }}>
+    <Box
+      sx={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: '#ffffff',
+        color: '#0f172a',
+        px: isExpanded ? { xs: 1.5, sm: 2 } : 1,
+        transition: 'padding 240ms cubic-bezier(0.4, 0, 0.2, 1)',
+        overflowX: 'hidden'
+      }}
+    >
+      <Box
+        sx={{
+          py: { xs: 2.25, sm: 2.75 },
+          px: isExpanded ? 1 : 0.5,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: isExpanded ? 'flex-start' : 'center',
+          gap: 1.4,
+          minHeight: 74,
+          transition: 'padding 240ms cubic-bezier(0.4, 0, 0.2, 1)'
+        }}
+      >
         <Box
           sx={{
             bgcolor: '#f8fafc',
@@ -152,10 +185,12 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: { xs: 44, sm: 50 },
-            height: { xs: 44, sm: 50 },
+            width: { xs: 44, sm: 48 },
+            height: { xs: 44, sm: 48 },
+            minWidth: { xs: 44, sm: 48 },
             border: '1px solid #e2e8f0',
-            boxShadow: '0 16px 34px -26px rgba(15,23,42,0.35)'
+            boxShadow: '0 16px 34px -26px rgba(15,23,42,0.35)',
+            flexShrink: 0
           }}
         >
           <Box
@@ -169,131 +204,162 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             }}
           />
         </Box>
-        <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h6" component="div" sx={{ fontWeight: 800, color: '#0f172a', letterSpacing: 0, lineHeight: 1.05 }}>
-            KAHE TMS
-          </Typography>
-          <Typography variant="caption" noWrap sx={{ display: 'block', color: '#64748b', fontWeight: 680 }}>
-            Task Management
-          </Typography>
-        </Box>
+        {isExpanded && (
+          <Box sx={{ minWidth: 0, overflow: 'hidden', whiteSpace: 'nowrap' }}>
+            <Typography variant="h6" component="div" sx={{ fontWeight: 800, color: '#0f172a', letterSpacing: 0, lineHeight: 1.05 }}>
+              KAHE TMS
+            </Typography>
+            <Typography variant="caption" noWrap sx={{ display: 'block', color: '#64748b', fontWeight: 680 }}>
+              Task Management
+            </Typography>
+          </Box>
+        )}
       </Box>
 
-      <Box sx={{ px: 0.5, mb: { xs: 2, sm: 3 } }}>
+      <Box sx={{ px: isExpanded ? 0.5 : 0, mb: { xs: 2, sm: 2.5 }, transition: 'padding 240ms cubic-bezier(0.4, 0, 0.2, 1)' }}>
         <Paper elevation={0} sx={{
-          p: { xs: 1.35, sm: 1.75 },
+          p: isExpanded ? { xs: 1.35, sm: 1.6 } : 1,
           bgcolor: '#ffffff',
           border: '1px solid #e2e8f0',
           boxShadow: '0 16px 34px -30px rgba(15,23,42,0.45)',
           borderRadius: 2,
           display: 'flex',
           alignItems: 'center',
-          gap: 1.5,
-          color: '#0f172a'
+          justifyContent: isExpanded ? 'flex-start' : 'center',
+          gap: isExpanded ? 1.5 : 0,
+          color: '#0f172a',
+          transition: 'all 240ms cubic-bezier(0.4, 0, 0.2, 1)'
         }}>
-          <Avatar sx={{ width: 40, height: 40, bgcolor: '#dbeafe', color: '#1d4ed8', fontWeight: 800 }}>
+          <Avatar sx={{ width: 38, height: 38, bgcolor: '#dbeafe', color: '#1d4ed8', fontWeight: 800, flexShrink: 0 }}>
             {(user.username?.[0] || 'U').toUpperCase()}
           </Avatar>
-          <Box sx={{ overflow: 'hidden' }}>
-            <Typography variant="subtitle2" noWrap sx={{ fontWeight: 760, color: '#0f172a' }}>
-              {user.full_name || user.username || 'User'}
-            </Typography>
-            <Typography variant="caption" sx={{ color: '#0f766e', fontWeight: 720 }}>
-              {roleLabel}
-            </Typography>
-          </Box>
+          {isExpanded && (
+            <Box sx={{ overflow: 'hidden', minWidth: 0, whiteSpace: 'nowrap' }}>
+              <Typography variant="subtitle2" noWrap sx={{ fontWeight: 760, color: '#0f172a' }}>
+                {user.full_name || user.username || 'User'}
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#0f766e', fontWeight: 720 }}>
+                {roleLabel}
+              </Typography>
+            </Box>
+          )}
         </Paper>
       </Box>
 
       <List sx={{ px: 0, mt: 0.5 }}>
-        {modulePermissions === null && (
+        {modulePermissions === null && isExpanded && (
           <Typography variant="caption" sx={{ display: 'block', px: 1.5, py: 1, color: '#667085', fontWeight: 700 }}>
             Loading access...
           </Typography>
         )}
         {modulePermissions !== null && (
           <ListItem disablePadding sx={{ mb: 0.75 }}>
-            <ListItemButton
-              disableRipple
-              onClick={handleHomeToggle}
-              sx={{
-                position: 'relative',
-                overflow: 'hidden',
-                borderRadius: 2,
-                bgcolor: isHomeActive ? '#eff6ff' : 'transparent',
-                color: '#0f172a',
-                border: isHomeActive ? '1px solid rgba(37,99,235,0.22)' : '1px solid transparent',
-                transition: 'background-color 260ms ease, border-color 260ms ease, box-shadow 260ms ease',
-                boxShadow: isHomeActive ? '0 14px 28px -24px rgba(37,99,235,0.7)' : 'none',
-                '&:hover': {
-                  bgcolor: isHomeActive ? '#eff6ff' : '#f8fafc',
-                  borderColor: isHomeActive ? 'rgba(37,99,235,0.35)' : '#dbe4ef',
-                  boxShadow: '0 16px 34px -28px rgba(15,23,42,0.42)'
-                },
-                py: 1.25
-              }}
-            >
-              <ListItemIcon sx={{
-                color: isHomeActive ? '#2563eb' : '#64748b',
-                minWidth: '42px',
-                '& svg': { fontSize: '1.35rem' }
-              }}>
-                <HomeOutlined />
-              </ListItemIcon>
-              <ListItemText
-                primary="Home"
-                primaryTypographyProps={{
-                  fontSize: '0.875rem',
-                  fontWeight: isHomeActive ? 760 : 680,
+            <Tooltip title={!isExpanded ? "Home" : ""} placement="right" disableHoverListener={isExpanded} arrow>
+              <ListItemButton
+                disableRipple
+                onClick={handleHomeToggle}
+                sx={{
+                  position: 'relative',
+                  overflow: 'hidden',
+                  borderRadius: 2,
+                  bgcolor: isHomeActive ? '#eff6ff' : 'transparent',
+                  color: '#0f172a',
+                  border: isHomeActive ? '1px solid rgba(37,99,235,0.22)' : '1px solid transparent',
+                  transition: 'background-color 260ms ease, border-color 260ms ease, box-shadow 260ms ease, padding 240ms cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: isHomeActive ? '0 14px 28px -24px rgba(37,99,235,0.7)' : 'none',
+                  '&:hover': {
+                    bgcolor: isHomeActive ? '#eff6ff' : '#f8fafc',
+                    borderColor: isHomeActive ? 'rgba(37,99,235,0.35)' : '#dbe4ef',
+                    boxShadow: '0 16px 34px -28px rgba(15,23,42,0.42)'
+                  },
+                  py: 1.25,
+                  px: isExpanded ? 1.5 : 1,
+                  justifyContent: isExpanded ? 'flex-start' : 'center'
                 }}
-              />
-              {homeOpen ? <ExpandLessRounded sx={{ color: '#64748b' }} /> : <ExpandMoreRounded sx={{ color: '#64748b' }} />}
-            </ListItemButton>
+              >
+                <ListItemIcon sx={{
+                  color: isHomeActive ? '#2563eb' : '#64748b',
+                  minWidth: isExpanded ? '40px' : 'auto',
+                  justifyContent: 'center',
+                  '& svg': { fontSize: '1.35rem' }
+                }}>
+                  <HomeOutlined />
+                </ListItemIcon>
+                {isExpanded && (
+                  <>
+                    <ListItemText
+                      primary="Home"
+                      primaryTypographyProps={{
+                        fontSize: '0.875rem',
+                        fontWeight: isHomeActive ? 760 : 680,
+                        whiteSpace: 'nowrap'
+                      }}
+                    />
+                    {homeOpen ? <ExpandLessRounded sx={{ color: '#64748b' }} /> : <ExpandMoreRounded sx={{ color: '#64748b' }} />}
+                  </>
+                )}
+              </ListItemButton>
+            </Tooltip>
           </ListItem>
         )}
         <Collapse in={homeOpen && modulePermissions !== null} timeout="auto" unmountOnExit>
-          <List disablePadding sx={{ pl: 1.5, ml: 1, borderLeft: '1px solid #e2e8f0' }}>
+          <List
+            disablePadding
+            sx={{
+              pl: isExpanded ? 1.5 : 0,
+              ml: isExpanded ? 1 : 0,
+              borderLeft: isExpanded ? '1px solid #e2e8f0' : 'none',
+              transition: 'all 240ms cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          >
             {menuItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <ListItem key={item.text} disablePadding sx={{ mb: 0.6 }}>
-                  <ListItemButton
-                    disableRipple
-                    onClick={() => handleNavigate(item.path)}
-                    sx={{
-                      position: 'relative',
-                      overflow: 'hidden',
-                      borderRadius: 2,
-                      bgcolor: isActive ? '#eff6ff' : 'transparent',
-                      color: '#0f172a',
-                      border: isActive ? '1px solid rgba(37,99,235,0.22)' : '1px solid transparent',
-                      transition: 'background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease',
-                      boxShadow: isActive ? '0 14px 28px -24px rgba(37,99,235,0.7)' : 'none',
-                      '&:hover': {
-                        bgcolor: isActive ? '#eff6ff' : '#f8fafc',
-                        borderColor: isActive ? 'rgba(37,99,235,0.35)' : '#dbe4ef',
-                        boxShadow: '0 16px 34px -28px rgba(15,23,42,0.42)'
-                      },
-                      py: 1.05,
-                      pl: 1.25
-                    }}
-                  >
-                    <ListItemIcon sx={{
-                      color: isActive ? '#2563eb' : '#64748b',
-                      minWidth: '38px',
-                      transition: 'color 180ms ease',
-                      '& svg': { fontSize: '1.35rem' }
-                    }}>
-                      {item.icon}
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={item.text}
-                      primaryTypographyProps={{
-                        fontSize: '0.835rem',
-                        fontWeight: isActive ? 760 : 680,
+                  <Tooltip title={!isExpanded ? item.text : ""} placement="right" disableHoverListener={isExpanded} arrow>
+                    <ListItemButton
+                      disableRipple
+                      onClick={() => handleNavigate(item.path)}
+                      sx={{
+                        position: 'relative',
+                        overflow: 'hidden',
+                        borderRadius: 2,
+                        bgcolor: isActive ? '#eff6ff' : 'transparent',
+                        color: '#0f172a',
+                        border: isActive ? '1px solid rgba(37,99,235,0.22)' : '1px solid transparent',
+                        transition: 'background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease, padding 240ms cubic-bezier(0.4, 0, 0.2, 1)',
+                        boxShadow: isActive ? '0 14px 28px -24px rgba(37,99,235,0.7)' : 'none',
+                        '&:hover': {
+                          bgcolor: isActive ? '#eff6ff' : '#f8fafc',
+                          borderColor: isActive ? 'rgba(37,99,235,0.35)' : '#dbe4ef',
+                          boxShadow: '0 16px 34px -28px rgba(15,23,42,0.42)'
+                        },
+                        py: 1.05,
+                        px: isExpanded ? 1.25 : 1,
+                        justifyContent: isExpanded ? 'flex-start' : 'center'
                       }}
-                    />
-                  </ListItemButton>
+                    >
+                      <ListItemIcon sx={{
+                        color: isActive ? '#2563eb' : '#64748b',
+                        minWidth: isExpanded ? '38px' : 'auto',
+                        justifyContent: 'center',
+                        transition: 'color 180ms ease',
+                        '& svg': { fontSize: '1.35rem' }
+                      }}>
+                        {item.icon}
+                      </ListItemIcon>
+                      {isExpanded && (
+                        <ListItemText
+                          primary={item.text}
+                          primaryTypographyProps={{
+                            fontSize: '0.835rem',
+                            fontWeight: isActive ? 760 : 680,
+                            whiteSpace: 'nowrap'
+                          }}
+                        />
+                      )}
+                    </ListItemButton>
+                  </Tooltip>
                 </ListItem>
               );
             })}
@@ -308,17 +374,35 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
       {!hideSidebar && (
         <Drawer
           variant={isMobile ? "temporary" : "permanent"}
-          open={isMobile ? open : true}
+          open={isMobile ? mobileOpen : true}
           onClose={handleDrawerToggle}
+          PaperProps={{
+            onMouseEnter: handleSidebarMouseEnter,
+            onMouseLeave: handleSidebarMouseLeave,
+          }}
           sx={{
-            width: { xs: 'min(86vw, 292px)', md: drawerWidth },
+            width: {
+              xs: 'min(86vw, 292px)',
+              md: isHovered ? drawerExpandedWidth : drawerCollapsedWidth,
+            },
             flexShrink: 0,
+            transition: theme.transitions.create('width', {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.enteringScreen,
+            }),
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
-              width: { xs: 'min(86vw, 292px)', md: drawerWidth },
+              width: isMobile ? 'min(86vw, 292px)' : (isHovered ? drawerExpandedWidth : drawerCollapsedWidth),
               borderRight: '1px solid #e2e8f0',
               bgcolor: '#ffffff',
-              boxShadow: '10px 0 30px -28px rgba(15,23,42,0.45)',
+              boxShadow: isHovered
+                ? '0 20px 40px -15px rgba(15, 23, 42, 0.18), 10px 0 30px -20px rgba(15,23,42,0.35)'
+                : '4px 0 20px -15px rgba(15,23,42,0.1)',
+              transition: theme.transitions.create(['width', 'box-shadow'], {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+              }),
+              overflowX: 'hidden',
             },
           }}
         >
