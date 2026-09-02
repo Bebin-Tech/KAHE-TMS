@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import useAutoRefresh from '../hooks/useAutoRefresh';
 import TextAnimate from '../components/TextAnimate';
+import StatCard from '../components/StatCard';
 import {
   Avatar,
   Box,
@@ -16,6 +17,7 @@ import {
   ErrorOutlineRounded,
   PendingActionsRounded,
   TrendingUpRounded
+  PendingActionsRounded
 } from '@mui/icons-material';
 import api from '../api/axios';
 
@@ -55,30 +57,72 @@ const DeanDashboard = () => {
       icon: <AssignmentOutlined />,
       color: '#2563eb',
       bg: '#dbeafe'
+      bg: '#eff6ff',
+      borderColor: 'rgba(37,99,235,0.22)',
+      glow: 'rgba(37,99,235,0.12)',
+      badge: {
+        label: 'Active',
+        bg: '#eff6ff',
+        color: '#1d4ed8',
+        borderColor: 'rgba(37,99,235,0.2)'
+      }
     },
     {
       title: 'Dean Review',
       value: taskTotals.pendingReview,
       helper: 'Awaiting final decision',
+      helper: taskTotals.pendingReview > 0 ? `${taskTotals.pendingReview} awaiting approval` : 'All tasks reviewed',
       icon: <PendingActionsRounded />,
       color: '#0f172a',
       bg: '#f1f5f9'
+      color: '#7c3aed',
+      bg: '#f5f3ff',
+      borderColor: 'rgba(124,58,237,0.22)',
+      glow: 'rgba(124,58,237,0.12)',
+      badge: {
+        label: taskTotals.pendingReview > 0 ? 'Action Needed' : 'Up to Date',
+        bg: taskTotals.pendingReview > 0 ? '#fef3c7' : '#f5f3ff',
+        color: taskTotals.pendingReview > 0 ? '#b45309' : '#6d28d9',
+        borderColor: taskTotals.pendingReview > 0 ? 'rgba(245,158,11,0.25)' : 'rgba(124,58,237,0.2)'
+      }
     },
     {
       title: 'Completed',
       value: taskTotals.completed,
       helper: `${taskTotals.completionRate}% completion rate`,
+      helper: `${taskTotals.completionRate}% institutional completion rate`,
       icon: <AssignmentTurnedInOutlined />,
       color: '#0f766e',
       bg: '#ccfbf1'
+      color: '#059669',
+      bg: '#ecfdf5',
+      borderColor: 'rgba(5,150,105,0.22)',
+      glow: 'rgba(5,150,105,0.12)',
+      progress: taskTotals.completionRate,
+      badge: {
+        label: `${taskTotals.completionRate}% Done`,
+        bg: '#ecfdf5',
+        color: '#047857',
+        borderColor: 'rgba(5,150,105,0.2)'
+      }
     },
     {
       title: 'Overdue',
       value: taskTotals.overdue,
       helper: 'Needs follow-up',
+      helper: taskTotals.overdue > 0 ? `${taskTotals.overdue} tasks past deadline` : 'No overdue tasks',
       icon: <ErrorOutlineRounded />,
       color: '#dc2626',
       bg: '#fee2e2'
+      bg: '#fef2f2',
+      borderColor: 'rgba(220,38,38,0.22)',
+      glow: 'rgba(220,38,38,0.12)',
+      badge: {
+        label: taskTotals.overdue > 0 ? 'Urgent' : 'On Track',
+        bg: taskTotals.overdue > 0 ? '#fee2e2' : '#f0fdf4',
+        color: taskTotals.overdue > 0 ? '#b91c1c' : '#15803d',
+        borderColor: taskTotals.overdue > 0 ? 'rgba(220,38,38,0.2)' : 'rgba(22,163,74,0.2)'
+      }
     }
   ];
 
@@ -150,6 +194,7 @@ const DeanDashboard = () => {
               <Typography variant="subtitle2" sx={{ fontWeight: 760, color: 'text.primary' }}>{card.title}</Typography>
               <Typography variant="body2" color="text.secondary">{card.helper}</Typography>
             </Card>
+            <StatCard {...card} />
           </Grid>
         ))}
       </Grid>

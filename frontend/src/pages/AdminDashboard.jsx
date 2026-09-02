@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import useAutoRefresh from '../hooks/useAutoRefresh';
 import TextAnimate from '../components/TextAnimate';
+import StatCard from '../components/StatCard';
 import {
   Avatar,
   Box,
@@ -106,6 +107,16 @@ const AdminDashboard = () => {
       icon: <PeopleOutlined />,
       color: '#237dba',
       bg: '#eaf3ff'
+      color: '#2563eb',
+      bg: '#eff6ff',
+      borderColor: 'rgba(37,99,235,0.22)',
+      glow: 'rgba(37,99,235,0.12)',
+      badge: {
+        label: 'Members',
+        bg: '#eff6ff',
+        color: '#1d4ed8',
+        borderColor: 'rgba(37,99,235,0.2)'
+      }
     },
     {
       title: 'Departments',
@@ -114,22 +125,56 @@ const AdminDashboard = () => {
       icon: <AccountBalanceOutlined />,
       color: '#1f7f79',
       bg: '#e8f7f6'
+      color: '#0f766e',
+      bg: '#ccfbf1',
+      borderColor: 'rgba(15,118,110,0.22)',
+      glow: 'rgba(15,118,110,0.12)',
+      badge: {
+        label: 'Departments',
+        bg: '#ccfbf1',
+        color: '#0f766e',
+        borderColor: 'rgba(15,118,110,0.2)'
+      }
     },
     {
       title: 'Completed',
+      title: 'Completed Tasks',
       value: taskTotals.completed,
       helper: `${taskTotals.completionRate}% completion rate`,
+      helper: `${taskTotals.completionRate}% institutional completion rate`,
       icon: <AssignmentTurnedInOutlined />,
       color: '#0f172a',
       bg: '#ececf1'
+      color: '#059669',
+      bg: '#ecfdf5',
+      borderColor: 'rgba(5,150,105,0.22)',
+      glow: 'rgba(5,150,105,0.12)',
+      progress: taskTotals.completionRate,
+      badge: {
+        label: `${taskTotals.completionRate}% Done`,
+        bg: '#ecfdf5',
+        color: '#047857',
+        borderColor: 'rgba(5,150,105,0.2)'
+      }
     },
     {
       title: 'Total Tasks',
       value: taskTotals.total,
       helper: `${taskTotals.pending} currently active`,
+      helper: `${taskTotals.pending} currently active tasks`,
       icon: <AssignmentOutlined />,
       color: '#8a6f00',
       bg: '#fff8d9'
+      color: '#d97706',
+      bg: '#fffbeb',
+      borderColor: 'rgba(217,119,6,0.22)',
+      glow: 'rgba(217,119,6,0.12)',
+      badge: {
+        label: `${taskTotals.pending} Active`,
+        bg: '#fffbeb',
+        color: '#b45309',
+        borderColor: 'rgba(217,119,6,0.2)'
+      }
     }
   ];
 
@@ -225,6 +270,7 @@ const AdminDashboard = () => {
               <Typography variant="subtitle2" sx={{ fontWeight: 760, color: 'text.primary' }}>{card.title}</Typography>
               <Typography variant="body2" color="text.secondary">{card.helper}</Typography>
             </Card>
+            <StatCard {...card} />
           </Grid>
         ))}
       </Grid>

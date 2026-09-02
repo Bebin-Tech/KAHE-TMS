@@ -4,6 +4,7 @@ import CreateSubTaskDialog from '../components/CreateSubTaskDialog';
 import ReviewSubmissionDialog from '../components/ReviewSubmissionDialog';
 import useAutoRefresh from '../hooks/useAutoRefresh';
 import TextAnimate from '../components/TextAnimate';
+import StatCard from '../components/StatCard';
 import {
   Grid, Paper, Typography, Box, Button,
   Table, TableBody, TableCell, TableContainer,
@@ -305,28 +306,60 @@ const HODDashboard = () => {
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
             title="Dean assignments"
+            title="Dean Assignments"
             value={stats.assigned}
             helper={`Routed to ${departmentName}`}
             icon={<AssignmentRounded />}
             color="#2563eb"
+            bg="#eff6ff"
+            borderColor="rgba(37,99,235,0.22)"
+            glow="rgba(37,99,235,0.12)"
+            badge={{
+              label: 'Assigned',
+              bg: '#eff6ff',
+              color: '#1d4ed8',
+              borderColor: 'rgba(37,99,235,0.2)'
+            }}
           />
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
             title="Faculty work"
+            title="Faculty Work"
             value={activeSubtasks}
             helper="Subtasks currently with faculty"
             icon={<GroupWorkRounded />}
             color="#0f172a"
+            color="#7c3aed"
+            bg="#f5f3ff"
+            borderColor="rgba(124,58,237,0.22)"
+            glow="rgba(124,58,237,0.12)"
+            badge={{
+              label: 'In Progress',
+              bg: '#f5f3ff',
+              color: '#6d28d9',
+              borderColor: 'rgba(124,58,237,0.2)'
+            }}
           />
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
             title="To review"
+            title="To Review"
             value={stats.pendingReview}
             helper="Faculty submissions waiting"
             icon={<RateReviewRounded />}
             color="#b45309"
+            color="#d97706"
+            bg="#fffbeb"
+            borderColor="rgba(217,119,6,0.22)"
+            glow="rgba(217,119,6,0.12)"
+            badge={{
+              label: stats.pendingReview > 0 ? 'Pending Action' : 'All Clear',
+              bg: stats.pendingReview > 0 ? '#fef3c7' : '#f0fdf4',
+              color: stats.pendingReview > 0 ? '#b45309' : '#15803d',
+              borderColor: stats.pendingReview > 0 ? 'rgba(245,158,11,0.25)' : 'rgba(22,163,74,0.2)'
+            }}
           />
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
@@ -336,6 +369,16 @@ const HODDashboard = () => {
             helper="Verified work ready to submit"
             icon={<FactCheckRounded />}
             color="#34B1AA"
+            color="#059669"
+            bg="#ecfdf5"
+            borderColor="rgba(5,150,105,0.22)"
+            glow="rgba(5,150,105,0.12)"
+            badge={{
+              label: readyForDean > 0 ? 'Ready' : 'Completed',
+              bg: '#ecfdf5',
+              color: '#047857',
+              borderColor: 'rgba(5,150,105,0.2)'
+            }}
           />
         </Grid>
       </Grid>
