@@ -221,49 +221,6 @@ const HODDashboard = () => {
     || subtasks.find((subtask) => subtask.department_name)?.department_name
     || 'your department';
 
-  const StatCard = ({ title, value, helper, icon, color }) => (
-    <Card
-      sx={{
-        borderRadius: 2.5,
-        overflow: 'hidden',
-        height: '100%',
-        border: '1px solid #dbe5ef',
-        boxShadow: '0 18px 42px -36px rgba(30,30,44,0.5)',
-        transition: 'transform 180ms ease, box-shadow 180ms ease',
-        '&:hover': {
-          transform: 'translateY(-2px)',
-          boxShadow: '0 22px 52px -38px rgba(30,30,44,0.65)',
-        },
-      }}
-    >
-      <CardContent sx={{ p: 2.25, display: 'flex', alignItems: 'center', gap: 1.75 }}>
-        <Box sx={{
-          width: 52,
-          height: 52,
-          borderRadius: 2,
-          bgcolor: `${color}15`,
-          color,
-          display: 'grid',
-          placeItems: 'center',
-          flexShrink: 0,
-        }}>
-          {icon}
-        </Box>
-        <Box sx={{ minWidth: 0 }}>
-          <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 850, textTransform: 'uppercase', letterSpacing: 0.4 }}>
-            {title}
-          </Typography>
-          <Typography variant="h4" sx={{ fontWeight: 900, lineHeight: 1.05, mt: 0.25 }}>
-            {value}
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 650 }}>
-            {helper}
-          </Typography>
-        </Box>
-      </CardContent>
-    </Card>
-  );
-
   return (
     <DashboardLayout title="Department Overview">
       <Paper
@@ -305,7 +262,6 @@ const HODDashboard = () => {
       <Grid container spacing={2.5} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
-            title="Dean assignments"
             title="Dean Assignments"
             value={stats.assigned}
             helper={`Routed to ${departmentName}`}
@@ -324,12 +280,10 @@ const HODDashboard = () => {
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
-            title="Faculty work"
             title="Faculty Work"
             value={activeSubtasks}
             helper="Subtasks currently with faculty"
             icon={<GroupWorkRounded />}
-            color="#0f172a"
             color="#7c3aed"
             bg="#f5f3ff"
             borderColor="rgba(124,58,237,0.22)"
@@ -344,12 +298,10 @@ const HODDashboard = () => {
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
-            title="To review"
             title="To Review"
             value={stats.pendingReview}
             helper="Faculty submissions waiting"
             icon={<RateReviewRounded />}
-            color="#b45309"
             color="#d97706"
             bg="#fffbeb"
             borderColor="rgba(217,119,6,0.22)"
@@ -368,7 +320,6 @@ const HODDashboard = () => {
             value={readyForDean}
             helper="Verified work ready to submit"
             icon={<FactCheckRounded />}
-            color="#34B1AA"
             color="#059669"
             bg="#ecfdf5"
             borderColor="rgba(5,150,105,0.22)"

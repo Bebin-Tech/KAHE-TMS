@@ -105,8 +105,6 @@ const AdminDashboard = () => {
       value: stats.total_users || 0,
       helper: 'Active institutional accounts',
       icon: <PeopleOutlined />,
-      color: '#237dba',
-      bg: '#eaf3ff'
       color: '#2563eb',
       bg: '#eff6ff',
       borderColor: 'rgba(37,99,235,0.22)',
@@ -123,8 +121,6 @@ const AdminDashboard = () => {
       value: stats.departments || departments.length || 0,
       helper: 'Academic units onboarded',
       icon: <AccountBalanceOutlined />,
-      color: '#1f7f79',
-      bg: '#e8f7f6'
       color: '#0f766e',
       bg: '#ccfbf1',
       borderColor: 'rgba(15,118,110,0.22)',
@@ -137,14 +133,10 @@ const AdminDashboard = () => {
       }
     },
     {
-      title: 'Completed',
       title: 'Completed Tasks',
       value: taskTotals.completed,
-      helper: `${taskTotals.completionRate}% completion rate`,
       helper: `${taskTotals.completionRate}% institutional completion rate`,
       icon: <AssignmentTurnedInOutlined />,
-      color: '#0f172a',
-      bg: '#ececf1'
       color: '#059669',
       bg: '#ecfdf5',
       borderColor: 'rgba(5,150,105,0.22)',
@@ -160,11 +152,8 @@ const AdminDashboard = () => {
     {
       title: 'Total Tasks',
       value: taskTotals.total,
-      helper: `${taskTotals.pending} currently active`,
       helper: `${taskTotals.pending} currently active tasks`,
       icon: <AssignmentOutlined />,
-      color: '#8a6f00',
-      bg: '#fff8d9'
       color: '#d97706',
       bg: '#fffbeb',
       borderColor: 'rgba(217,119,6,0.22)',
@@ -248,28 +237,6 @@ const AdminDashboard = () => {
       <Grid container spacing={2.5} sx={{ mb: 3 }}>
         {summaryCards.map((card) => (
           <Grid item xs={12} sm={6} lg={3} key={card.title}>
-            <Card
-              sx={{
-                p: { xs: 2, sm: 2.5 },
-                height: '100%',
-                borderRadius: 3,
-                transition: 'transform 180ms ease, box-shadow 180ms ease',
-                '&:hover': {
-                  transform: 'translateY(-3px)',
-                  boxShadow: '0 20px 52px -36px rgba(30,30,44,0.62)'
-                }
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Avatar sx={{ bgcolor: card.bg, color: card.color, width: 48, height: 48 }}>
-                  {card.icon}
-                </Avatar>
-                <TrendingUpRounded sx={{ color: '#98a2b3', fontSize: 20 }} />
-              </Box>
-              <Typography variant="h4" sx={{ mb: 0.5, fontWeight: 800 }}>{card.value}</Typography>
-              <Typography variant="subtitle2" sx={{ fontWeight: 760, color: 'text.primary' }}>{card.title}</Typography>
-              <Typography variant="body2" color="text.secondary">{card.helper}</Typography>
-            </Card>
             <StatCard {...card} />
           </Grid>
         ))}

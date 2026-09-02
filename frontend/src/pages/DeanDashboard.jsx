@@ -4,9 +4,7 @@ import useAutoRefresh from '../hooks/useAutoRefresh';
 import TextAnimate from '../components/TextAnimate';
 import StatCard from '../components/StatCard';
 import {
-  Avatar,
   Box,
-  Card,
   Grid,
   Paper,
   Typography
@@ -15,8 +13,6 @@ import {
   AssignmentOutlined,
   AssignmentTurnedInOutlined,
   ErrorOutlineRounded,
-  PendingActionsRounded,
-  TrendingUpRounded
   PendingActionsRounded
 } from '@mui/icons-material';
 import api from '../api/axios';
@@ -56,7 +52,6 @@ const DeanDashboard = () => {
       helper: `${taskTotals.active} currently active`,
       icon: <AssignmentOutlined />,
       color: '#2563eb',
-      bg: '#dbeafe'
       bg: '#eff6ff',
       borderColor: 'rgba(37,99,235,0.22)',
       glow: 'rgba(37,99,235,0.12)',
@@ -70,11 +65,8 @@ const DeanDashboard = () => {
     {
       title: 'Dean Review',
       value: taskTotals.pendingReview,
-      helper: 'Awaiting final decision',
       helper: taskTotals.pendingReview > 0 ? `${taskTotals.pendingReview} awaiting approval` : 'All tasks reviewed',
       icon: <PendingActionsRounded />,
-      color: '#0f172a',
-      bg: '#f1f5f9'
       color: '#7c3aed',
       bg: '#f5f3ff',
       borderColor: 'rgba(124,58,237,0.22)',
@@ -89,11 +81,8 @@ const DeanDashboard = () => {
     {
       title: 'Completed',
       value: taskTotals.completed,
-      helper: `${taskTotals.completionRate}% completion rate`,
       helper: `${taskTotals.completionRate}% institutional completion rate`,
       icon: <AssignmentTurnedInOutlined />,
-      color: '#0f766e',
-      bg: '#ccfbf1'
       color: '#059669',
       bg: '#ecfdf5',
       borderColor: 'rgba(5,150,105,0.22)',
@@ -109,11 +98,9 @@ const DeanDashboard = () => {
     {
       title: 'Overdue',
       value: taskTotals.overdue,
-      helper: 'Needs follow-up',
       helper: taskTotals.overdue > 0 ? `${taskTotals.overdue} tasks past deadline` : 'No overdue tasks',
       icon: <ErrorOutlineRounded />,
       color: '#dc2626',
-      bg: '#fee2e2'
       bg: '#fef2f2',
       borderColor: 'rgba(220,38,38,0.22)',
       glow: 'rgba(220,38,38,0.12)',
@@ -172,28 +159,6 @@ const DeanDashboard = () => {
       <Grid container spacing={2.5} sx={{ mb: 3 }}>
         {summaryCards.map((card) => (
           <Grid item xs={12} sm={6} lg={3} key={card.title}>
-            <Card
-              sx={{
-                p: { xs: 2, sm: 2.5 },
-                height: '100%',
-                borderRadius: 3,
-                transition: 'transform 180ms ease, box-shadow 180ms ease',
-                '&:hover': {
-                  transform: 'translateY(-3px)',
-                  boxShadow: '0 20px 52px -36px rgba(15,23,42,0.62)'
-                }
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                <Avatar sx={{ bgcolor: card.bg, color: card.color, width: 48, height: 48 }}>
-                  {card.icon}
-                </Avatar>
-                <TrendingUpRounded sx={{ color: '#94a3b8', fontSize: 20 }} />
-              </Box>
-              <Typography variant="h4" sx={{ mb: 0.5, fontWeight: 800 }}>{card.value}</Typography>
-              <Typography variant="subtitle2" sx={{ fontWeight: 760, color: 'text.primary' }}>{card.title}</Typography>
-              <Typography variant="body2" color="text.secondary">{card.helper}</Typography>
-            </Card>
             <StatCard {...card} />
           </Grid>
         ))}
