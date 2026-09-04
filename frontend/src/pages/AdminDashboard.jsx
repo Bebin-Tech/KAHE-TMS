@@ -7,7 +7,6 @@ import {
   Avatar,
   Box,
   Button,
-  Card,
   Chip,
   Grid,
   LinearProgress,
@@ -22,8 +21,7 @@ import {
   AssignmentTurnedInOutlined,
   BusinessOutlined,
   PeopleOutlined,
-  PriorityHighRounded,
-  TrendingUpRounded
+  PriorityHighRounded
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
@@ -363,4 +361,3 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
-

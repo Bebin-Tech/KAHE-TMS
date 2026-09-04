@@ -9,7 +9,7 @@ import {
   Grid, Paper, Typography, Box, Button,
   Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Chip, IconButton,
-  Card, CardContent, Avatar,
+  Avatar,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField,
   CircularProgress,
   Tooltip,
@@ -908,4 +908,3 @@ const HODDashboard = () => {
 };
 
 export default HODDashboard;
-

@@ -65,6 +65,38 @@ class Task(models.Model):
     def __str__(self):
         return self.title
 
+class AcademicCalendarEvent(models.Model):
+    ACTIVITY_CHOICES = (
+        ('SEMESTER_EXAM', 'Semester Examination'),
+        ('COLLEGE_EVENT', 'College Event'),
+        ('INAUGURATION', 'Inauguration Program'),
+        ('FESTIVAL', 'Festival'),
+        ('ACADEMIC_PROGRAM', 'Academic Program'),
+        ('INSTITUTIONAL_PROGRAM', 'Institutional Program'),
+        ('OTHER', 'Other'),
+    )
+
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    activity_type = models.CharField(max_length=30, choices=ACTIVITY_CHOICES, default='ACADEMIC_PROGRAM')
+    academic_year = models.CharField(max_length=20)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField(null=True, blank=True)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, related_name='academic_calendar_events', null=True, blank=True)
+    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='academic_calendar_events', null=True, blank=True)
+    generated_task = models.OneToOneField(Task, on_delete=models.SET_NULL, related_name='calendar_event', null=True, blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_academic_calendar_events')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    objects = models.Manager()
+
+    class Meta:
+        ordering = ['start_date', 'title']
+
+    def __str__(self):
+        return f"{self.academic_year} - {self.title}"
+
 class SubTask(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='subtasks')
     title = models.CharField(max_length=255)
@@ -134,6 +166,7 @@ class UserModulePermission(models.Model):
         ('tasks', 'Tasks'),
         ('completed_tasks', 'Completed Tasks'),
         ('reports', 'Reports'),
+        ('academic_calendar', 'Academic Calendar'),
         ('notes', 'Notes'),
         ('settings', 'Settings'),
         ('user_management', 'User Management'),

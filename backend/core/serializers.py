@@ -1,7 +1,10 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
-from .models import User, Department, Task, SubTask, Submission, TaskReport, Notification, UserModulePermission, Note
+from .models import (
+    User, Department, Task, SubTask, Submission, TaskReport, Notification,
+    UserModulePermission, Note, AcademicCalendarEvent
+)
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
@@ -69,6 +72,27 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def get_subtasks(self, obj):
         return SubTaskSerializer(obj.subtasks.filter(is_active=True), many=True).data
+
+class AcademicCalendarEventSerializer(serializers.ModelSerializer):
+    activity_type_label = serializers.CharField(source='get_activity_type_display', read_only=True)
+    department_name = serializers.ReadOnlyField(source='department.name')
+    assigned_to_name = serializers.SerializerMethodField()
+    created_by_name = serializers.SerializerMethodField()
+    generated_task_title = serializers.ReadOnlyField(source='generated_task.title')
+    generated_task_status = serializers.ReadOnlyField(source='generated_task.status')
+
+    class Meta:
+        model = AcademicCalendarEvent
+        fields = '__all__'
+        read_only_fields = ('created_by', 'generated_task', 'is_active', 'created_at', 'updated_at')
+
+    def get_assigned_to_name(self, obj):
+        if not obj.assigned_to:
+            return ''
+        return obj.assigned_to.get_full_name() or obj.assigned_to.username
+
+    def get_created_by_name(self, obj):
+        return obj.created_by.get_full_name() or obj.created_by.username
 
 class SubmissionSerializer(serializers.ModelSerializer):
     submitted_by_name = serializers.ReadOnlyField(source='submitted_by.get_full_name')

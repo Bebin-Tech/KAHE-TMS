@@ -19,6 +19,7 @@ import {
   ExitToAppRounded,
   AssignmentTurnedInOutlined,
   HomeOutlined,
+  CalendarMonthRounded,
   ExpandLessRounded,
   ExpandMoreRounded,
   LogoutRounded
@@ -134,6 +135,9 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     { text: 'Task', icon: <AssignmentOutlined />, path: '/tasks', module: 'tasks' },
     { text: 'Completed Task', icon: <AssignmentTurnedInOutlined />, path: '/completed-tasks', module: 'completed_tasks' },
     { text: 'Report', icon: <AssessmentOutlined />, path: '/reports', module: 'reports' },
+    ...(user.role !== 'FACULTY' ? [
+      { text: 'Academic Calendar', icon: <CalendarMonthRounded />, path: '/academic-calendar', module: 'academic_calendar' }
+    ] : []),
     { text: 'Notes', icon: <NotesOutlined />, path: user.role === 'ADMIN' ? '/admin-notes' : '/notes', module: 'notes' },
     ...(user.role === 'ADMIN' ? [
       { text: 'User', icon: <PeopleOutlined />, path: '/user-management', module: 'user_management' }

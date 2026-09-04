@@ -3,13 +3,19 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.core.files.base import ContentFile
+from django.db import transaction
 from django.db.models import Count, Exists, OuterRef, Q
 from django.utils import timezone
-from .models import User, Department, Task, SubTask, Submission, TaskReport, Notification, UserModulePermission, Note
+from datetime import datetime, time
+import calendar
+from .models import (
+    User, Department, Task, SubTask, Submission, TaskReport, Notification,
+    UserModulePermission, Note, AcademicCalendarEvent
+)
 from .serializers import (
     UserSerializer, CreateUserSerializer, DepartmentSerializer, TaskSerializer, 
     SubTaskSerializer, SubmissionSerializer, TaskReportSerializer, NotificationSerializer,
-    UserModulePermissionSerializer, NoteSerializer,
+    UserModulePermissionSerializer, NoteSerializer, AcademicCalendarEventSerializer,
     MyTokenObtainPairSerializer
 )
 
@@ -60,6 +66,163 @@ def has_module_permission(user, module, *fields):
     for field in fields:
         field_query |= Q(**{field: True})
     return UserModulePermission.objects.filter(query & field_query).exists()
+
+
+def build_calendar_task_description(event):
+    date_text = timezone.localtime(event.start_date).strftime('%d %b %Y, %I:%M %p')
+    if event.end_date:
+        date_text = f"{date_text} to {timezone.localtime(event.end_date).strftime('%d %b %Y, %I:%M %p')}"
+
+    parts = [
+        f"Academic Calendar Activity: {event.get_activity_type_display()}",
+        f"Academic Year: {event.academic_year}",
+        f"Scheduled Date: {date_text}",
+    ]
+    if event.description:
+        parts.append("")
+        parts.append(event.description)
+    return "\n".join(parts)
+
+
+def sync_calendar_task(event, created_by):
+    assigned_hod = event.assigned_to if event.assigned_to and event.assigned_to.role == 'HOD' else None
+    task_department = event.department or getattr(assigned_hod, 'department', None)
+    deadline = event.end_date or event.start_date
+    payload = {
+        'title': event.title,
+        'description': build_calendar_task_description(event),
+        'department': task_department,
+        'assigned_to_hod': assigned_hod,
+        'start_date': event.start_date,
+        'deadline': deadline,
+        'priority': 'MEDIUM',
+        'status': 'ASSIGNED' if assigned_hod else 'ONGOING',
+        'is_special': True,
+        'is_active': True,
+    }
+
+    if event.generated_task:
+        task = event.generated_task
+        for field, value in payload.items():
+            setattr(task, field, value)
+        task.save()
+        action = 'Updated task from academic calendar'
+    else:
+        task = Task.objects.create(created_by=created_by, **payload)
+        event.generated_task = task
+        event.save(update_fields=['generated_task', 'updated_at'])
+        action = 'Created task from academic calendar'
+
+    record_task_activity(
+        task=task,
+        user=created_by,
+        role=created_by.role,
+        status=task.status,
+        action_performed=action,
+        assigned_by=created_by,
+        assigned_at=task.created_at,
+    )
+    if assigned_hod:
+        record_task_activity(
+            task=task,
+            user=assigned_hod,
+            role='HOD',
+            status='ASSIGNED',
+            action_performed='Assigned academic calendar task to HOD',
+            assigned_by=created_by,
+            assigned_at=task.created_at,
+        )
+        Notification.objects.create(
+            user=assigned_hod,
+            message=f"Academic calendar task '{task.title}' has been assigned to you by {created_by.get_full_name() or created_by.username}."
+        )
+    return task
+
+
+def infer_calendar_activity_type(title):
+    text = (title or '').lower()
+    if any(keyword in text for keyword in ['exam', 'cia', 'test', 'assessment']):
+        return 'SEMESTER_EXAM'
+    if any(keyword in text for keyword in ['festival', 'pongal', 'diwali', 'christmas', 'onam']):
+        return 'FESTIVAL'
+    if 'inauguration' in text:
+        return 'INAUGURATION'
+    if any(keyword in text for keyword in ['seminar', 'workshop', 'orientation', 'conference', 'symposium']):
+        return 'ACADEMIC_PROGRAM'
+    if any(keyword in text for keyword in ['holiday', 'day', 'celebration', 'function', 'event']):
+        return 'COLLEGE_EVENT'
+    return 'INSTITUTIONAL_PROGRAM'
+
+
+def parse_academic_year_from_sheet(worksheet, fallback):
+    for row in worksheet.iter_rows(min_row=1, max_row=min(5, worksheet.max_row), values_only=True):
+        for cell in row:
+            text = str(cell or '')
+            if '2026' in text and '2027' in text:
+                return '2026-2027'
+    return fallback
+
+
+def parse_calendar_excel_rows(upload, academic_year):
+    try:
+        from openpyxl import load_workbook
+    except ImportError as exc:
+        raise ValueError('Excel import requires openpyxl. Install backend requirements before importing.') from exc
+
+    workbook = load_workbook(upload, read_only=True, data_only=True)
+    worksheet = workbook.active
+    academic_year = parse_academic_year_from_sheet(worksheet, academic_year)
+    year_start = int(academic_year.split('-')[0]) if academic_year and '-' in academic_year else timezone.localdate().year
+    current_month = None
+    current_year = year_start
+    events = []
+
+    for index, row in enumerate(worksheet.iter_rows(values_only=True), start=1):
+        first_cell = row[0] if row else None
+        particulars = str(row[2] or '').strip() if len(row) > 2 and row[2] else ''
+
+        if isinstance(first_cell, datetime):
+            current_month = first_cell.month
+            current_year = first_cell.year
+            if not particulars:
+                continue
+            day_value = first_cell.day
+        elif isinstance(first_cell, str):
+            month_name = first_cell.strip()
+            matched_month = next(
+                (month_number for month_number in range(1, 13) if month_name.lower().startswith(calendar.month_name[month_number].lower())),
+                None
+            )
+            if matched_month:
+                current_month = matched_month
+                current_year = year_start if matched_month >= 5 else year_start + 1
+            continue
+        elif isinstance(first_cell, (int, float)) and current_month:
+            day_value = int(first_cell)
+        else:
+            continue
+
+        if not particulars:
+            continue
+
+        try:
+            event_date = datetime.combine(
+                datetime(current_year, current_month, day_value).date(),
+                time(hour=9, minute=0)
+            )
+        except ValueError:
+            continue
+
+        aware_start = timezone.make_aware(event_date, timezone.get_current_timezone())
+        events.append({
+            'title': particulars[:255],
+            'description': f"Imported from academic calendar row {index}.",
+            'activity_type': infer_calendar_activity_type(particulars),
+            'academic_year': academic_year,
+            'start_date': aware_start,
+        })
+
+    return events
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
@@ -229,6 +392,22 @@ class TaskViewSet(viewsets.ModelViewSet):
         instance.save()
         instance.subtasks.update(is_active=False)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['delete'], url_path='delete-all')
+    def delete_all(self, request):
+        """Soft delete every task visible to the current user."""
+        if not has_module_delete_access(request.user, 'tasks', 'completed_tasks'):
+            return Response({'error': 'Delete access is required for the Task module.'}, status=status.HTTP_403_FORBIDDEN)
+
+        task_ids = list(self.get_queryset().values_list('id', flat=True))
+        if not task_ids:
+            return Response({'deleted_count': 0}, status=status.HTTP_200_OK)
+
+        with transaction.atomic():
+            deleted_count = Task.objects.filter(id__in=task_ids, is_active=True).update(is_active=False)
+            SubTask.objects.filter(task_id__in=task_ids, is_active=True).update(is_active=False)
+
+        return Response({'deleted_count': deleted_count}, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
         if request.user.role == 'FACULTY':
@@ -941,6 +1120,130 @@ class NotificationViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         instance.is_active = False
         instance.save(update_fields=['is_active'])
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AcademicCalendarEventViewSet(viewsets.ModelViewSet):
+    queryset = AcademicCalendarEvent.objects.select_related(
+        'department', 'assigned_to', 'generated_task', 'created_by'
+    ).filter(is_active=True)
+    serializer_class = AcademicCalendarEventSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = self.queryset
+
+        academic_year = self.request.query_params.get('academic_year')
+        if academic_year:
+            queryset = queryset.filter(academic_year=academic_year)
+
+        if user.role == 'ADMIN':
+            return queryset
+        if user.role == 'DEAN':
+            return queryset.filter(created_by=user)
+        if user.role == 'HOD':
+            return queryset.filter(assigned_to=user)
+        return queryset.none()
+
+    def create(self, request, *args, **kwargs):
+        if request.user.role not in ['ADMIN', 'DEAN']:
+            return Response({'error': 'Only Dean or Admin users can create academic calendar activities.'}, status=status.HTTP_403_FORBIDDEN)
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        if request.user.role not in ['ADMIN', 'DEAN']:
+            return Response({'error': 'Only Dean or Admin users can update academic calendar activities.'}, status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        if request.user.role not in ['ADMIN', 'DEAN']:
+            return Response({'error': 'Only Dean or Admin users can update academic calendar activities.'}, status=status.HTTP_403_FORBIDDEN)
+        return super().partial_update(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        with transaction.atomic():
+            event = serializer.save(created_by=self.request.user, is_active=True)
+            sync_calendar_task(event, self.request.user)
+
+    def perform_update(self, serializer):
+        with transaction.atomic():
+            event = serializer.save()
+            sync_calendar_task(event, self.request.user)
+
+    @action(detail=False, methods=['post'], url_path='import-excel')
+    def import_excel(self, request):
+        if request.user.role not in ['ADMIN', 'DEAN']:
+            return Response({'error': 'Only Dean or Admin users can import academic calendar activities.'}, status=status.HTTP_403_FORBIDDEN)
+
+        upload = request.FILES.get('file')
+        department_id = request.data.get('department')
+        assigned_to_id = request.data.get('assigned_to')
+        academic_year = request.data.get('academic_year') or '2026-2027'
+
+        if not upload:
+            return Response({'error': 'Upload an academic calendar Excel file.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        department = Department.objects.filter(id=department_id, is_active=True).first()
+        if not department:
+            return Response({'error': 'Select a valid department before importing.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        assigned_to = User.objects.filter(id=assigned_to_id, role='HOD', is_active=True, department=department).first()
+        if not assigned_to:
+            return Response({'error': 'Select an active HOD from the selected department before importing.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            rows = parse_calendar_excel_rows(upload, academic_year)
+        except ValueError as exc:
+            return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not rows:
+            return Response({'error': 'No date-wise academic calendar activities were found in the Excel file.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        created_events = []
+        skipped_count = 0
+        with transaction.atomic():
+            for row in rows:
+                exists = AcademicCalendarEvent.objects.filter(
+                    created_by=request.user,
+                    title=row['title'],
+                    start_date=row['start_date'],
+                    assigned_to=assigned_to,
+                    is_active=True,
+                ).exists()
+                if exists:
+                    skipped_count += 1
+                    continue
+
+                event = AcademicCalendarEvent.objects.create(
+                    **row,
+                    department=department,
+                    assigned_to=assigned_to,
+                    created_by=request.user,
+                    is_active=True,
+                )
+                sync_calendar_task(event, request.user)
+                created_events.append(event)
+
+        serializer = self.get_serializer(created_events, many=True)
+        return Response({
+            'created_count': len(created_events),
+            'skipped_count': skipped_count,
+            'events': serializer.data,
+        }, status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, *args, **kwargs):
+        if request.user.role not in ['ADMIN', 'DEAN']:
+            return Response({'error': 'Only Dean or Admin users can delete academic calendar activities.'}, status=status.HTTP_403_FORBIDDEN)
+
+        instance = self.get_object()
+        with transaction.atomic():
+            instance.is_active = False
+            instance.save(update_fields=['is_active', 'updated_at'])
+            if instance.generated_task:
+                instance.generated_task.is_active = False
+                instance.generated_task.save(update_fields=['is_active', 'updated_at'])
+                instance.generated_task.subtasks.update(is_active=False)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

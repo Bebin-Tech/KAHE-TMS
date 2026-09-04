@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     UserViewSet, TaskViewSet, SubTaskViewSet, 
     SubmissionViewSet, TaskReportViewSet, DepartmentViewSet, NotificationViewSet,
-    UserModulePermissionViewSet, NoteViewSet
+    UserModulePermissionViewSet, NoteViewSet, AcademicCalendarEventViewSet
 )
 
 router = DefaultRouter()
@@ -16,6 +16,7 @@ router.register(r'departments', DepartmentViewSet)
 router.register(r'notifications', NotificationViewSet)
 router.register(r'user-module-permissions', UserModulePermissionViewSet)
 router.register(r'notes', NoteViewSet)
+router.register(r'academic-calendar', AcademicCalendarEventViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

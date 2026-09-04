@@ -9,6 +9,7 @@ import UserManagement from './pages/UserManagement.jsx';
 import DepartmentManagement from './pages/DepartmentManagement.jsx';
 import Tasks from './pages/Tasks.jsx';
 import Reports from './pages/Reports.jsx';
+import AcademicCalendar from './pages/AcademicCalendar.jsx';
 import Notes from './pages/Notes.jsx';
 import Settings from './pages/Settings.jsx';
 import CompleteModule from './pages/CompleteModule.jsx';
@@ -91,6 +92,15 @@ function App() {
           element={
             <ProtectedRoute>
               <Reports />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/academic-calendar"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN', 'DEAN', 'HOD']}>
+              <AcademicCalendar />
             </ProtectedRoute>
           }
         />

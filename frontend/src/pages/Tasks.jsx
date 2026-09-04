@@ -16,6 +16,7 @@ import {
   AssignmentOutlined,
   EditRounded,
   DeleteRounded,
+  DeleteSweepRounded,
   StarRounded,
   ScheduleRounded,
   CheckCircleRounded,
@@ -130,6 +131,7 @@ const Tasks = () => {
   const [open, setOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteAllOpen, setDeleteAllOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [submitTarget, setSubmitTarget] = useState(null);
   const [submissionRemarks, setSubmissionRemarks] = useState('');
@@ -227,7 +229,7 @@ const Tasks = () => {
   useAutoRefresh(
     fetchData,
     isHod ? 1000 : 5000,
-    !open && !selectedTask && !submitTarget && !facultyAssignmentTask && !reviewOpen && !deleteTarget && !successTask
+    !open && !selectedTask && !submitTarget && !facultyAssignmentTask && !reviewOpen && !deleteTarget && !deleteAllOpen && !successTask
   );
 
   const handleEdit = (task) => {
@@ -246,6 +248,22 @@ const Tasks = () => {
     } catch (err) {
       console.error('Error deleting task:', err);
       showMessage(formatApiError(err, 'Failed to delete task.'), 'error');
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    setActionLoading(true);
+    try {
+      const response = await api.delete('tasks/delete-all/');
+      const deletedCount = response.data?.deleted_count || 0;
+      setDeleteAllOpen(false);
+      showMessage(`${deletedCount} task${deletedCount === 1 ? '' : 's'} deleted successfully.`);
+      fetchData();
+    } catch (err) {
+      console.error('Error deleting all tasks:', err);
+      showMessage(formatApiError(err, 'Failed to delete all tasks.'), 'error');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -406,7 +424,18 @@ const Tasks = () => {
 
   return (
     <DashboardLayout title="Task Management">
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end', alignItems: { xs: 'stretch', md: 'center' } }}>
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'flex-end', gap: 1.25, alignItems: { xs: 'stretch', md: 'center' }, flexDirection: { xs: 'column', sm: 'row' } }}>
+        {canDeleteTask && visibleTasks.length > 0 && (
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<DeleteSweepRounded />}
+            onClick={() => setDeleteAllOpen(true)}
+            sx={{ width: { xs: '100%', sm: 'auto' }, bgcolor: '#ffffff', fontWeight: 850, borderRadius: 1.5 }}
+          >
+            Delete All
+          </Button>
+        )}
         {canCreateTask && (
           <Button
             variant="outlined"
@@ -1119,6 +1148,62 @@ const Tasks = () => {
             }}
           >
             Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={deleteAllOpen}
+        onClose={() => setDeleteAllOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            overflow: 'hidden',
+            boxShadow: '0 26px 70px -42px rgba(15,23,42,0.65)',
+          },
+        }}
+      >
+        <DialogTitle sx={{ p: 0, bgcolor: '#fff7f7', borderBottom: '1px solid #fee2e2' }}>
+          <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Avatar sx={{ bgcolor: '#fee2e2', color: '#dc2626' }}>
+              <DeleteSweepRounded />
+            </Avatar>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a' }}>
+                Delete All Tasks
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                This removes all currently visible tasks from active lists.
+              </Typography>
+            </Box>
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ px: 3, py: 2.5 }}>
+          <Typography variant="body2" color="text.secondary">
+            Are you sure you want to delete all {visibleTasks.length} task{visibleTasks.length === 1 ? '' : 's'}? Assigned users will no longer see them in active task lists.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0', gap: 1 }}>
+          <Button
+            onClick={() => setDeleteAllOpen(false)}
+            variant="outlined"
+            color="inherit"
+            disabled={actionLoading}
+            sx={{ bgcolor: '#ffffff', fontWeight: 850, minWidth: 100 }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteAll}
+            variant="contained"
+            color="error"
+            disabled={actionLoading}
+            startIcon={<DeleteSweepRounded />}
+            sx={{ fontWeight: 900, minWidth: 130 }}
+          >
+            Delete All
           </Button>
         </DialogActions>
       </Dialog>

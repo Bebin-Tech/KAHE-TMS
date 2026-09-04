@@ -6,7 +6,6 @@ import TextAnimate from '../components/TextAnimate';
 import StatCard from '../components/StatCard';
 import {
   Alert,
-  Avatar,
   Box,
   Button,
   Chip,
@@ -27,7 +26,6 @@ import {
   HistoryRounded,
   PendingActionsRounded,
   TrendingUpRounded,
-  AccessTimeRounded,
   AssignmentTurnedInOutlined
 } from '@mui/icons-material';
 import api from '../api/axios';
