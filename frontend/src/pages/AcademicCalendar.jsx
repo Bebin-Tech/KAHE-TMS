@@ -26,6 +26,7 @@ import {
   AssignmentTurnedInRounded,
   CalendarMonthRounded,
   DeleteRounded,
+  DeleteSweepRounded,
   EditRounded,
   EventAvailableRounded,
   FileUploadRounded,
@@ -98,6 +99,7 @@ const AcademicCalendar = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteAllOpen, setDeleteAllOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [fetchingHods, setFetchingHods] = useState(false);
   const [fetchingImportHods, setFetchingImportHods] = useState(false);
@@ -271,6 +273,19 @@ const AcademicCalendar = () => {
     }
   };
 
+  const handleDeleteAll = async () => {
+    try {
+      const response = await api.delete('academic-calendar/delete-all/');
+      const deletedCount = response.data?.deleted_count || 0;
+      setDeleteAllOpen(false);
+      setEvents([]);
+      showMessage(`${deletedCount} calendar entr${deletedCount === 1 ? 'y' : 'ies'} deleted successfully.`);
+      fetchEvents();
+    } catch (err) {
+      showMessage(formatApiError(err, 'Unable to delete all calendar entries.'), 'error');
+    }
+  };
+
   const handleImport = async (event) => {
     event.preventDefault();
     if (!importFile) {
@@ -321,6 +336,11 @@ const AcademicCalendar = () => {
           </Stack>
           {canManage && (
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} sx={{ alignSelf: { xs: 'stretch', md: 'center' } }}>
+              {events.length > 0 && (
+                <Button variant="outlined" color="error" startIcon={<DeleteSweepRounded />} onClick={() => setDeleteAllOpen(true)} sx={{ minWidth: 150, bgcolor: '#ffffff', fontWeight: 850 }}>
+                  Delete All
+                </Button>
+              )}
               <Button variant="outlined" startIcon={<FileUploadRounded />} onClick={handleOpenImport} sx={{ minWidth: 160, bgcolor: '#ffffff', fontWeight: 850 }}>
                 Import Excel
               </Button>
@@ -555,6 +575,37 @@ const AcademicCalendar = () => {
         <DialogActions sx={{ px: 3, pb: 2.5 }}>
           <Button color="inherit" onClick={() => setDeleteTarget(null)}>Cancel</Button>
           <Button variant="contained" color="error" onClick={handleDelete}>Delete</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={deleteAllOpen} onClose={() => setDeleteAllOpen(false)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}>
+        <DialogTitle sx={{ p: 0, bgcolor: '#fff7f7', borderBottom: '1px solid #fee2e2' }}>
+          <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Avatar sx={{ bgcolor: '#fee2e2', color: '#dc2626' }}>
+              <DeleteSweepRounded />
+            </Avatar>
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a' }}>
+                Delete All Entries
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                This removes all visible calendar entries and generated tasks.
+              </Typography>
+            </Box>
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ px: 3, py: 2.5 }}>
+          <Typography variant="body2" color="text.secondary">
+            Are you sure you want to delete all {events.length} calendar entr{events.length === 1 ? 'y' : 'ies'}? The linked tasks will also be removed from active task lists.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0', gap: 1 }}>
+          <Button variant="outlined" color="inherit" onClick={() => setDeleteAllOpen(false)} sx={{ bgcolor: '#ffffff', fontWeight: 850, minWidth: 100 }}>
+            Cancel
+          </Button>
+          <Button variant="contained" color="error" startIcon={<DeleteSweepRounded />} onClick={handleDeleteAll} sx={{ fontWeight: 900, minWidth: 130 }}>
+            Delete All
+          </Button>
         </DialogActions>
       </Dialog>
 

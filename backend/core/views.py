@@ -1171,6 +1171,28 @@ class AcademicCalendarEventViewSet(viewsets.ModelViewSet):
             event = serializer.save()
             sync_calendar_task(event, self.request.user)
 
+    @action(detail=False, methods=['delete'], url_path='delete-all')
+    def delete_all(self, request):
+        if request.user.role not in ['ADMIN', 'DEAN']:
+            return Response({'error': 'Only Dean or Admin users can delete academic calendar activities.'}, status=status.HTTP_403_FORBIDDEN)
+
+        event_ids = list(self.get_queryset().values_list('id', flat=True))
+        if not event_ids:
+            return Response({'deleted_count': 0}, status=status.HTTP_200_OK)
+
+        task_ids = list(AcademicCalendarEvent.objects.filter(
+            id__in=event_ids,
+            generated_task__isnull=False,
+        ).values_list('generated_task_id', flat=True))
+
+        with transaction.atomic():
+            deleted_count = AcademicCalendarEvent.objects.filter(id__in=event_ids, is_active=True).update(is_active=False)
+            if task_ids:
+                Task.objects.filter(id__in=task_ids, is_active=True).update(is_active=False)
+                SubTask.objects.filter(task_id__in=task_ids, is_active=True).update(is_active=False)
+
+        return Response({'deleted_count': deleted_count}, status=status.HTTP_200_OK)
+
     @action(detail=False, methods=['post'], url_path='import-excel')
     def import_excel(self, request):
         if request.user.role not in ['ADMIN', 'DEAN']:
