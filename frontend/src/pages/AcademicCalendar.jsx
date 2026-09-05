@@ -30,7 +30,9 @@ import {
   EditRounded,
   EventAvailableRounded,
   FileUploadRounded,
+  GroupsRounded,
   PersonRounded,
+  TodayRounded,
 } from '@mui/icons-material';
 import api from '../api/axios';
 import { getCurrentSession } from '../utils/session';
@@ -113,6 +115,14 @@ const AcademicCalendar = () => {
       if (event.academic_year) base.add(event.academic_year);
     });
     return Array.from(base).sort();
+  }, [events]);
+
+  const calendarStats = useMemo(() => {
+    const now = new Date();
+    const upcoming = events.filter((event) => event.start_date && new Date(event.start_date) >= now).length;
+    const assigned = events.filter((event) => Boolean(event.assigned_to)).length;
+    const synced = events.filter((event) => Boolean(event.generated_task)).length;
+    return { upcoming, assigned, synced };
   }, [events]);
 
   const showMessage = (text, severity = 'success') => {
@@ -318,19 +328,38 @@ const AcademicCalendar = () => {
 
   return (
     <DashboardLayout title="Academic Calendar">
-      <Paper elevation={0} sx={{ mb: 3, p: { xs: 2.25, md: 3 }, borderRadius: 2, border: '1px solid #dbe5ef', bgcolor: '#ffffff' }}>
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems={{ xs: 'stretch', md: 'center' }} justifyContent="space-between">
-          <Stack direction="row" spacing={2} alignItems="center">
-            <Avatar sx={{ width: 54, height: 54, bgcolor: '#e8f7f4', color: '#0f766e' }}>
-              <CalendarMonthRounded />
-            </Avatar>
-            <Box>
-              <Typography variant="overline" sx={{ color: '#237dba', fontWeight: 900 }}>Dean workflow</Typography>
-              <Typography variant="h4" sx={{ fontWeight: 900, fontSize: { xs: '1.45rem', sm: '2rem' }, lineHeight: 1.15 }}>
+      <Paper
+        elevation={0}
+        sx={{
+          mb: 2.5,
+          p: { xs: 2.25, md: 3 },
+          borderRadius: 3,
+          border: '1px solid #cfe0f4',
+          bgcolor: '#f8fbff',
+          position: 'relative',
+          overflow: 'hidden',
+          boxShadow: '0 22px 60px -46px rgba(15,23,42,0.42)',
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            right: -78,
+            top: -90,
+            width: 240,
+            height: 240,
+            borderRadius: '50%',
+            border: '32px solid rgba(37,99,235,0.12)',
+          },
+        }}
+      >
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems={{ xs: 'stretch', md: 'center' }} justifyContent="space-between" sx={{ position: 'relative', zIndex: 1 }}>
+          <Stack direction="row" spacing={1.75} alignItems="center">
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="overline" sx={{ color: '#0f766e', fontWeight: 900, letterSpacing: 1.4 }}>Automated dean workflow</Typography>
+              <Typography variant="h4" sx={{ fontWeight: 950, color: '#0f172a', fontSize: { xs: '1.55rem', sm: '2.2rem' }, lineHeight: 1.1 }}>
                 Academic Calendar
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Add academic-year activities once and automatically route them as tasks to the assigned HOD or section head.
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.6, maxWidth: 720 }}>
+                Plan academic-year activities and let the system create, assign, and track the linked HOD tasks automatically.
               </Typography>
             </Box>
           </Stack>
@@ -352,11 +381,33 @@ const AcademicCalendar = () => {
         </Stack>
       </Paper>
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mb: 2 }}>
-        {academicYears.map((year) => (
-          <Chip key={year} icon={<EventAvailableRounded />} label={year} sx={{ bgcolor: '#f0fdfa', color: '#0f766e', fontWeight: 900, border: '1px solid #ccfbf1' }} />
+      <Grid container spacing={1.5} sx={{ mb: 2.5 }}>
+        {[
+          { label: 'Calendar Entries', value: events.length, icon: <CalendarMonthRounded />, color: '#2563eb', bg: '#eff6ff' },
+          { label: 'Upcoming', value: calendarStats.upcoming, icon: <TodayRounded />, color: '#0f766e', bg: '#f0fdfa' },
+          { label: 'Assigned', value: calendarStats.assigned, icon: <GroupsRounded />, color: '#7c3aed', bg: '#f5f3ff' },
+          { label: 'Tasks Synced', value: calendarStats.synced, icon: <AssignmentTurnedInRounded />, color: '#b45309', bg: '#fffbeb' },
+        ].map((item) => (
+          <Grid item xs={12} sm={6} lg={3} key={item.label}>
+            <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: '1px solid #dbe5ef', bgcolor: '#ffffff', height: '100%' }}>
+              <Stack direction="row" alignItems="center" spacing={1.5}>
+                <Avatar sx={{ width: 42, height: 42, bgcolor: item.bg, color: item.color }}>
+                  {item.icon}
+                </Avatar>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 850 }}>{item.label}</Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 950, lineHeight: 1 }}>{item.value}</Typography>
+                </Box>
+              </Stack>
+            </Paper>
+          </Grid>
         ))}
-        <Chip icon={<AssignmentTurnedInRounded />} label={`${events.length} calendar activit${events.length === 1 ? 'y' : 'ies'}`} sx={{ bgcolor: '#eff6ff', color: '#1d4ed8', fontWeight: 900, border: '1px solid #bfdbfe' }} />
+      </Grid>
+
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mb: 2 }}>
+        {academicYears.map((year) => (
+          <Chip key={year} icon={<EventAvailableRounded />} label={year} sx={{ bgcolor: '#ffffff', color: '#0f766e', fontWeight: 900, border: '1px solid #ccfbf1' }} />
+        ))}
       </Stack>
 
       {loading ? (
@@ -370,23 +421,33 @@ const AcademicCalendar = () => {
           <Typography variant="body2" color="text.secondary">Create an activity to generate and assign the related task automatically.</Typography>
         </Paper>
       ) : (
-        <Grid container spacing={2.25}>
+        <Grid container spacing={2}>
           {events.map((event) => (
             <Grid item xs={12} md={6} xl={4} key={event.id}>
-              <Paper elevation={0} sx={{ height: '100%', p: 2.25, borderRadius: 2, border: '1px solid #dbe5ef', bgcolor: '#ffffff' }}>
-                <Stack spacing={1.6}>
-                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1.5}>
-                    <Box sx={{ minWidth: 0 }}>
-                      <Chip size="small" label={event.activity_type_label || event.activity_type} sx={{ mb: 1, bgcolor: '#eef5ff', color: '#237dba', fontWeight: 850 }} />
-                      <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.2 }}>{event.title}</Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        {event.description || 'No additional description'}
-                      </Typography>
-                    </Box>
+              <Paper
+                elevation={0}
+                sx={{
+                  height: '100%',
+                  p: 0,
+                  borderRadius: 3,
+                  border: '1px solid #dbe5ef',
+                  bgcolor: '#ffffff',
+                  overflow: 'hidden',
+                  transition: 'transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    borderColor: '#b7d5fb',
+                    boxShadow: '0 18px 44px -34px rgba(15,23,42,0.5)',
+                  },
+                }}
+              >
+                <Box sx={{ px: 2, py: 1.5, bgcolor: '#f8fbff', borderBottom: '1px solid #e2e8f0' }}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1.5}>
+                    <Chip size="small" label={event.activity_type_label || event.activity_type} sx={{ bgcolor: '#e0f2fe', color: '#0369a1', fontWeight: 900 }} />
                     {canManage && (
                       <Stack direction="row" spacing={0.5}>
                         <Tooltip title="Edit">
-                          <IconButton size="small" onClick={() => handleOpenEdit(event)}>
+                          <IconButton size="small" onClick={() => handleOpenEdit(event)} sx={{ color: '#2563eb' }}>
                             <EditRounded fontSize="small" />
                           </IconButton>
                         </Tooltip>
@@ -398,15 +459,29 @@ const AcademicCalendar = () => {
                       </Stack>
                     )}
                   </Stack>
+                </Box>
+                <Stack spacing={1.6} sx={{ p: 2.25 }}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1.5}>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 950, lineHeight: 1.2, color: '#0f172a' }}>{event.title}</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {event.description || 'No additional description'}
+                      </Typography>
+                    </Box>
+                  </Stack>
 
                   <Grid container spacing={1.25}>
                     <Grid item xs={12} sm={6}>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 850 }}>Starts</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 760 }}>{formatDateTime(event.start_date)}</Typography>
+                      <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 850 }}>Starts</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 850 }}>{formatDateTime(event.start_date)}</Typography>
+                      </Box>
                     </Grid>
                     <Grid item xs={12} sm={6}>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 850 }}>Ends / Deadline</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 760 }}>{formatDateTime(event.end_date || event.start_date)}</Typography>
+                      <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 850 }}>Deadline</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 850 }}>{formatDateTime(event.end_date || event.start_date)}</Typography>
+                      </Box>
                     </Grid>
                   </Grid>
 
@@ -422,13 +497,20 @@ const AcademicCalendar = () => {
         </Grid>
       )}
 
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}>
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden', maxWidth: 820 } }}>
         <form onSubmit={handleSave}>
           <DialogTitle sx={{ px: 2.5, py: 2, bgcolor: '#f8fbff', borderBottom: '1px solid #e2e8f0' }}>
-            <Typography variant="h6" sx={{ fontWeight: 900 }}>{editingEvent ? 'Edit Calendar Activity' : 'Add Calendar Activity'}</Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>This will sync directly into the task workflow.</Typography>
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Avatar sx={{ width: 42, height: 42, bgcolor: '#e0f2fe', color: '#2563eb' }}>
+                <CalendarMonthRounded />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 950 }}>{editingEvent ? 'Edit Calendar Activity' : 'Add Calendar Activity'}</Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>This will sync directly into the task workflow.</Typography>
+              </Box>
+            </Stack>
           </DialogTitle>
-          <DialogContent dividers sx={{ p: 2.5, bgcolor: '#ffffff' }}>
+          <DialogContent dividers sx={{ p: 2.5, bgcolor: '#ffffff', '& .MuiTextField-root': { bgcolor: '#ffffff' } }}>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={7}>
                 <TextField fullWidth required size="small" label="Activity Title" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
@@ -487,11 +569,18 @@ const AcademicCalendar = () => {
         </form>
       </Dialog>
 
-      <Dialog open={importDialogOpen} onClose={() => setImportDialogOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}>
+      <Dialog open={importDialogOpen} onClose={() => setImportDialogOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden', maxWidth: 620 } }}>
         <form onSubmit={handleImport}>
           <DialogTitle sx={{ px: 2.5, py: 2, bgcolor: '#f8fbff', borderBottom: '1px solid #e2e8f0' }}>
-            <Typography variant="h6" sx={{ fontWeight: 900 }}>Import Academic Calendar</Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>Date-wise activities will become assigned tasks automatically.</Typography>
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Avatar sx={{ width: 42, height: 42, bgcolor: '#f0fdfa', color: '#0f766e' }}>
+                <FileUploadRounded />
+              </Avatar>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 950 }}>Import Academic Calendar</Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>Date-wise activities will become assigned tasks automatically.</Typography>
+              </Box>
+            </Stack>
           </DialogTitle>
           <DialogContent dividers sx={{ p: 2.5, bgcolor: '#ffffff' }}>
             <Grid container spacing={2}>
