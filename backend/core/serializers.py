@@ -3,7 +3,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from .models import (
     User, Department, Task, SubTask, Submission, TaskReport, Notification,
-    UserModulePermission, Note, AcademicCalendarEvent
+    UserModulePermission, Note, AcademicCalendarEvent, AcademicCalendarImport
 )
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -80,11 +80,39 @@ class AcademicCalendarEventSerializer(serializers.ModelSerializer):
     created_by_name = serializers.SerializerMethodField()
     generated_task_title = serializers.ReadOnlyField(source='generated_task.title')
     generated_task_status = serializers.ReadOnlyField(source='generated_task.status')
+    generated_task_is_active = serializers.ReadOnlyField(source='generated_task.is_active')
+    release_status = serializers.SerializerMethodField()
 
     class Meta:
         model = AcademicCalendarEvent
         fields = '__all__'
-        read_only_fields = ('created_by', 'generated_task', 'is_active', 'created_at', 'updated_at')
+        read_only_fields = (
+            'created_by', 'generated_task', 'task_released_at', 'notification_sent_at',
+            'is_active', 'created_at', 'updated_at'
+        )
+
+    def get_assigned_to_name(self, obj):
+        if not obj.assigned_to:
+            return ''
+        return obj.assigned_to.get_full_name() or obj.assigned_to.username
+
+    def get_created_by_name(self, obj):
+        return obj.created_by.get_full_name() or obj.created_by.username
+
+    def get_release_status(self, obj):
+        if obj.task_released_at:
+            return 'RELEASED'
+        return 'SCHEDULED'
+
+class AcademicCalendarImportSerializer(serializers.ModelSerializer):
+    department_name = serializers.ReadOnlyField(source='department.name')
+    assigned_to_name = serializers.SerializerMethodField()
+    created_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AcademicCalendarImport
+        fields = '__all__'
+        read_only_fields = ('created_by', 'is_active', 'created_at', 'updated_at')
 
     def get_assigned_to_name(self, obj):
         if not obj.assigned_to:

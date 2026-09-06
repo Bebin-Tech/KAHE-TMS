@@ -66,6 +66,11 @@ class Task(models.Model):
         return self.title
 
 class AcademicCalendarEvent(models.Model):
+    SOURCE_CHOICES = (
+        ('MANUAL', 'Manual Entry'),
+        ('EXCEL_IMPORT', 'Excel Import'),
+    )
+
     ACTIVITY_CHOICES = (
         ('SEMESTER_EXAM', 'Semester Examination'),
         ('COLLEGE_EVENT', 'College Event'),
@@ -86,6 +91,11 @@ class AcademicCalendarEvent(models.Model):
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='academic_calendar_events', null=True, blank=True)
     generated_task = models.OneToOneField(Task, on_delete=models.SET_NULL, related_name='calendar_event', null=True, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_academic_calendar_events')
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default='MANUAL')
+    import_batch_id = models.UUIDField(null=True, blank=True, db_index=True)
+    import_file_name = models.CharField(max_length=255, blank=True)
+    task_released_at = models.DateTimeField(null=True, blank=True)
+    notification_sent_at = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -96,6 +106,25 @@ class AcademicCalendarEvent(models.Model):
 
     def __str__(self):
         return f"{self.academic_year} - {self.title}"
+
+class AcademicCalendarImport(models.Model):
+    batch_id = models.UUIDField(db_index=True, unique=True)
+    file_name = models.CharField(max_length=255)
+    academic_year = models.CharField(max_length=20)
+    department = models.ForeignKey(Department, on_delete=models.SET_NULL, related_name='academic_calendar_imports', null=True, blank=True)
+    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='academic_calendar_imports', null=True, blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_academic_calendar_imports')
+    layout = models.JSONField(default=dict)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    objects = models.Manager()
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.academic_year} - {self.file_name}"
 
 class SubTask(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='subtasks')

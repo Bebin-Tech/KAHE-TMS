@@ -8,14 +8,16 @@ from django.db.models import Count, Exists, OuterRef, Q
 from django.utils import timezone
 from datetime import datetime, time
 import calendar
+import uuid
 from .models import (
     User, Department, Task, SubTask, Submission, TaskReport, Notification,
-    UserModulePermission, Note, AcademicCalendarEvent
+    UserModulePermission, Note, AcademicCalendarEvent, AcademicCalendarImport
 )
 from .serializers import (
     UserSerializer, CreateUserSerializer, DepartmentSerializer, TaskSerializer, 
     SubTaskSerializer, SubmissionSerializer, TaskReportSerializer, NotificationSerializer,
     UserModulePermissionSerializer, NoteSerializer, AcademicCalendarEventSerializer,
+    AcademicCalendarImportSerializer,
     MyTokenObtainPairSerializer
 )
 
@@ -84,10 +86,82 @@ def build_calendar_task_description(event):
     return "\n".join(parts)
 
 
+def is_calendar_event_due(event):
+    return timezone.localtime(event.start_date).date() <= timezone.localdate()
+
+
+def release_calendar_event_task(event):
+    if event.task_released_at or not event.generated_task or not event.assigned_to:
+        return False
+    if not is_calendar_event_due(event):
+        return False
+
+    task = event.generated_task
+    now = timezone.now()
+    task.is_active = True
+    task.status = 'ASSIGNED'
+    task.save(update_fields=['is_active', 'status', 'updated_at'])
+
+    already_reported = TaskReport.objects.filter(
+        task=task,
+        user=event.assigned_to,
+        role='HOD',
+        action_performed='Released academic calendar task to HOD',
+    ).exists()
+    if not already_reported:
+        record_task_activity(
+            task=task,
+            user=event.assigned_to,
+            role='HOD',
+            status='ASSIGNED',
+            action_performed='Released academic calendar task to HOD',
+            assigned_by=event.created_by,
+            assigned_at=now,
+            action_at=now,
+        )
+
+    if not event.notification_sent_at:
+        Notification.objects.create(
+            user=event.assigned_to,
+            message=f"Academic calendar task '{task.title}' is scheduled for today and has been assigned to you."
+        )
+        event.notification_sent_at = now
+
+    event.task_released_at = now
+    event.save(update_fields=['task_released_at', 'notification_sent_at', 'updated_at'])
+    return True
+
+
+def release_due_calendar_tasks_for_user(user):
+    queryset = AcademicCalendarEvent.objects.select_related(
+        'generated_task', 'assigned_to', 'created_by'
+    ).filter(
+        is_active=True,
+        task_released_at__isnull=True,
+        start_date__date__lte=timezone.localdate(),
+        generated_task__isnull=False,
+        assigned_to__isnull=False,
+    )
+
+    if user.role == 'HOD':
+        queryset = queryset.filter(assigned_to=user)
+    elif user.role == 'DEAN':
+        queryset = queryset.filter(created_by=user)
+    elif user.role != 'ADMIN':
+        return 0
+
+    released_count = 0
+    for event in queryset:
+        if release_calendar_event_task(event):
+            released_count += 1
+    return released_count
+
+
 def sync_calendar_task(event, created_by):
     assigned_hod = event.assigned_to if event.assigned_to and event.assigned_to.role == 'HOD' else None
     task_department = event.department or getattr(assigned_hod, 'department', None)
     deadline = event.end_date or event.start_date
+    task_is_active = bool(event.task_released_at or is_calendar_event_due(event))
     payload = {
         'title': event.title,
         'description': build_calendar_task_description(event),
@@ -98,7 +172,7 @@ def sync_calendar_task(event, created_by):
         'priority': 'MEDIUM',
         'status': 'ASSIGNED' if assigned_hod else 'ONGOING',
         'is_special': True,
-        'is_active': True,
+        'is_active': task_is_active,
     }
 
     if event.generated_task:
@@ -122,20 +196,8 @@ def sync_calendar_task(event, created_by):
         assigned_by=created_by,
         assigned_at=task.created_at,
     )
-    if assigned_hod:
-        record_task_activity(
-            task=task,
-            user=assigned_hod,
-            role='HOD',
-            status='ASSIGNED',
-            action_performed='Assigned academic calendar task to HOD',
-            assigned_by=created_by,
-            assigned_at=task.created_at,
-        )
-        Notification.objects.create(
-            user=assigned_hod,
-            message=f"Academic calendar task '{task.title}' has been assigned to you by {created_by.get_full_name() or created_by.username}."
-        )
+    if assigned_hod and task_is_active and not event.task_released_at:
+        release_calendar_event_task(event)
     return task
 
 
@@ -161,6 +223,113 @@ def parse_academic_year_from_sheet(worksheet, fallback):
             if '2026' in text and '2027' in text:
                 return '2026-2027'
     return fallback
+
+
+def format_workbook_cell_value(value):
+    if value is None:
+        return ''
+    if isinstance(value, datetime):
+        return value.strftime('%d-%m-%Y')
+    return str(value)
+
+
+def get_workbook_color(color):
+    try:
+        rgb = color.rgb if color and color.type == 'rgb' else ''
+    except (AttributeError, TypeError, ValueError):
+        return ''
+    if not rgb:
+        return ''
+    rgb = str(rgb)[-6:]
+    if rgb in ('000000', 'FFFFFF'):
+        return ''
+    return f"#{rgb}"
+
+
+def parse_calendar_excel_layout(upload):
+    try:
+        from openpyxl import load_workbook
+        from openpyxl.utils import get_column_letter
+    except ImportError as exc:
+        raise ValueError('Excel import requires openpyxl. Install backend requirements before importing.') from exc
+
+    workbook = load_workbook(upload, read_only=False, data_only=True)
+    worksheet = workbook.active
+    academic_year = parse_academic_year_from_sheet(worksheet, '')
+    year_start = int(academic_year.split('-')[0]) if academic_year and '-' in academic_year else timezone.localdate().year
+    max_row = worksheet.max_row
+    max_column = worksheet.max_column
+    current_month = None
+    current_year = year_start
+
+    rows = []
+    for row in worksheet.iter_rows(min_row=1, max_row=max_row, max_col=max_column):
+        cells = []
+        first_cell = row[0].value if row else None
+        row_date_key = ''
+        day_name = ''
+        particulars = format_workbook_cell_value(row[2].value).strip() if len(row) > 2 else ''
+
+        if isinstance(first_cell, datetime):
+            current_month = first_cell.month
+            current_year = first_cell.year
+        elif isinstance(first_cell, str):
+            month_name = first_cell.strip()
+            matched_month = next(
+                (month_number for month_number in range(1, 13) if month_name.lower().startswith(calendar.month_name[month_number].lower())),
+                None
+            )
+            if matched_month:
+                current_month = matched_month
+                current_year = year_start if matched_month >= 5 else year_start + 1
+        elif isinstance(first_cell, (int, float)) and current_month:
+            try:
+                row_date = datetime(current_year, current_month, int(first_cell)).date()
+                row_date_key = row_date.isoformat()
+                day_name = format_workbook_cell_value(row[1].value).strip() if len(row) > 1 else ''
+            except ValueError:
+                row_date_key = ''
+
+        for cell in row:
+            fill_color = get_workbook_color(cell.fill.fgColor) if cell.fill else ''
+            font_color = get_workbook_color(cell.font.color) if cell.font else ''
+            cells.append({
+                'ref': cell.coordinate,
+                'value': format_workbook_cell_value(cell.value),
+                'bold': bool(cell.font and cell.font.bold),
+                'italic': bool(cell.font and cell.font.italic),
+                'font_size': float(cell.font.sz) if cell.font and cell.font.sz else 11,
+                'align': cell.alignment.horizontal or 'left',
+                'vertical_align': cell.alignment.vertical or 'center',
+                'wrap_text': bool(cell.alignment.wrap_text),
+                'fill': fill_color,
+                'color': font_color,
+            })
+        rows.append({
+            'index': row[0].row if row else len(rows) + 1,
+            'height': worksheet.row_dimensions[row[0].row].height if row else None,
+            'date_key': row_date_key,
+            'day_name': day_name,
+            'particulars': particulars,
+            'cells': cells,
+        })
+
+    columns = []
+    for column_index in range(1, max_column + 1):
+        letter = get_column_letter(column_index)
+        columns.append({
+            'letter': letter,
+            'width': worksheet.column_dimensions[letter].width or 12,
+        })
+
+    return {
+        'sheet_name': worksheet.title,
+        'max_row': max_row,
+        'max_column': max_column,
+        'columns': columns,
+        'merged_ranges': [str(cell_range) for cell_range in worksheet.merged_cells.ranges],
+        'rows': rows,
+    }
 
 
 def parse_calendar_excel_rows(upload, academic_year):
@@ -1146,6 +1315,28 @@ class AcademicCalendarEventViewSet(viewsets.ModelViewSet):
             return queryset.filter(assigned_to=user)
         return queryset.none()
 
+    def get_import_queryset(self):
+        user = self.request.user
+        queryset = AcademicCalendarImport.objects.select_related(
+            'department', 'assigned_to', 'created_by'
+        ).filter(is_active=True)
+
+        academic_year = self.request.query_params.get('academic_year')
+        if academic_year:
+            queryset = queryset.filter(academic_year=academic_year)
+
+        if user.role == 'ADMIN':
+            return queryset
+        if user.role == 'DEAN':
+            return queryset.filter(created_by=user)
+        if user.role == 'HOD':
+            return queryset.filter(assigned_to=user)
+        return queryset.none()
+
+    def list(self, request, *args, **kwargs):
+        release_due_calendar_tasks_for_user(request.user)
+        return super().list(request, *args, **kwargs)
+
     def create(self, request, *args, **kwargs):
         if request.user.role not in ['ADMIN', 'DEAN']:
             return Response({'error': 'Only Dean or Admin users can create academic calendar activities.'}, status=status.HTTP_403_FORBIDDEN)
@@ -1171,6 +1362,16 @@ class AcademicCalendarEventViewSet(viewsets.ModelViewSet):
             event = serializer.save()
             sync_calendar_task(event, self.request.user)
 
+    @action(detail=False, methods=['post'], url_path='dispatch-due')
+    def dispatch_due(self, request):
+        released_count = release_due_calendar_tasks_for_user(request.user)
+        return Response({'released_count': released_count}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], url_path='imports')
+    def imports(self, request):
+        serializer = AcademicCalendarImportSerializer(self.get_import_queryset(), many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     @action(detail=False, methods=['delete'], url_path='delete-all')
     def delete_all(self, request):
         if request.user.role not in ['ADMIN', 'DEAN']:
@@ -1187,11 +1388,69 @@ class AcademicCalendarEventViewSet(viewsets.ModelViewSet):
 
         with transaction.atomic():
             deleted_count = AcademicCalendarEvent.objects.filter(id__in=event_ids, is_active=True).update(is_active=False)
+            AcademicCalendarImport.objects.filter(
+                is_active=True,
+                batch_id__in=AcademicCalendarEvent.objects.filter(id__in=event_ids).values('import_batch_id')
+            ).update(is_active=False)
             if task_ids:
                 Task.objects.filter(id__in=task_ids, is_active=True).update(is_active=False)
                 SubTask.objects.filter(task_id__in=task_ids, is_active=True).update(is_active=False)
 
         return Response({'deleted_count': deleted_count}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['delete'], url_path='delete-imported')
+    def delete_imported(self, request):
+        if request.user.role not in ['ADMIN', 'DEAN']:
+            return Response({'error': 'Only Dean or Admin users can delete imported academic calendars.'}, status=status.HTTP_403_FORBIDDEN)
+
+        academic_year = request.query_params.get('academic_year')
+        department_id = request.query_params.get('department')
+        assigned_to_id = request.query_params.get('assigned_to')
+        import_batch_id = request.query_params.get('import_batch_id')
+
+        import_queryset = self.get_import_queryset()
+        if department_id:
+            import_queryset = import_queryset.filter(department_id=department_id)
+        if assigned_to_id:
+            import_queryset = import_queryset.filter(assigned_to_id=assigned_to_id)
+        if import_batch_id:
+            import_queryset = import_queryset.filter(batch_id=import_batch_id)
+
+        import_batch_ids = list(import_queryset.values_list('batch_id', flat=True))
+        queryset = self.get_queryset().filter(source='EXCEL_IMPORT')
+        if academic_year:
+            queryset = queryset.filter(academic_year=academic_year)
+        if department_id:
+            queryset = queryset.filter(department_id=department_id)
+        if assigned_to_id:
+            queryset = queryset.filter(assigned_to_id=assigned_to_id)
+        if import_batch_id:
+            queryset = queryset.filter(import_batch_id=import_batch_id)
+        elif import_batch_ids:
+            queryset = queryset.filter(import_batch_id__in=import_batch_ids)
+
+        event_ids = list(queryset.values_list('id', flat=True))
+        task_ids = list(AcademicCalendarEvent.objects.filter(
+            id__in=event_ids,
+            generated_task__isnull=False,
+        ).values_list('generated_task_id', flat=True))
+
+        with transaction.atomic():
+            deleted_count = 0
+            if event_ids:
+                deleted_count = AcademicCalendarEvent.objects.filter(id__in=event_ids, is_active=True).update(is_active=False)
+            deleted_import_count = AcademicCalendarImport.objects.filter(
+                id__in=import_queryset.values('id'),
+                is_active=True,
+            ).update(is_active=False)
+            if task_ids:
+                Task.objects.filter(id__in=task_ids, is_active=True).update(is_active=False)
+                SubTask.objects.filter(task_id__in=task_ids, is_active=True).update(is_active=False)
+
+        return Response({
+            'deleted_count': deleted_count,
+            'deleted_import_count': deleted_import_count,
+        }, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'], url_path='import-excel')
     def import_excel(self, request):
@@ -1206,15 +1465,23 @@ class AcademicCalendarEventViewSet(viewsets.ModelViewSet):
         if not upload:
             return Response({'error': 'Upload an academic calendar Excel file.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        department = Department.objects.filter(id=department_id, is_active=True).first()
-        if not department:
-            return Response({'error': 'Select a valid department before importing.'}, status=status.HTTP_400_BAD_REQUEST)
+        department = None
+        assigned_to = None
+        if department_id:
+            department = Department.objects.filter(id=department_id, is_active=True).first()
+            if not department:
+                return Response({'error': 'Select a valid department before importing.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        assigned_to = User.objects.filter(id=assigned_to_id, role='HOD', is_active=True, department=department).first()
-        if not assigned_to:
-            return Response({'error': 'Select an active HOD from the selected department before importing.'}, status=status.HTTP_400_BAD_REQUEST)
+        if assigned_to_id:
+            assigned_to = User.objects.filter(id=assigned_to_id, role='HOD', is_active=True).first()
+            if not assigned_to:
+                return Response({'error': 'Select an active HOD before importing.'}, status=status.HTTP_400_BAD_REQUEST)
+            if department and assigned_to.department_id != department.id:
+                return Response({'error': 'Select an active HOD from the selected department before importing.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            layout = parse_calendar_excel_layout(upload)
+            upload.seek(0)
             rows = parse_calendar_excel_rows(upload, academic_year)
         except ValueError as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
@@ -1222,36 +1489,26 @@ class AcademicCalendarEventViewSet(viewsets.ModelViewSet):
         if not rows:
             return Response({'error': 'No date-wise academic calendar activities were found in the Excel file.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        created_events = []
-        skipped_count = 0
+        import_batch_id = uuid.uuid4()
         with transaction.atomic():
-            for row in rows:
-                exists = AcademicCalendarEvent.objects.filter(
-                    created_by=request.user,
-                    title=row['title'],
-                    start_date=row['start_date'],
-                    assigned_to=assigned_to,
-                    is_active=True,
-                ).exists()
-                if exists:
-                    skipped_count += 1
-                    continue
+            calendar_import = AcademicCalendarImport.objects.create(
+                batch_id=import_batch_id,
+                file_name=upload.name,
+                academic_year=rows[0]['academic_year'],
+                department=department,
+                assigned_to=assigned_to,
+                created_by=request.user,
+                layout=layout,
+                is_active=True,
+            )
 
-                event = AcademicCalendarEvent.objects.create(
-                    **row,
-                    department=department,
-                    assigned_to=assigned_to,
-                    created_by=request.user,
-                    is_active=True,
-                )
-                sync_calendar_task(event, request.user)
-                created_events.append(event)
-
-        serializer = self.get_serializer(created_events, many=True)
         return Response({
-            'created_count': len(created_events),
-            'skipped_count': skipped_count,
-            'events': serializer.data,
+            'created_count': 0,
+            'skipped_count': 0,
+            'calendar_row_count': len(rows),
+            'import_batch_id': str(import_batch_id),
+            'imported_calendar': AcademicCalendarImportSerializer(calendar_import).data,
+            'events': [],
         }, status=status.HTTP_201_CREATED)
 
     def destroy(self, request, *args, **kwargs):

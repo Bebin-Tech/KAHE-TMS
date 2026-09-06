@@ -99,6 +99,22 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     };
   }, [userId, userRole]);
 
+  useEffect(() => {
+    if (!userId || !['ADMIN', 'DEAN', 'HOD'].includes(userRole)) return undefined;
+
+    const dispatchDueCalendarTasks = async () => {
+      try {
+        await api.post('academic-calendar/dispatch-due/');
+      } catch (err) {
+        // Calendar dispatch should stay quiet; normal page API errors still surface in each module.
+      }
+    };
+
+    dispatchDueCalendarTasks();
+    const intervalId = window.setInterval(dispatchDueCalendarTasks, 60000);
+    return () => window.clearInterval(intervalId);
+  }, [userId, userRole]);
+
   const handleDrawerToggle = () => setMobileOpen((prev) => !prev);
   const handleSidebarMouseEnter = () => {
     if (isMobile) return;
