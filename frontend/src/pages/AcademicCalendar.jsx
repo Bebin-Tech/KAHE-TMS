@@ -136,6 +136,78 @@ const getCellBackground = (cell, hasValue) => {
   return hasValue ? '#ffffff' : '#fbfdff';
 };
 
+const parseAcademicYearStart = (academicYear) => {
+  const match = /^(\d{4})/.exec(academicYear || '');
+  return match ? Number(match[1]) : new Date().getFullYear();
+};
+
+const parseDateCellValue = (value) => {
+  const text = String(value || '').trim();
+  const match = /^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/.exec(text);
+  if (!match) return null;
+  const [, day, month, year] = match.map(Number);
+  if (!day || !month || !year) return null;
+  return { day, month, year };
+};
+
+const getMonthFromText = (value) => {
+  const text = String(value || '').trim().toLowerCase();
+  if (!text) return null;
+  const monthNames = [
+    'january', 'february', 'march', 'april', 'may', 'june',
+    'july', 'august', 'september', 'october', 'november', 'december',
+  ];
+  const index = monthNames.findIndex((month) => text.startsWith(month));
+  return index >= 0 ? index + 1 : null;
+};
+
+const makeDateKey = (year, month, day) => {
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return '';
+  }
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+};
+
+const deriveCalendarRows = (layout, academicYear) => {
+  let currentMonth = null;
+  let currentYear = parseAcademicYearStart(academicYear);
+  const yearStart = currentYear;
+
+  return (layout?.rows || []).map((row) => {
+    if (row.date_key) return row;
+
+    const firstValue = row.cells?.[0]?.value;
+    const parsedDate = parseDateCellValue(firstValue);
+    const monthFromText = getMonthFromText(firstValue);
+
+    if (parsedDate) {
+      currentMonth = parsedDate.month;
+      currentYear = parsedDate.year;
+      return row;
+    }
+
+    if (monthFromText) {
+      currentMonth = monthFromText;
+      currentYear = monthFromText >= 5 ? yearStart : yearStart + 1;
+      return row;
+    }
+
+    const numericDay = Number(firstValue);
+    if (!Number.isInteger(numericDay) || !currentMonth) return row;
+
+    const dateKey = makeDateKey(currentYear, currentMonth, numericDay);
+    if (!dateKey) return row;
+
+    return {
+      ...row,
+      date_key: dateKey,
+      day_name: row.day_name || String(row.cells?.[1]?.value || '').trim(),
+      particulars: row.particulars || String(row.cells?.[2]?.value || '').trim(),
+    };
+  });
+};
+
 const getUserLabel = (user) => {
   const name = `${user.first_name || ''} ${user.last_name || ''}`.trim();
   return name || user.username;
@@ -182,7 +254,7 @@ const AcademicCalendar = () => {
     const released = actionableEvents.filter((event) => event.release_status === 'RELEASED' || event.task_released_at).length;
     const imported = events.filter((event) => event.source === 'EXCEL_IMPORT').length;
     const importedRows = calendarImports.reduce((total, item) => (
-      total + (item.layout?.rows || []).filter((row) => row.date_key && row.particulars).length
+      total + deriveCalendarRows(item.layout, item.academic_year).filter((row) => row.date_key && row.particulars).length
     ), 0);
     return { upcoming, assigned, released, imported: importedRows || imported };
   }, [calendarImports, events]);
@@ -192,6 +264,9 @@ const AcademicCalendar = () => {
   ), [events]);
 
   const selectedCalendarImport = calendarImports[0] || null;
+  const selectedCalendarRows = useMemo(() => (
+    deriveCalendarRows(selectedCalendarImport?.layout, selectedCalendarImport?.academic_year)
+  ), [selectedCalendarImport]);
   const importMergeLookup = useMemo(() => (
     buildMergeLookup(selectedCalendarImport?.layout?.merged_ranges || [])
   ), [selectedCalendarImport]);
@@ -529,6 +604,11 @@ const AcademicCalendar = () => {
               <Typography variant="body2" color="text.secondary">
                 {selectedCalendarImport.file_name} - {selectedCalendarImport.layout?.sheet_name || 'Calendar sheet'} - {selectedCalendarImport.academic_year}
               </Typography>
+              {canManage && (
+                <Typography variant="caption" sx={{ display: 'block', mt: 0.35, color: '#1d4ed8', fontWeight: 850 }}>
+                  Click any date/day row to create and assign a task for that selected date.
+                </Typography>
+              )}
             </Box>
             {canManage && (
               <Button
@@ -572,7 +652,7 @@ const AcademicCalendar = () => {
                 ))}
               </colgroup>
               <tbody>
-                {(selectedCalendarImport.layout?.rows || []).map((row) => (
+                {selectedCalendarRows.map((row) => (
                   <tr
                     key={row.index}
                     style={{
@@ -587,12 +667,14 @@ const AcademicCalendar = () => {
                       const merge = ref ? importMergeLookup[`${ref.row}:${ref.column}`] : null;
                       if (merge?.hidden) return null;
                       const hasValue = Boolean(cell.value);
+                      const clickableDateCell = canManage && row.date_key && ref?.column <= 3;
                       return (
                         <Box
                           key={cell.ref}
                           component="td"
                           colSpan={merge?.colSpan || 1}
                           rowSpan={merge?.rowSpan || 1}
+                          onClick={() => handleOpenCreateFromImportedRow(row)}
                           sx={{
                             bgcolor: getCellBackground(cell, hasValue),
                             color: cell.color || '#0f172a',
@@ -604,9 +686,12 @@ const AcademicCalendar = () => {
                             whiteSpace: cell.wrap_text ? 'pre-wrap' : 'normal',
                             overflowWrap: 'anywhere',
                             minHeight: 24,
-                            ...(canManage && row.date_key && ref?.column <= 3 && {
+                            ...(clickableDateCell && {
                               bgcolor: hasValue ? '#eff6ff' : getCellBackground(cell, hasValue),
                               color: '#1d4ed8',
+                              cursor: 'pointer',
+                              textDecoration: 'underline',
+                              textDecorationColor: '#bfdbfe',
                             }),
                           }}
                         >
