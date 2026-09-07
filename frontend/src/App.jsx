@@ -27,7 +27,7 @@ function App() {
         <Route
           path="/dean-dashboard"
           element={
-            <ProtectedRoute allowedRoles={['DEAN']}>
+            <ProtectedRoute allowedRoles={['DEAN']} module="dashboard">
               <DeanDashboard />
             </ProtectedRoute>
           }
@@ -36,7 +36,7 @@ function App() {
         <Route
           path="/hod-dashboard"
           element={
-            <ProtectedRoute allowedRoles={['HOD']}>
+            <ProtectedRoute allowedRoles={['HOD']} module="dashboard">
               <HODDashboard />
             </ProtectedRoute>
           }
@@ -45,7 +45,7 @@ function App() {
         <Route
           path="/faculty-dashboard"
           element={
-            <ProtectedRoute allowedRoles={['FACULTY']}>
+            <ProtectedRoute allowedRoles={['FACULTY']} module="dashboard">
               <FacultyDashboard />
             </ProtectedRoute>
           }
@@ -81,7 +81,7 @@ function App() {
         <Route
           path="/tasks"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute module="tasks">
               <Tasks />
             </ProtectedRoute>
           }
@@ -90,7 +90,7 @@ function App() {
         <Route
           path="/reports"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute module="reports">
               <Reports />
             </ProtectedRoute>
           }
@@ -99,7 +99,7 @@ function App() {
         <Route
           path="/academic-calendar"
           element={
-            <ProtectedRoute allowedRoles={['ADMIN', 'DEAN', 'HOD']}>
+            <ProtectedRoute allowedRoles={['ADMIN', 'DEAN', 'HOD']} module="academic_calendar">
               <AcademicCalendar />
             </ProtectedRoute>
           }
@@ -108,7 +108,7 @@ function App() {
         <Route
           path="/notes"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute module="notes">
               <Notes />
             </ProtectedRoute>
           }
@@ -126,7 +126,7 @@ function App() {
         <Route
           path="/settings"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute module="settings">
               <Settings />
             </ProtectedRoute>
           }
@@ -135,7 +135,7 @@ function App() {
         <Route
           path="/complete-module"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute module="completed_tasks">
               <CompleteModule />
             </ProtectedRoute>
           }
@@ -144,7 +144,7 @@ function App() {
         <Route
           path="/completed-tasks"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute module="completed_tasks">
               <CompletedTasks />
             </ProtectedRoute>
           }

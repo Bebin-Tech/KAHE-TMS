@@ -1632,24 +1632,35 @@ class UserModulePermissionViewSet(viewsets.ModelViewSet):
             return Response({'error': 'Selected user was not found.'}, status=status.HTTP_404_NOT_FOUND)
 
         valid_modules = {key for key, _ in UserModulePermission.MODULE_CHOICES}
-        saved_permissions = []
+        requested_by_module = {
+            item.get('module'): item
+            for item in permissions_data
+            if item.get('module') in valid_modules
+        }
 
-        for item in permissions_data:
-            module = item.get('module')
-            if module not in valid_modules:
-                continue
+        with transaction.atomic():
+            for module, _label in UserModulePermission.MODULE_CHOICES:
+                item = requested_by_module.get(module, {})
+                can_view = bool(item.get('can_view', False))
+                can_edit = bool(item.get('can_edit', False))
+                can_delete = bool(item.get('can_delete', False))
+                can_access = bool(item.get('can_access', False) or can_view or can_edit or can_delete)
+                if not can_access:
+                    can_view = False
+                    can_edit = False
+                    can_delete = False
 
-            permission, _ = UserModulePermission.objects.update_or_create(
-                user=user,
-                module=module,
-                defaults={
-                    'can_view': bool(item.get('can_view', False)),
-                    'can_edit': bool(item.get('can_edit', False)),
-                    'can_delete': bool(item.get('can_delete', False)),
-                    'can_access': bool(item.get('can_access', False)),
-                }
-            )
-            saved_permissions.append(permission)
+                UserModulePermission.objects.update_or_create(
+                    user=user,
+                    module=module,
+                    defaults={
+                        'can_view': can_view,
+                        'can_edit': can_edit,
+                        'can_delete': can_delete,
+                        'can_access': can_access,
+                    }
+                )
 
+        saved_permissions = UserModulePermission.objects.filter(user=user).order_by('module')
         serializer = self.get_serializer(saved_permissions, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

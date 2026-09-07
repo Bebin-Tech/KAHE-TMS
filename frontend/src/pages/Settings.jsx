@@ -33,6 +33,7 @@ import {
 } from '@mui/icons-material';
 import api from '../api/axios';
 import { getCurrentSession } from '../utils/session';
+import { clearCachedPermissions, notifyPermissionChange } from '../utils/modulePermissions';
 
 const permissionFields = [
   { key: 'can_access', label: 'Access' },
@@ -181,6 +182,8 @@ const Settings = () => {
         permissions: permissionRows,
       });
       setPermissionRows(buildPermissionRows(modules, response.data));
+      clearCachedPermissions(selectedUser);
+      notifyPermissionChange(selectedUserId);
       setMessage('Permission changes saved.');
     } catch (err) {
       console.error('Error saving user permissions:', err);

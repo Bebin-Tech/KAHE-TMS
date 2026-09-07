@@ -26,35 +26,18 @@ import {
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { clearRoleSession, getCurrentSession, setActiveRole, setRouteRole } from '../utils/session';
+import {
+  PERMISSION_UPDATED_EVENT,
+  canAccessModule,
+  readCachedPermissions,
+  writeCachedPermissions,
+} from '../utils/modulePermissions';
 import api from '../api/axios';
 import NoteReminder from './NoteReminder';
 
 const drawerExpandedWidth = 292;
 const drawerCollapsedWidth = 76;
-const permissionCachePrefix = 'tms_module_permissions';
 let sidebarHoverActive = false;
-
-const getPermissionCacheKey = (user) => (
-  user?.id && user?.role ? `${permissionCachePrefix}:${user.id}:${user.role}` : ''
-);
-
-const readCachedPermissions = (user) => {
-  const key = getPermissionCacheKey(user);
-  if (!key) return null;
-
-  try {
-    const cached = sessionStorage.getItem(key);
-    return cached ? JSON.parse(cached) : null;
-  } catch (err) {
-    return null;
-  }
-};
-
-const writeCachedPermissions = (user, permissions) => {
-  const key = getPermissionCacheKey(user);
-  if (!key) return;
-  sessionStorage.setItem(key, JSON.stringify(permissions));
-};
 
 const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const theme = useTheme();
@@ -94,8 +77,25 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     };
 
     fetchModulePermissions();
+    const intervalId = window.setInterval(fetchModulePermissions, 30000);
+    const handleVisibilityChange = () => {
+      if (!document.hidden) fetchModulePermissions();
+    };
+    const handlePermissionUpdate = (event) => {
+      if (event.key !== PERMISSION_UPDATED_EVENT) return;
+      fetchModulePermissions();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', fetchModulePermissions);
+    window.addEventListener('storage', handlePermissionUpdate);
+
     return () => {
       isMounted = false;
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', fetchModulePermissions);
+      window.removeEventListener('storage', handlePermissionUpdate);
     };
   }, [userId, userRole]);
 
@@ -162,10 +162,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   ];
 
   const menuItems = modulePermissions === null ? [] : baseMenuItems.filter((item) => {
-    if (user.role === 'ADMIN') return true;
-    if (modulePermissions.length === 0) return true;
-    const permission = modulePermissions.find((row) => row.module === item.module);
-    return !permission || permission.can_access;
+    return canAccessModule(user, modulePermissions, item.module);
   });
 
   const roleLabel = user.role ? user.role.replace('_', ' ') : 'Member';
