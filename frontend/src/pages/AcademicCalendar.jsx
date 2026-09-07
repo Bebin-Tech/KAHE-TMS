@@ -81,6 +81,13 @@ const formatDateTime = (value) => {
   });
 };
 
+const getDateKeyFromValue = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+};
+
 const dateKeyToInputValue = (dateKey, time = '09:00') => `${dateKey}T${time}`;
 
 const columnLetterToIndex = (letters) => letters.split('').reduce((total, letter) => (
@@ -135,6 +142,10 @@ const getCellBackground = (cell, hasValue) => {
   if (cell.fill) return cell.fill;
   return hasValue ? '#ffffff' : '#fbfdff';
 };
+
+const shouldHighlightAssignedDateCell = (row, cell, ref, assignedTaskDateKeys) => (
+  Boolean(row.date_key && assignedTaskDateKeys.has(row.date_key) && ref?.column === 1 && cell.value)
+);
 
 const parseAcademicYearStart = (academicYear) => {
   const match = /^(\d{4})/.exec(academicYear || '');
@@ -262,6 +273,13 @@ const AcademicCalendar = () => {
   const workflowEvents = useMemo(() => (
     events.filter((event) => event.source !== 'EXCEL_IMPORT' || event.assigned_to || event.generated_task)
   ), [events]);
+
+  const assignedTaskDateKeys = useMemo(() => new Set(
+    workflowEvents
+      .filter((event) => event.assigned_to && event.start_date)
+      .map((event) => getDateKeyFromValue(event.start_date))
+      .filter(Boolean)
+  ), [workflowEvents]);
 
   const selectedCalendarImport = calendarImports[0] || null;
   const selectedCalendarRows = useMemo(() => (
@@ -668,6 +686,7 @@ const AcademicCalendar = () => {
                       if (merge?.hidden) return null;
                       const hasValue = Boolean(cell.value);
                       const clickableDateCell = canManage && row.date_key && ref?.column <= 3;
+                      const assignedDateCell = shouldHighlightAssignedDateCell(row, cell, ref, assignedTaskDateKeys);
                       return (
                         <Box
                           key={cell.ref}
@@ -695,7 +714,27 @@ const AcademicCalendar = () => {
                             }),
                           }}
                         >
-                          {cell.value}
+                          {assignedDateCell ? (
+                            <Box
+                              component="span"
+                              sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                minWidth: 28,
+                                height: 28,
+                                px: 0.75,
+                                borderRadius: '999px',
+                                border: '2px solid #16a34a',
+                                bgcolor: '#dcfce7',
+                                color: '#166534',
+                                fontWeight: 950,
+                                lineHeight: 1,
+                              }}
+                            >
+                              {cell.value}
+                            </Box>
+                          ) : cell.value}
                         </Box>
                       );
                     })}
