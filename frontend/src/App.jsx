@@ -1,26 +1,46 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import LoginPage from './pages/LoginPage.jsx';
-import DeanDashboard from './pages/DeanDashboard.jsx';
-import HODDashboard from './pages/HODDashboard.jsx';
-import FacultyDashboard from './pages/FacultyDashboard.jsx';
-import AdminDashboard from './pages/AdminDashboard.jsx';
-import UserManagement from './pages/UserManagement.jsx';
-import DepartmentManagement from './pages/DepartmentManagement.jsx';
-import Tasks from './pages/Tasks.jsx';
-import Reports from './pages/Reports.jsx';
-import AcademicCalendar from './pages/AcademicCalendar.jsx';
-import Notes from './pages/Notes.jsx';
-import Settings from './pages/Settings.jsx';
-import CompleteModule from './pages/CompleteModule.jsx';
-import CompletedTasks from './pages/CompletedTasks.jsx';
-import ChangePassword from './pages/ChangePassword.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+
+const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
+const DeanDashboard = lazy(() => import('./pages/DeanDashboard.jsx'));
+const HODDashboard = lazy(() => import('./pages/HODDashboard.jsx'));
+const FacultyDashboard = lazy(() => import('./pages/FacultyDashboard.jsx'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard.jsx'));
+const UserManagement = lazy(() => import('./pages/UserManagement.jsx'));
+const DepartmentManagement = lazy(() => import('./pages/DepartmentManagement.jsx'));
+const Tasks = lazy(() => import('./pages/Tasks.jsx'));
+const Reports = lazy(() => import('./pages/Reports.jsx'));
+const AcademicCalendar = lazy(() => import('./pages/AcademicCalendar.jsx'));
+const Notes = lazy(() => import('./pages/Notes.jsx'));
+const Settings = lazy(() => import('./pages/Settings.jsx'));
+const CompleteModule = lazy(() => import('./pages/CompleteModule.jsx'));
+const CompletedTasks = lazy(() => import('./pages/CompletedTasks.jsx'));
+const ChangePassword = lazy(() => import('./pages/ChangePassword.jsx'));
+
+const PageLoading = () => (
+  <div
+    role="status"
+    aria-label="Loading page"
+    style={{
+      minHeight: '100vh',
+      display: 'grid',
+      placeItems: 'center',
+      color: '#2563eb',
+      fontFamily: 'inherit',
+      fontWeight: 700,
+      background: '#f5f8fc',
+    }}
+  >
+    Loading...
+  </div>
+);
 
 function App() {
   return (
     <Router>
-      <Routes>
+      <Suspense fallback={<PageLoading />}>
+        <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/change-password" element={<ChangePassword />} />
 
@@ -152,7 +172,8 @@ function App() {
 
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
+        </Routes>
+      </Suspense>
     </Router>
   );
 }

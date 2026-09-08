@@ -29,8 +29,8 @@ import { clearRoleSession, getCurrentSession, setActiveRole, setRouteRole } from
 import {
   PERMISSION_UPDATED_EVENT,
   canAccessModule,
+  loadModulePermissions,
   readCachedPermissions,
-  writeCachedPermissions,
 } from '../utils/modulePermissions';
 import api from '../api/axios';
 import NoteReminder from './NoteReminder';
@@ -38,6 +38,8 @@ import NoteReminder from './NoteReminder';
 const drawerExpandedWidth = 292;
 const drawerCollapsedWidth = 76;
 let sidebarHoverActive = false;
+let lastCalendarDispatchAt = 0;
+let calendarDispatchRequest = null;
 
 const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const theme = useTheme();
@@ -67,9 +69,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
       if (cachedPermissions) setModulePermissions(cachedPermissions);
 
       try {
-        const response = await api.get('user-module-permissions/mine/');
-        const permissions = response.data || [];
-        writeCachedPermissions(cacheUser, permissions);
+        const permissions = await loadModulePermissions(cacheUser);
         if (isMounted) setModulePermissions(permissions);
       } catch (err) {
         if (isMounted) setModulePermissions([]);
@@ -77,13 +77,17 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     };
 
     fetchModulePermissions();
-    const intervalId = window.setInterval(fetchModulePermissions, 30000);
+    const intervalId = window.setInterval(fetchModulePermissions, 120000);
     const handleVisibilityChange = () => {
       if (!document.hidden) fetchModulePermissions();
     };
     const handlePermissionUpdate = (event) => {
       if (event.key !== PERMISSION_UPDATED_EVENT) return;
-      fetchModulePermissions();
+      loadModulePermissions({ id: userId, role: userRole }, { force: true })
+        .then((permissions) => {
+          if (isMounted) setModulePermissions(permissions);
+        })
+        .catch(() => {});
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -103,10 +107,17 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     if (!userId || !['ADMIN', 'DEAN', 'HOD'].includes(userRole)) return undefined;
 
     const dispatchDueCalendarTasks = async () => {
+      const now = Date.now();
+      if (calendarDispatchRequest || now - lastCalendarDispatchAt < 60000) return;
+
       try {
-        await api.post('academic-calendar/dispatch-due/');
+        calendarDispatchRequest = api.post('academic-calendar/dispatch-due/');
+        await calendarDispatchRequest;
+        lastCalendarDispatchAt = Date.now();
       } catch (err) {
         // Calendar dispatch should stay quiet; normal page API errors still surface in each module.
+      } finally {
+        calendarDispatchRequest = null;
       }
     };
 

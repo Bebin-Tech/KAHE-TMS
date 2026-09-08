@@ -1,5 +1,9 @@
+import api from '../api/axios';
+
 const permissionCachePrefix = 'tms_module_permissions';
 export const PERMISSION_UPDATED_EVENT = 'tms_permissions_updated';
+const permissionCacheMaxAge = 60 * 1000;
+const permissionRequests = new Map();
 
 export const MODULE_BY_PATH = {
   '/admin-dashboard': 'dashboard',
@@ -28,7 +32,25 @@ export const readCachedPermissions = (user) => {
 
   try {
     const cached = sessionStorage.getItem(key);
-    return cached ? JSON.parse(cached) : null;
+    if (!cached) return null;
+    const parsed = JSON.parse(cached);
+    return Array.isArray(parsed) ? parsed : parsed.permissions || null;
+  } catch (err) {
+    return null;
+  }
+};
+
+const readPermissionCacheEntry = (user) => {
+  const key = getPermissionCacheKey(user);
+  if (!key) return null;
+
+  try {
+    const cached = sessionStorage.getItem(key);
+    if (!cached) return null;
+    const parsed = JSON.parse(cached);
+    return Array.isArray(parsed)
+      ? { permissions: parsed, cachedAt: 0 }
+      : parsed;
   } catch (err) {
     return null;
   }
@@ -37,12 +59,38 @@ export const readCachedPermissions = (user) => {
 export const writeCachedPermissions = (user, permissions) => {
   const key = getPermissionCacheKey(user);
   if (!key) return;
-  sessionStorage.setItem(key, JSON.stringify(permissions));
+  sessionStorage.setItem(key, JSON.stringify({ permissions, cachedAt: Date.now() }));
 };
 
 export const clearCachedPermissions = (user) => {
   const key = getPermissionCacheKey(user);
-  if (key) sessionStorage.removeItem(key);
+  if (key) {
+    permissionRequests.delete(key);
+    sessionStorage.removeItem(key);
+  }
+};
+
+export const loadModulePermissions = async (user, { force = false } = {}) => {
+  if (!user?.id || user.role === 'ADMIN') return [];
+
+  const key = getPermissionCacheKey(user);
+  const cached = readPermissionCacheEntry(user);
+  const cacheIsFresh = cached?.permissions
+    && Date.now() - Number(cached.cachedAt || 0) < permissionCacheMaxAge;
+
+  if (!force && cacheIsFresh) return cached.permissions;
+  if (permissionRequests.has(key)) return permissionRequests.get(key);
+
+  const request = api.get('user-module-permissions/mine/')
+    .then((response) => {
+      const permissions = response.data || [];
+      writeCachedPermissions(user, permissions);
+      return permissions;
+    })
+    .finally(() => permissionRequests.delete(key));
+
+  permissionRequests.set(key, request);
+  return request;
 };
 
 export const notifyPermissionChange = (userId) => {

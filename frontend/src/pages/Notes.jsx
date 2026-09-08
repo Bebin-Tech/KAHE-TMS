@@ -34,6 +34,7 @@ import {
 import api from '../api/axios';
 import { getCurrentSession, getStoredSession, setActiveRole } from '../utils/session';
 import { formatApiError } from '../utils/errors';
+import { loadModulePermissions } from '../utils/modulePermissions';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -63,6 +64,8 @@ const Notes = () => {
     : getCurrentSession();
   const currentUser = currentSession?.session?.user || {};
   const currentRole = currentUser.role || currentSession?.role;
+  const currentUserId = currentUser.id;
+  const currentUserRole = currentUser.role;
   const [notes, setNotes] = useState([]);
   const [modulePermissions, setModulePermissions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -90,13 +93,13 @@ const Notes = () => {
 
   const fetchPermissions = useCallback(async () => {
     try {
-      const response = await api.get('user-module-permissions/mine/');
-      setModulePermissions(response.data || []);
+      const permissions = await loadModulePermissions({ id: currentUserId, role: currentUserRole });
+      setModulePermissions(permissions);
     } catch (err) {
       console.error('Error fetching note permissions:', err);
       setModulePermissions([]);
     }
-  }, []);
+  }, [currentUserId, currentUserRole]);
 
   const fetchNotes = useCallback(async () => {
     setLoading(true);

@@ -11,6 +11,7 @@ import { AssessmentRounded, AssignmentOutlined, DeleteRounded, FilterAltOffRound
 import api from '../api/axios';
 import { getCurrentSession } from '../utils/session';
 import { formatApiError } from '../utils/errors';
+import { loadModulePermissions } from '../utils/modulePermissions';
 
 const statusOptions = [
   'ASSIGNED',
@@ -74,7 +75,11 @@ const Reports = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
   const [loading, setLoading] = useState(true);
-  const currentRole = getCurrentSession()?.role;
+  const currentSession = getCurrentSession();
+  const currentRole = currentSession?.role;
+  const currentUser = currentSession?.session?.user || {};
+  const currentUserId = currentUser.id;
+  const currentUserRole = currentUser.role;
   const isDean = currentRole === 'DEAN';
   const showReportFilters = !isDean && !['ADMIN', 'HOD'].includes(currentRole);
   const canDeleteReports = currentRole === 'ADMIN' || modulePermissions.some((permission) => (
@@ -174,15 +179,15 @@ const Reports = () => {
     }
   };
 
-  const fetchModulePermission = async () => {
+  const fetchModulePermission = useCallback(async () => {
     try {
-      const response = await api.get('user-module-permissions/mine/');
-      setModulePermissions(response.data || []);
+      const permissions = await loadModulePermissions({ id: currentUserId, role: currentUserRole });
+      setModulePermissions(permissions);
     } catch (err) {
       console.error('Error fetching report permissions:', err);
       setModulePermissions([]);
     }
-  };
+  }, [currentUserId, currentUserRole]);
 
   const handleDeleteReport = async () => {
     if (!deleteTarget) return;
@@ -236,7 +241,7 @@ const Reports = () => {
     fetchUsers();
     fetchModulePermission();
     fetchReports();
-  }, [fetchReports]);
+  }, [fetchReports, fetchModulePermission]);
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({ ...prev, [key]: value }));

@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { getAvailableSession, getCurrentSession, redirectPathForUser, setActiveRole } from '../utils/session';
-import api from '../api/axios';
 import {
   PERMISSION_UPDATED_EVENT,
   canAccessModule,
+  loadModulePermissions,
   readCachedPermissions,
-  writeCachedPermissions,
 } from '../utils/modulePermissions';
 
 const ProtectedRoute = ({ children, allowedRoles, module }) => {
@@ -32,9 +31,7 @@ const ProtectedRoute = ({ children, allowedRoles, module }) => {
       if (cached && isMounted) setModuleAllowed(canAccessModule(permissionUser, cached, module));
 
       try {
-        const response = await api.get('user-module-permissions/mine/');
-        const permissions = response.data || [];
-        writeCachedPermissions(permissionUser, permissions);
+        const permissions = await loadModulePermissions(permissionUser);
         if (isMounted) setModuleAllowed(canAccessModule(permissionUser, permissions, module));
       } catch (err) {
         if (isMounted && !cached) setModuleAllowed(true);
@@ -42,23 +39,19 @@ const ProtectedRoute = ({ children, allowedRoles, module }) => {
     };
 
     checkModuleAccess();
-    const intervalId = window.setInterval(checkModuleAccess, 30000);
-    const handleVisibilityChange = () => {
-      if (!document.hidden) checkModuleAccess();
-    };
     const handlePermissionUpdate = (event) => {
-      if (event.key === PERMISSION_UPDATED_EVENT) checkModuleAccess();
+      if (event.key !== PERMISSION_UPDATED_EVENT) return;
+      loadModulePermissions(permissionUser, { force: true })
+        .then((permissions) => {
+          if (isMounted) setModuleAllowed(canAccessModule(permissionUser, permissions, module));
+        })
+        .catch(() => {});
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', checkModuleAccess);
     window.addEventListener('storage', handlePermissionUpdate);
 
     return () => {
       isMounted = false;
-      window.clearInterval(intervalId);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', checkModuleAccess);
       window.removeEventListener('storage', handlePermissionUpdate);
     };
   }, [current?.session?.access, module, permissionUser, user.role]);

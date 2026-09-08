@@ -33,6 +33,7 @@ import {
 import api from '../api/axios';
 import { getCurrentSession } from '../utils/session';
 import { formatApiError } from '../utils/errors';
+import { loadModulePermissions } from '../utils/modulePermissions';
 
 const CompletedTasks = () => {
   const [completedMainTasks, setCompletedMainTasks] = useState([]);
@@ -42,7 +43,9 @@ const CompletedTasks = () => {
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState({ open: false, severity: 'success', message: '' });
 
-  const currentRole = getCurrentSession()?.role;
+  const currentSession = getCurrentSession();
+  const currentRole = currentSession?.role;
+  const currentUser = currentSession?.session?.user || {};
   const canDelete = currentRole === 'ADMIN' || modulePermissions.some((permission) => (
     ['tasks', 'completed_tasks'].includes(permission.module)
     && permission.can_delete
@@ -65,20 +68,15 @@ const CompletedTasks = () => {
     }
   };
 
-  const fetchModulePermission = async () => {
-    try {
-      const response = await api.get('user-module-permissions/mine/');
-      setModulePermissions(response.data || []);
-    } catch (err) {
-      console.error('Error fetching completed task permissions:', err);
-      setModulePermissions([]);
-    }
-  };
-
   useEffect(() => {
     fetchCompletedTasks();
-    fetchModulePermission();
-  }, []);
+    loadModulePermissions({ id: currentUser.id, role: currentUser.role })
+      .then(setModulePermissions)
+      .catch((err) => {
+        console.error('Error fetching completed task permissions:', err);
+        setModulePermissions([]);
+      });
+  }, [currentUser.id, currentUser.role]);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;

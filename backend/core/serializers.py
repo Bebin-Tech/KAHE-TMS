@@ -71,7 +71,12 @@ class TaskSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_subtasks(self, obj):
-        return SubTaskSerializer(obj.subtasks.filter(is_active=True), many=True).data
+        subtasks = getattr(obj, '_active_subtasks', None)
+        if subtasks is None:
+            subtasks = obj.subtasks.filter(is_active=True).select_related(
+                'assigned_to', 'created_by', 'task__department'
+            )
+        return SubTaskSerializer(subtasks, many=True).data
 
 class AcademicCalendarEventSerializer(serializers.ModelSerializer):
     activity_type_label = serializers.CharField(source='get_activity_type_display', read_only=True)

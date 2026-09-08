@@ -32,6 +32,7 @@ import {
 import api from '../api/axios';
 import { getCurrentSession } from '../utils/session';
 import { formatApiError } from '../utils/errors';
+import { loadModulePermissions } from '../utils/modulePermissions';
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/';
 const fileBaseUrl = apiBaseUrl.replace(/\/api\/?$/, '');
@@ -123,7 +124,11 @@ const getFacultyProgress = (task) => {
 };
 
 const Tasks = () => {
-  const currentRole = getCurrentSession()?.role;
+  const currentSession = getCurrentSession();
+  const currentRole = currentSession?.role;
+  const currentUser = currentSession?.session?.user || {};
+  const currentUserId = currentUser.id;
+  const currentUserRole = currentUser.role;
   const isHod = currentRole === 'HOD';
   const isDean = currentRole === 'DEAN';
   const canCreateTask = ['ADMIN', 'DEAN', 'HOD'].includes(currentRole);
@@ -160,13 +165,7 @@ const Tasks = () => {
       };
       if (isDean) {
         const res = await api.get('tasks/', requestConfig);
-        if (res.data?.length) {
-          setTasks(res.data);
-          return;
-        }
-
-        const workflowRes = await api.get('tasks/dean-workflow/', requestConfig);
-        setTasks(workflowRes.data);
+        setTasks(res.data || []);
         return;
       }
 
@@ -177,13 +176,7 @@ const Tasks = () => {
       }
 
       const assignedResponse = await api.get('tasks/assigned-to-me/', requestConfig);
-      if (assignedResponse.data?.length) {
-        setTasks(assignedResponse.data);
-        return;
-      }
-
-      const fallbackResponse = await api.get('tasks/', requestConfig);
-      setTasks(filterActiveHodTasks(fallbackResponse.data));
+      setTasks(assignedResponse.data || []);
     } catch (err) {
       console.error('Error fetching tasks:', err);
       if (isDean) {
@@ -212,14 +205,14 @@ const Tasks = () => {
 
   const fetchModulePermission = useCallback(async () => {
     try {
-      const response = await api.get('user-module-permissions/mine/');
-      const permission = response.data.find((row) => row.module === 'tasks');
+      const permissions = await loadModulePermissions({ id: currentUserId, role: currentUserRole });
+      const permission = permissions.find((row) => row.module === 'tasks');
       setModulePermission(permission || null);
     } catch (err) {
       console.error('Error fetching task permissions:', err);
       setModulePermission(null);
     }
-  }, []);
+  }, [currentUserId, currentUserRole]);
 
   useEffect(() => {
     fetchData();
@@ -228,7 +221,7 @@ const Tasks = () => {
 
   useAutoRefresh(
     fetchData,
-    isHod ? 1000 : 5000,
+    isHod ? 10000 : 15000,
     !open && !selectedTask && !submitTarget && !facultyAssignmentTask && !reviewOpen && !deleteTarget && !deleteAllOpen && !successTask
   );
 

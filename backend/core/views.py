@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.core.files.base import ContentFile
 from django.db import transaction
-from django.db.models import Count, Exists, OuterRef, Q
+from django.db.models import Count, Exists, OuterRef, Prefetch, Q
 from django.utils import timezone
 from datetime import datetime, time
 import calendar
@@ -525,21 +525,38 @@ class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    @staticmethod
+    def with_related_data(queryset):
+        active_subtasks = SubTask.objects.filter(is_active=True).select_related(
+            'assigned_to', 'created_by', 'task__department'
+        )
+        return queryset.select_related(
+            'created_by', 'assigned_to_hod', 'department'
+        ).prefetch_related(
+            Prefetch('subtasks', queryset=active_subtasks, to_attr='_active_subtasks')
+        )
+
     def visible_task_queryset(self):
         active_subtasks = SubTask.objects.filter(task=OuterRef('pk'), is_active=True)
         any_subtasks = SubTask.objects.filter(task=OuterRef('pk'))
-        return Task.objects.filter(is_active=True).annotate(
+        queryset = Task.objects.filter(is_active=True).annotate(
             has_active_subtasks=Exists(active_subtasks),
             has_any_subtasks=Exists(any_subtasks)
         ).exclude(
             has_any_subtasks=True,
             has_active_subtasks=False
         ).order_by('-created_at', '-id')
+        return self.with_related_data(queryset)
 
     def get_queryset(self):
         user = self.request.user
         if user.role == 'FACULTY':
-            return Task.objects.filter(is_active=True, subtasks__is_active=True, subtasks__assigned_to=user).distinct()
+            queryset = Task.objects.filter(
+                is_active=True,
+                subtasks__is_active=True,
+                subtasks__assigned_to=user
+            ).distinct()
+            return self.with_related_data(queryset)
 
         # Admin, Dean, and HOD only see active tasks with active related work.
         base_queryset = self.visible_task_queryset()
@@ -978,7 +995,12 @@ class SubTaskViewSet(viewsets.ModelViewSet):
         if user.role == 'FACULTY':
             return SubTask.objects.filter(is_active=True, task__is_active=True, assigned_to=user)
 
-        base_queryset = SubTask.objects.filter(is_active=True, task__is_active=True)
+        base_queryset = SubTask.objects.filter(
+            is_active=True,
+            task__is_active=True
+        ).select_related(
+            'task', 'task__department', 'task__assigned_to_hod', 'assigned_to', 'created_by'
+        )
         if user.role == 'ADMIN':
             return base_queryset
         if user.role == 'DEAN':

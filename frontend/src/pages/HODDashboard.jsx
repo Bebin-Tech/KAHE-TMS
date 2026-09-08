@@ -152,7 +152,7 @@ const HODDashboard = () => {
     fetchData();
   }, [fetchData]);
 
-  useAutoRefresh(fetchData, 1000, !dialogOpen && !reviewOpen && !submitTask && !detailTask && !detailSubtask);
+  useAutoRefresh(fetchData, 10000, !dialogOpen && !reviewOpen && !submitTask && !detailTask && !detailSubtask);
 
   const handleOpenReview = (item, type) => {
     setReviewTask({ ...item, type });

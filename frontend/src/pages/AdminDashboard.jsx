@@ -85,7 +85,7 @@ const AdminDashboard = () => {
     fetchDashboard();
   }, [fetchDashboard]);
 
-  useAutoRefresh(fetchDashboard, 5000);
+  useAutoRefresh(fetchDashboard, 15000);
 
   const taskTotals = useMemo(() => {
     const completed = tasks.filter((task) => ['COMPLETED', 'DEAN_APPROVED'].includes(task.status)).length || stats.completed_tasks || 0;
