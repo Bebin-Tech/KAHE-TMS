@@ -758,9 +758,27 @@ const AcademicCalendar = () => {
         </Paper>
       ) : (
         <>
-          <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 950, color: '#0f172a' }}>
-            Scheduled Workflow Entries
-          </Typography>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            justifyContent="space-between"
+            alignItems={{ xs: 'flex-start', sm: 'center' }}
+            spacing={1}
+            sx={{ mb: 1.5 }}
+          >
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 950, color: '#0f172a', lineHeight: 1.25 }}>
+                Scheduled Workflow Entries
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Activities created from selected calendar dates and assigned for delivery.
+              </Typography>
+            </Box>
+            <Chip
+              size="small"
+              label={`${workflowEvents.length} ${workflowEvents.length === 1 ? 'entry' : 'entries'}`}
+              sx={{ bgcolor: '#e0f2fe', color: '#0369a1', fontWeight: 900 }}
+            />
+          </Stack>
           <Grid container spacing={2}>
             {workflowEvents.map((event) => (
               <Grid item xs={12} md={6} xl={4} key={event.id}>
@@ -815,14 +833,12 @@ const AcademicCalendar = () => {
                     </Stack>
                   </Box>
                   <Stack spacing={1.6} sx={{ p: 2.25 }}>
-                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1.5}>
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 950, lineHeight: 1.2, color: '#0f172a' }}>{event.title}</Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                          {event.description || 'No additional description'}
-                        </Typography>
-                      </Box>
-                    </Stack>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 950, lineHeight: 1.2, color: '#0f172a' }}>{event.title}</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                        {event.description || 'No additional description'}
+                      </Typography>
+                    </Box>
 
                     <Grid container spacing={1.25}>
                       <Grid item xs={12} sm={6}>
