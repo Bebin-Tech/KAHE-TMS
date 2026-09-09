@@ -126,6 +126,25 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
     return () => window.clearInterval(intervalId);
   }, [userId, userRole]);
 
+  useEffect(() => {
+    if (isMobile || hideSidebar) return undefined;
+
+    const syncSidebarWithPointer = (event) => {
+      if (event.pointerType === 'touch') return;
+
+      if (sidebarHoverActive && event.clientX > drawerExpandedWidth) {
+        sidebarHoverActive = false;
+        setIsHovered(false);
+      } else if (!sidebarHoverActive && event.clientX <= drawerCollapsedWidth) {
+        sidebarHoverActive = true;
+        setIsHovered(true);
+      }
+    };
+
+    window.addEventListener('pointermove', syncSidebarWithPointer, { passive: true });
+    return () => window.removeEventListener('pointermove', syncSidebarWithPointer);
+  }, [hideSidebar, isMobile]);
+
   const handleDrawerToggle = () => setMobileOpen((prev) => !prev);
   const handleSidebarMouseEnter = () => {
     if (isMobile) return;
@@ -189,7 +208,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
         bgcolor: '#ffffff',
         color: '#0f172a',
         px: isExpanded ? { xs: 1.5, sm: 2 } : 1,
-        transition: 'padding 240ms cubic-bezier(0.4, 0, 0.2, 1)',
+        transition: 'padding 120ms ease-out',
         overflowX: 'hidden'
       }}
     >
@@ -202,7 +221,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           justifyContent: isExpanded ? 'flex-start' : 'center',
           gap: 1.4,
           minHeight: 74,
-          transition: 'padding 240ms cubic-bezier(0.4, 0, 0.2, 1)'
+          transition: 'padding 120ms ease-out'
         }}
       >
         <Box
@@ -244,7 +263,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
         )}
       </Box>
 
-      <Box sx={{ px: isExpanded ? 0.5 : 0, mb: { xs: 2, sm: 2.5 }, transition: 'padding 240ms cubic-bezier(0.4, 0, 0.2, 1)' }}>
+      <Box sx={{ px: isExpanded ? 0.5 : 0, mb: { xs: 2, sm: 2.5 }, transition: 'padding 120ms ease-out' }}>
         <Paper elevation={0} sx={{
           p: isExpanded ? { xs: 1.35, sm: 1.6 } : 1,
           bgcolor: '#ffffff',
@@ -256,7 +275,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           justifyContent: isExpanded ? 'flex-start' : 'center',
           gap: isExpanded ? 1.5 : 0,
           color: '#0f172a',
-          transition: 'all 240ms cubic-bezier(0.4, 0, 0.2, 1)'
+          transition: 'all 120ms ease-out'
         }}>
           <Avatar sx={{ width: 38, height: 38, bgcolor: '#dbeafe', color: '#1d4ed8', fontWeight: 800, flexShrink: 0 }}>
             {(user.username?.[0] || 'U').toUpperCase()}
@@ -293,7 +312,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   bgcolor: isHomeActive ? '#eff6ff' : 'transparent',
                   color: '#0f172a',
                   border: isHomeActive ? '1px solid rgba(37,99,235,0.22)' : '1px solid transparent',
-                  transition: 'background-color 260ms ease, border-color 260ms ease, box-shadow 260ms ease, padding 240ms cubic-bezier(0.4, 0, 0.2, 1)',
+                  transition: 'background-color 120ms ease, border-color 120ms ease, box-shadow 120ms ease, padding 120ms ease-out',
                   boxShadow: isHomeActive ? '0 14px 28px -24px rgba(37,99,235,0.7)' : 'none',
                   '&:hover': {
                     bgcolor: isHomeActive ? '#eff6ff' : '#f8fafc',
@@ -337,7 +356,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
               pl: isExpanded ? 1.5 : 0,
               ml: isExpanded ? 1 : 0,
               borderLeft: isExpanded ? '1px solid #e2e8f0' : 'none',
-              transition: 'all 240ms cubic-bezier(0.4, 0, 0.2, 1)'
+              transition: 'all 120ms ease-out'
             }}
           >
             {menuItems.map((item) => {
@@ -355,7 +374,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                         bgcolor: isActive ? '#eff6ff' : 'transparent',
                         color: '#0f172a',
                         border: isActive ? '1px solid rgba(37,99,235,0.22)' : '1px solid transparent',
-                        transition: 'background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease, padding 240ms cubic-bezier(0.4, 0, 0.2, 1)',
+                        transition: 'background-color 120ms ease, border-color 120ms ease, color 120ms ease, box-shadow 120ms ease, padding 120ms ease-out',
                         boxShadow: isActive ? '0 14px 28px -24px rgba(37,99,235,0.7)' : 'none',
                         '&:hover': {
                           bgcolor: isActive ? '#eff6ff' : '#f8fafc',
@@ -414,10 +433,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
               md: isHovered ? drawerExpandedWidth : drawerCollapsedWidth,
             },
             flexShrink: 0,
-            transition: theme.transitions.create('width', {
-              easing: theme.transitions.easing.sharp,
-              duration: theme.transitions.duration.enteringScreen,
-            }),
+            transition: 'width 120ms ease-out',
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
               width: isMobile ? 'min(86vw, 292px)' : (isHovered ? drawerExpandedWidth : drawerCollapsedWidth),
@@ -426,10 +442,8 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
               boxShadow: isHovered
                 ? '0 20px 40px -15px rgba(15, 23, 42, 0.18), 10px 0 30px -20px rgba(15,23,42,0.35)'
                 : '4px 0 20px -15px rgba(15,23,42,0.1)',
-              transition: theme.transitions.create(['width', 'box-shadow'], {
-                easing: theme.transitions.easing.sharp,
-                duration: theme.transitions.duration.enteringScreen,
-              }),
+              transition: 'width 120ms ease-out, box-shadow 120ms ease-out',
+              willChange: 'width',
               overflowX: 'hidden',
             },
           }}
