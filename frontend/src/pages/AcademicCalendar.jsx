@@ -551,13 +551,8 @@ const AcademicCalendar = () => {
                   Delete All
                 </Button>
               )}
-              {calendarStats.imported > 0 && (
-                <Button variant="outlined" color="warning" startIcon={<DeleteSweepRounded />} onClick={() => setDeleteImportedOpen(true)} sx={{ minWidth: 170, bgcolor: '#ffffff', fontWeight: 850 }}>
-                  Delete Imported
-                </Button>
-              )}
               <Button variant="outlined" startIcon={<FileUploadRounded />} onClick={handleOpenImport} sx={{ minWidth: 160, bgcolor: '#ffffff', fontWeight: 850 }}>
-                Import Excel
+                Import Calendar
               </Button>
               <Button variant="contained" startIcon={<AddRounded />} onClick={handleOpenCreate} sx={{ minWidth: 180 }}>
                 Add Activity
