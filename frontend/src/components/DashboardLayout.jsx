@@ -40,6 +40,29 @@ const drawerCollapsedWidth = 76;
 let sidebarHoverActive = false;
 let lastCalendarDispatchAt = 0;
 let calendarDispatchRequest = null;
+const routeModuleLoaders = {
+  '/admin-dashboard': () => import('../pages/AdminDashboard.jsx'),
+  '/dean-dashboard': () => import('../pages/DeanDashboard.jsx'),
+  '/hod-dashboard': () => import('../pages/HODDashboard.jsx'),
+  '/faculty-dashboard': () => import('../pages/FacultyDashboard.jsx'),
+  '/department-management': () => import('../pages/DepartmentManagement.jsx'),
+  '/tasks': () => import('../pages/Tasks.jsx'),
+  '/completed-tasks': () => import('../pages/CompletedTasks.jsx'),
+  '/reports': () => import('../pages/Reports.jsx'),
+  '/academic-calendar': () => import('../pages/AcademicCalendar.jsx'),
+  '/notes': () => import('../pages/Notes.jsx'),
+  '/admin-notes': () => import('../pages/Notes.jsx'),
+  '/user-management': () => import('../pages/UserManagement.jsx'),
+  '/settings': () => import('../pages/Settings.jsx'),
+};
+const routeModuleRequests = new Map();
+
+const preloadRouteModule = (path) => {
+  const loader = routeModuleLoaders[path];
+  if (!loader) return null;
+  if (!routeModuleRequests.has(path)) routeModuleRequests.set(path, loader());
+  return routeModuleRequests.get(path);
+};
 
 const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   const theme = useTheme();
@@ -104,6 +127,19 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   }, [userId, userRole]);
 
   useEffect(() => {
+    if (!userId) return undefined;
+    const preloadModules = () => Object.keys(routeModuleLoaders).forEach(preloadRouteModule);
+    const preloadId = 'requestIdleCallback' in window
+      ? window.requestIdleCallback(preloadModules, { timeout: 1500 })
+      : window.setTimeout(preloadModules, 300);
+
+    return () => {
+      if ('cancelIdleCallback' in window) window.cancelIdleCallback(preloadId);
+      else window.clearTimeout(preloadId);
+    };
+  }, [userId]);
+
+  useEffect(() => {
     if (!userId || !['ADMIN', 'DEAN', 'HOD'].includes(userRole)) return undefined;
 
     const dispatchDueCalendarTasks = async () => {
@@ -146,21 +182,20 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   }, [hideSidebar, isMobile]);
 
   const handleDrawerToggle = () => setMobileOpen((prev) => !prev);
-  const handleSidebarMouseEnter = () => {
-    if (isMobile) return;
-    sidebarHoverActive = true;
-    setIsHovered(true);
-  };
-  const handleSidebarMouseLeave = () => {
-    if (isMobile) return;
-    sidebarHoverActive = false;
-    setIsHovered(false);
-  };
   const handleHomeToggle = () => setHomeOpen((current) => !current);
-  const handleNavigate = (path) => {
+  const handleNavigate = async (path) => {
+    if (!isMobile) {
+      sidebarHoverActive = true;
+      setIsHovered(true);
+    }
     if (user.role) {
       setActiveRole(user.role);
       setRouteRole(path, user.role);
+    }
+    try {
+      await preloadRouteModule(path);
+    } catch (err) {
+      // Navigation can still proceed and let the route-level fallback handle a failed preload.
     }
     navigate(path);
     if (isMobile) setMobileOpen(false);
@@ -366,7 +401,9 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
                   <Tooltip title={!isExpanded ? item.text : ""} placement="right" disableHoverListener={isExpanded} arrow>
                     <ListItemButton
                       disableRipple
-                      onClick={() => handleNavigate(item.path)}
+                      onPointerEnter={() => preloadRouteModule(item.path)}
+                      onFocus={() => preloadRouteModule(item.path)}
+                      onClick={() => { void handleNavigate(item.path); }}
                       sx={{
                         position: 'relative',
                         overflow: 'hidden',
@@ -423,22 +460,29 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
           variant={isMobile ? "temporary" : "permanent"}
           open={isMobile ? mobileOpen : true}
           onClose={handleDrawerToggle}
-          PaperProps={{
-            onMouseEnter: handleSidebarMouseEnter,
-            onMouseLeave: handleSidebarMouseLeave,
-          }}
           sx={{
             width: {
               xs: 'min(86vw, 292px)',
               md: isHovered ? drawerExpandedWidth : drawerCollapsedWidth,
             },
             flexShrink: 0,
+            position: 'relative',
+            zIndex: theme.zIndex.drawer,
+            bgcolor: '#ffffff',
+            isolation: 'isolate',
             transition: 'width 120ms ease-out',
             '& .MuiDrawer-paper': {
               boxSizing: 'border-box',
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              height: '100vh',
               width: isMobile ? 'min(86vw, 292px)' : (isHovered ? drawerExpandedWidth : drawerCollapsedWidth),
               borderRight: '1px solid #e2e8f0',
-              bgcolor: '#ffffff',
+              backgroundColor: '#ffffff !important',
+              backgroundImage: 'none',
+              opacity: 1,
+              isolation: 'isolate',
               boxShadow: isHovered
                 ? '0 20px 40px -15px rgba(15, 23, 42, 0.18), 10px 0 30px -20px rgba(15,23,42,0.35)'
                 : '4px 0 20px -15px rgba(15,23,42,0.1)',
@@ -452,7 +496,7 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
         </Drawer>
       )}
 
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, maxWidth: '100%', overflowX: 'hidden' }}>
+      <Box sx={{ flex: '1 1 0', display: 'flex', flexDirection: 'column', minWidth: 0, width: 0, maxWidth: '100%', overflowX: 'hidden' }}>
         {/* Top Navbar */}
         <AppBar
           position="sticky"

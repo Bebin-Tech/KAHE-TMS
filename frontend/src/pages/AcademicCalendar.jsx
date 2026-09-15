@@ -224,12 +224,123 @@ const getUserLabel = (user) => {
   return name || user.username;
 };
 
+const calendarPageCache = {
+  events: null,
+  imports: null,
+  departments: null,
+};
+
+const ImportedCalendarGrid = React.memo(({
+  rows,
+  columns,
+  mergeLookup,
+  assignedTaskDateKeys,
+  canManage,
+  onSelectRow,
+}) => (
+  <table
+    style={{
+      borderCollapse: 'collapse',
+      tableLayout: 'fixed',
+      minWidth: getLayoutTableWidth(columns),
+      width: '100%',
+    }}
+  >
+    <colgroup>
+      {columns.map((column) => (
+        <col key={column.letter} style={{ width: excelColumnWidthToPx(column.width) }} />
+      ))}
+    </colgroup>
+    <tbody>
+      {rows.map((row) => (
+        <tr
+          key={row.index}
+          style={{
+            height: excelRowHeightToPx(row.height),
+            cursor: canManage && row.date_key ? 'pointer' : 'default',
+          }}
+          title={canManage && row.date_key ? 'Click to create a task for this date' : undefined}
+          onClick={() => onSelectRow(row)}
+        >
+          {(row.cells || []).map((cell) => {
+            const ref = parseCellRef(cell.ref);
+            const merge = ref ? mergeLookup[`${ref.row}:${ref.column}`] : null;
+            if (merge?.hidden) return null;
+
+            const hasValue = Boolean(cell.value);
+            const clickableDateCell = canManage && row.date_key && ref?.column <= 3;
+            const assignedDateCell = shouldHighlightAssignedDateCell(
+              row,
+              cell,
+              ref,
+              assignedTaskDateKeys,
+            );
+
+            return (
+              <td
+                key={cell.ref}
+                colSpan={merge?.colSpan || 1}
+                rowSpan={merge?.rowSpan || 1}
+                style={{
+                  border: '1px solid #dbe5ef',
+                  padding: '4px 5px',
+                  fontSize: cell.font_size
+                    ? `${Math.max(10, Math.min(Number(cell.font_size) * 1.05, 24))}px`
+                    : '0.78rem',
+                  lineHeight: 1.2,
+                  backgroundColor: clickableDateCell && hasValue
+                    ? '#eff6ff'
+                    : getCellBackground(cell, hasValue),
+                  color: clickableDateCell ? '#1d4ed8' : (cell.color || '#0f172a'),
+                  fontWeight: cell.bold ? 900 : 500,
+                  fontStyle: cell.italic ? 'italic' : 'normal',
+                  textAlign: ['center', 'right', 'left'].includes(cell.align) ? cell.align : 'center',
+                  verticalAlign: ['top', 'middle', 'bottom'].includes(cell.vertical_align)
+                    ? cell.vertical_align
+                    : 'middle',
+                  whiteSpace: cell.wrap_text ? 'pre-wrap' : 'normal',
+                  overflowWrap: 'anywhere',
+                  textDecoration: clickableDateCell ? 'underline' : 'none',
+                  textDecorationColor: clickableDateCell ? '#bfdbfe' : undefined,
+                }}
+              >
+                {assignedDateCell ? (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      minWidth: 28,
+                      height: 28,
+                      padding: '0 6px',
+                      borderRadius: 999,
+                      border: '2px solid #16a34a',
+                      backgroundColor: '#dcfce7',
+                      color: '#166534',
+                      fontWeight: 950,
+                      lineHeight: 1,
+                    }}
+                  >
+                    {cell.value}
+                  </span>
+                ) : cell.value}
+              </td>
+            );
+          })}
+        </tr>
+      ))}
+    </tbody>
+  </table>
+));
+
+ImportedCalendarGrid.displayName = 'ImportedCalendarGrid';
+
 const AcademicCalendar = () => {
   const currentUser = getCurrentSession()?.session?.user || {};
   const canManage = ['ADMIN', 'DEAN'].includes(currentUser.role);
-  const [events, setEvents] = useState([]);
-  const [calendarImports, setCalendarImports] = useState([]);
-  const [departments, setDepartments] = useState([]);
+  const [events, setEvents] = useState(() => calendarPageCache.events || []);
+  const [calendarImports, setCalendarImports] = useState(() => calendarPageCache.imports || []);
+  const [departments, setDepartments] = useState(() => calendarPageCache.departments || []);
   const [hods, setHods] = useState([]);
   const [formData, setFormData] = useState(emptyForm);
   const [importData, setImportData] = useState({ academic_year: getAcademicYear() });
@@ -240,7 +351,7 @@ const AcademicCalendar = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteAllOpen, setDeleteAllOpen] = useState(false);
   const [deleteImportedOpen, setDeleteImportedOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => calendarPageCache.events === null);
   const [fetchingHods, setFetchingHods] = useState(false);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -294,13 +405,12 @@ const AcademicCalendar = () => {
   };
 
   const fetchEvents = useCallback(async () => {
-    setLoading(true);
+    if (calendarPageCache.events === null) setLoading(true);
     try {
-      const response = await api.get('academic-calendar/', {
-        params: { refresh: Date.now() },
-        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
-      });
-      setEvents(normalizeList(response.data));
+      const response = await api.get('academic-calendar/');
+      const nextEvents = normalizeList(response.data);
+      calendarPageCache.events = nextEvents;
+      setEvents(nextEvents);
     } catch (err) {
       showMessage(formatApiError(err, 'Unable to load academic calendar.'), 'error');
     } finally {
@@ -310,11 +420,10 @@ const AcademicCalendar = () => {
 
   const fetchCalendarImports = useCallback(async () => {
     try {
-      const response = await api.get('academic-calendar/imports/', {
-        params: { refresh: Date.now() },
-        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
-      });
-      setCalendarImports(normalizeList(response.data));
+      const response = await api.get('academic-calendar/imports/');
+      const nextImports = normalizeList(response.data);
+      calendarPageCache.imports = nextImports;
+      setCalendarImports(nextImports);
     } catch (err) {
       showMessage(formatApiError(err, 'Unable to load imported academic calendar.'), 'error');
     }
@@ -323,7 +432,9 @@ const AcademicCalendar = () => {
   const fetchDepartments = useCallback(async () => {
     try {
       const response = await api.get('departments/');
-      setDepartments(normalizeList(response.data));
+      const nextDepartments = normalizeList(response.data);
+      calendarPageCache.departments = nextDepartments;
+      setDepartments(nextDepartments);
     } catch (err) {
       showMessage(formatApiError(err, 'Unable to load departments.'), 'error');
     }
@@ -364,7 +475,7 @@ const AcademicCalendar = () => {
     setDialogOpen(true);
   };
 
-  const handleOpenCreateFromImportedRow = (row) => {
+  const handleOpenCreateFromImportedRow = useCallback((row) => {
     if (!row?.date_key || !canManage) return;
     setEditingEvent(null);
     setFormData({
@@ -376,7 +487,7 @@ const AcademicCalendar = () => {
     });
     setHods([]);
     setDialogOpen(true);
-  };
+  }, [canManage]);
 
   const handleOpenImport = () => {
     setImportData({ academic_year: getAcademicYear() });
@@ -422,10 +533,14 @@ const AcademicCalendar = () => {
         ? await api.patch(`academic-calendar/${editingEvent.id}/`, payload)
         : await api.post('academic-calendar/', payload);
       const savedEvent = response.data;
-      setEvents((current) => [
-        savedEvent,
-        ...current.filter((row) => row.id !== savedEvent.id),
-      ]);
+      setEvents((current) => {
+        const nextEvents = [
+          savedEvent,
+          ...current.filter((row) => row.id !== savedEvent.id),
+        ];
+        calendarPageCache.events = nextEvents;
+        return nextEvents;
+      });
       setDialogOpen(false);
       setEditingEvent(null);
       showMessage(editingEvent ? 'Calendar activity updated and task schedule synced.' : 'Calendar activity saved. The task will be sent on its scheduled date.');
@@ -442,7 +557,11 @@ const AcademicCalendar = () => {
 
     try {
       await api.delete(`academic-calendar/${deleteTarget.id}/`);
-      setEvents((current) => current.filter((event) => event.id !== deleteTarget.id));
+      setEvents((current) => {
+        const nextEvents = current.filter((event) => event.id !== deleteTarget.id);
+        calendarPageCache.events = nextEvents;
+        return nextEvents;
+      });
       setDeleteTarget(null);
       showMessage('Calendar activity and generated task removed.');
     } catch (err) {
@@ -455,6 +574,7 @@ const AcademicCalendar = () => {
       const response = await api.delete('academic-calendar/delete-all/');
       const deletedCount = response.data?.deleted_count || 0;
       setDeleteAllOpen(false);
+      calendarPageCache.events = [];
       setEvents([]);
       showMessage(`${deletedCount} calendar entr${deletedCount === 1 ? 'y' : 'ies'} deleted successfully.`);
       fetchEvents();
@@ -469,7 +589,12 @@ const AcademicCalendar = () => {
       const response = await api.delete('academic-calendar/delete-imported/');
       const deletedCount = response.data?.deleted_count || 0;
       setDeleteImportedOpen(false);
-      setEvents((current) => current.filter((event) => event.source !== 'EXCEL_IMPORT'));
+      setEvents((current) => {
+        const nextEvents = current.filter((event) => event.source !== 'EXCEL_IMPORT');
+        calendarPageCache.events = nextEvents;
+        return nextEvents;
+      });
+      calendarPageCache.imports = [];
       setCalendarImports([]);
       showMessage(`${deletedCount} imported calendar entr${deletedCount === 1 ? 'y' : 'ies'} deleted successfully.`);
       fetchEvents();
@@ -636,107 +761,14 @@ const AcademicCalendar = () => {
             )}
           </Stack>
           <Box sx={{ overflow: 'auto', maxHeight: 620, bgcolor: '#ffffff' }}>
-            <Box
-              component="table"
-              sx={{
-                borderCollapse: 'collapse',
-                tableLayout: 'fixed',
-                minWidth: getLayoutTableWidth(selectedCalendarImport.layout?.columns || []),
-                width: '100%',
-                '& td': {
-                  border: '1px solid #dbe5ef',
-                  px: 0.55,
-                  py: 0.35,
-                  fontSize: '0.78rem',
-                  lineHeight: 1.2,
-                  color: '#0f172a',
-                  verticalAlign: 'middle',
-                  whiteSpace: 'pre-wrap',
-                },
-              }}
-            >
-              <colgroup>
-                {(selectedCalendarImport.layout?.columns || []).map((column) => (
-                  <Box
-                    key={column.letter}
-                    component="col"
-                    sx={{ width: excelColumnWidthToPx(column.width) }}
-                  />
-                ))}
-              </colgroup>
-              <tbody>
-                {selectedCalendarRows.map((row) => (
-                  <tr
-                    key={row.index}
-                    style={{
-                      height: excelRowHeightToPx(row.height),
-                      cursor: canManage && row.date_key ? 'pointer' : 'default',
-                    }}
-                    title={canManage && row.date_key ? 'Click to create a task for this date' : undefined}
-                    onClick={() => handleOpenCreateFromImportedRow(row)}
-                  >
-                    {(row.cells || []).map((cell) => {
-                      const ref = parseCellRef(cell.ref);
-                      const merge = ref ? importMergeLookup[`${ref.row}:${ref.column}`] : null;
-                      if (merge?.hidden) return null;
-                      const hasValue = Boolean(cell.value);
-                      const clickableDateCell = canManage && row.date_key && ref?.column <= 3;
-                      const assignedDateCell = shouldHighlightAssignedDateCell(row, cell, ref, assignedTaskDateKeys);
-                      return (
-                        <Box
-                          key={cell.ref}
-                          component="td"
-                          colSpan={merge?.colSpan || 1}
-                          rowSpan={merge?.rowSpan || 1}
-                          onClick={() => handleOpenCreateFromImportedRow(row)}
-                          sx={{
-                            bgcolor: getCellBackground(cell, hasValue),
-                            color: cell.color || '#0f172a',
-                            fontWeight: cell.bold ? 900 : 500,
-                            fontStyle: cell.italic ? 'italic' : 'normal',
-                            fontSize: cell.font_size ? `${Math.max(10, Math.min(Number(cell.font_size) * 1.05, 24))}px` : undefined,
-                            textAlign: ['center', 'right', 'left'].includes(cell.align) ? cell.align : 'center',
-                            verticalAlign: ['top', 'middle', 'bottom'].includes(cell.vertical_align) ? cell.vertical_align : 'middle',
-                            whiteSpace: cell.wrap_text ? 'pre-wrap' : 'normal',
-                            overflowWrap: 'anywhere',
-                            minHeight: 24,
-                            ...(clickableDateCell && {
-                              bgcolor: hasValue ? '#eff6ff' : getCellBackground(cell, hasValue),
-                              color: '#1d4ed8',
-                              cursor: 'pointer',
-                              textDecoration: 'underline',
-                              textDecorationColor: '#bfdbfe',
-                            }),
-                          }}
-                        >
-                          {assignedDateCell ? (
-                            <Box
-                              component="span"
-                              sx={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                minWidth: 28,
-                                height: 28,
-                                px: 0.75,
-                                borderRadius: '999px',
-                                border: '2px solid #16a34a',
-                                bgcolor: '#dcfce7',
-                                color: '#166534',
-                                fontWeight: 950,
-                                lineHeight: 1,
-                              }}
-                            >
-                              {cell.value}
-                            </Box>
-                          ) : cell.value}
-                        </Box>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </Box>
+            <ImportedCalendarGrid
+              rows={selectedCalendarRows}
+              columns={selectedCalendarImport.layout?.columns || []}
+              mergeLookup={importMergeLookup}
+              assignedTaskDateKeys={assignedTaskDateKeys}
+              canManage={canManage}
+              onSelectRow={handleOpenCreateFromImportedRow}
+            />
           </Box>
         </Paper>
       )}

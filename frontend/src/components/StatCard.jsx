@@ -10,7 +10,6 @@ const StatCard = ({
   color = '#2563eb',
   bg = '#eff6ff',
   borderColor = 'rgba(37,99,235,0.2)',
-  glow = 'rgba(37,99,235,0.08)',
   badge = null,
   progress = null,
   onClick = null,
@@ -27,6 +26,7 @@ const StatCard = ({
         bgcolor: '#ffffff',
         background: 'linear-gradient(180deg, #ffffff 0%, #fafbfc 100%)',
         border: '1px solid #e2e8f0',
+        borderTop: '1px solid #e2e8f0 !important',
         boxShadow: '0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02)',
         cursor: onClick ? 'pointer' : 'default',
         transition: 'all 240ms cubic-bezier(0.4, 0, 0.2, 1)',
@@ -35,26 +35,15 @@ const StatCard = ({
         justifyContent: 'space-between',
         '&:hover': {
           transform: 'translateY(-3px)',
-          borderColor: borderColor,
-          boxShadow: `0 20px 35px -12px ${glow || 'rgba(15,23,42,0.12)'}, 0 0 0 1px ${borderColor}`,
+          borderColor: '#cbd5e1',
+          borderTopColor: '#cbd5e1 !important',
+          boxShadow: '0 18px 34px -24px rgba(15,23,42,0.24)',
+        },
+        '&::before, &::after': {
+          display: 'none',
         },
       }}
     >
-      {/* Ambient background glow */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: -30,
-          right: -30,
-          width: 120,
-          height: 120,
-          borderRadius: '50%',
-          background: glow || `${color}15`,
-          filter: 'blur(32px)',
-          pointerEvents: 'none',
-        }}
-      />
-
       <Box sx={{ position: 'relative', zIndex: 1 }}>
         {/* Header Row: Icon + Badge / Trend */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
@@ -201,4 +190,3 @@ const StatCard = ({
 };
 
 export default StatCard;
-
