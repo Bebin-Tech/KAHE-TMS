@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+import DashboardLayout from './components/DashboardLayout.jsx';
 
 const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
 const DeanDashboard = lazy(() => import('./pages/DeanDashboard.jsx'));
@@ -44,6 +45,15 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/change-password" element={<ChangePassword />} />
 
+        <Route
+          element={(
+            <ProtectedRoute>
+              <DashboardLayout>
+                <Outlet />
+              </DashboardLayout>
+            </ProtectedRoute>
+          )}
+        >
         <Route
           path="/dean-dashboard"
           element={
@@ -169,6 +179,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        </Route>
 
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/login" replace />} />

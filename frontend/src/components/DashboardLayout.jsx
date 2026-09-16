@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import {
   Box, Drawer, AppBar, Toolbar, List, Typography,
   IconButton, ListItem, ListItemButton,
@@ -64,7 +64,32 @@ const preloadRouteModule = (path) => {
   return routeModuleRequests.get(path);
 };
 
+const DashboardLayoutContext = React.createContext(null);
+
 const DashboardLayout = ({ children, title, hideSidebar = false }) => {
+  const shell = useContext(DashboardLayoutContext);
+
+  useLayoutEffect(() => {
+    if (shell) shell.setPageConfig({ title, hideSidebar });
+  }, [hideSidebar, shell, title]);
+
+  if (shell) return children;
+
+  return (
+    <DashboardShell initialTitle={title} initialHideSidebar={hideSidebar}>
+      {children}
+    </DashboardShell>
+  );
+};
+
+const DashboardShell = ({ children, initialTitle, initialHideSidebar = false }) => {
+  const [pageConfig, setPageConfig] = useState({
+    title: initialTitle,
+    hideSidebar: initialHideSidebar,
+  });
+  const shellContext = useMemo(() => ({ setPageConfig }), []);
+  const title = pageConfig.title;
+  const hideSidebar = pageConfig.hideSidebar;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -454,7 +479,8 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
   );
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', width: '100%', maxWidth: '100vw', overflowX: 'hidden', bgcolor: 'background.default' }}>
+    <DashboardLayoutContext.Provider value={shellContext}>
+      <Box sx={{ display: 'flex', minHeight: '100vh', width: '100%', maxWidth: '100vw', overflowX: 'hidden', bgcolor: 'background.default' }}>
       {!hideSidebar && (
         <Drawer
           variant={isMobile ? "temporary" : "permanent"}
@@ -703,11 +729,20 @@ const DashboardLayout = ({ children, title, hideSidebar = false }) => {
             overflowX: 'hidden',
           }}
         >
-          {children}
+          <Suspense
+            fallback={(
+              <Box role="status" aria-label="Loading module" sx={{ minHeight: 260, display: 'grid', placeItems: 'center', color: '#2563eb', fontWeight: 800 }}>
+                Loading module...
+              </Box>
+            )}
+          >
+            {children}
+          </Suspense>
         </Box>
         {!hideSidebar && <NoteReminder />}
       </Box>
-    </Box>
+      </Box>
+    </DashboardLayoutContext.Provider>
   );
 };
 

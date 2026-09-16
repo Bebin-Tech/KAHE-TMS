@@ -5,16 +5,18 @@ import {
   Avatar,
   Box,
   Button,
+  Checkbox,
   CircularProgress,
+  Chip,
   FormControl,
   Grid,
   InputLabel,
+  ListSubheader,
   MenuItem,
   Paper,
   Select,
   Snackbar,
   Stack,
-  Switch,
   Table,
   TableBody,
   TableCell,
@@ -25,7 +27,11 @@ import {
 } from '@mui/material';
 import {
   AdminPanelSettingsRounded,
+  CheckBoxOutlineBlankRounded,
+  CheckBoxRounded,
   CheckCircleRounded,
+  FilterAltRounded,
+  GroupsRounded,
   LockPersonRounded,
   SaveRounded,
   SecurityRounded,
@@ -56,30 +62,28 @@ const getUserLabel = (user) => {
   return name || user.username;
 };
 
-const checkedThumbIcon = encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#237dba" d="M9.55 17.2 4.9 12.55l1.4-1.4 3.25 3.25 8.15-8.15 1.4 1.4z"/></svg>'
-);
-
-const permissionSwitchSx = {
-  '& .MuiSwitch-thumb': {
-    position: 'relative',
-  },
-  '& .MuiSwitch-switchBase.Mui-checked .MuiSwitch-thumb::before': {
-    content: '""',
-    position: 'absolute',
-    inset: 3,
-    backgroundImage: `url("data:image/svg+xml,${checkedThumbIcon}")`,
-    backgroundRepeat: 'no-repeat',
-    backgroundPosition: 'center',
-    backgroundSize: '16px 16px',
-  },
+const roleLabels = {
+  ADMIN: 'Admin',
+  DEAN: 'Dean',
+  HOD: 'HOD',
+  FACULTY: 'Faculty',
 };
+
+const getRoleLabel = (role = '') => roleLabels[role] || role
+  .toLowerCase()
+  .replace(/_/g, ' ')
+  .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+const getDepartmentValue = (user) => String(user.department || '');
+const getDepartmentLabel = (user) => user.department_name || 'No department assigned';
 
 const Settings = () => {
   const currentUser = getCurrentSession()?.session?.user || {};
   const [users, setUsers] = useState([]);
   const [modules, setModules] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [roleFilter, setRoleFilter] = useState('ALL');
+  const [departmentFilter, setDepartmentFilter] = useState('ALL');
   const [permissionRows, setPermissionRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -90,6 +94,54 @@ const Settings = () => {
     () => users.find((user) => String(user.id) === String(selectedUserId)),
     [selectedUserId, users]
   );
+
+  const availableRoles = useMemo(() => {
+    const roleOrder = ['ADMIN', 'DEAN', 'HOD', 'FACULTY'];
+    const roles = [...new Set(users.map((user) => user.role).filter(Boolean))];
+    return roles.sort((first, second) => {
+      const firstIndex = roleOrder.indexOf(first);
+      const secondIndex = roleOrder.indexOf(second);
+      if (firstIndex === -1 && secondIndex === -1) return first.localeCompare(second);
+      if (firstIndex === -1) return 1;
+      if (secondIndex === -1) return -1;
+      return firstIndex - secondIndex;
+    });
+  }, [users]);
+
+  const roleFilteredUsers = useMemo(
+    () => users.filter((user) => roleFilter === 'ALL' || user.role === roleFilter),
+    [roleFilter, users]
+  );
+
+  const availableDepartments = useMemo(() => {
+    const departments = new Map();
+    roleFilteredUsers.forEach((user) => {
+      const value = getDepartmentValue(user);
+      if (value) departments.set(value, getDepartmentLabel(user));
+    });
+    return [...departments.entries()]
+      .map(([value, label]) => ({ value, label }))
+      .sort((first, second) => first.label.localeCompare(second.label));
+  }, [roleFilteredUsers]);
+
+  const filteredUsers = useMemo(
+    () => roleFilteredUsers.filter((user) => (
+      departmentFilter === 'ALL' || getDepartmentValue(user) === departmentFilter
+    )),
+    [departmentFilter, roleFilteredUsers]
+  );
+
+  const usersByDepartment = useMemo(() => {
+    const groups = new Map();
+    filteredUsers.forEach((user) => {
+      const department = getDepartmentLabel(user);
+      if (!groups.has(department)) groups.set(department, []);
+      groups.get(department).push(user);
+    });
+    return [...groups.entries()].sort(([first], [second]) => first.localeCompare(second));
+  }, [filteredUsers]);
+
+  const groupUsersByDepartment = roleFilter === 'HOD' || roleFilter === 'FACULTY';
 
   const buildPermissionRows = useCallback((moduleList, savedRows = []) => {
     const savedByModule = savedRows.reduce((acc, row) => {
@@ -149,6 +201,19 @@ const Settings = () => {
   useEffect(() => {
     if (!loading) fetchUserPermissions();
   }, [fetchUserPermissions, loading]);
+
+  useEffect(() => {
+    if (departmentFilter !== 'ALL' && !availableDepartments.some(({ value }) => value === departmentFilter)) {
+      setDepartmentFilter('ALL');
+    }
+  }, [availableDepartments, departmentFilter]);
+
+  useEffect(() => {
+    const selectedIsVisible = filteredUsers.some(
+      (user) => String(user.id) === String(selectedUserId)
+    );
+    if (!selectedIsVisible) setSelectedUserId(filteredUsers[0]?.id || '');
+  }, [filteredUsers, selectedUserId]);
 
   const handlePermissionChange = (module, field, checked) => {
     setPermissionRows((rows) => rows.map((row) => {
@@ -249,27 +314,82 @@ const Settings = () => {
               </Box>
             </Stack>
 
-            <FormControl fullWidth disabled={loading || users.length === 0}>
-              <InputLabel>User</InputLabel>
-              <Select
-                label="User"
-                value={selectedUserId}
-                onChange={(event) => setSelectedUserId(event.target.value)}
-              >
-                {users.map((user) => (
-                  <MenuItem key={user.id} value={user.id}>
-                    {getUserLabel(user)} - {user.role}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Stack spacing={1.75}>
+              <FormControl fullWidth disabled={loading || users.length === 0}>
+                <InputLabel>Filter by role</InputLabel>
+                <Select
+                  label="Filter by role"
+                  value={roleFilter}
+                  onChange={(event) => {
+                    setRoleFilter(event.target.value);
+                    setDepartmentFilter('ALL');
+                  }}
+                  startAdornment={<FilterAltRounded sx={{ mr: 1, color: 'text.secondary' }} />}
+                >
+                  <MenuItem value="ALL">All roles</MenuItem>
+                  {availableRoles.map((role) => (
+                    <MenuItem key={role} value={role}>{getRoleLabel(role)}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              {availableDepartments.length > 0 && (
+                <FormControl fullWidth disabled={loading}>
+                  <InputLabel>Filter by department</InputLabel>
+                  <Select
+                    label="Filter by department"
+                    value={departmentFilter}
+                    onChange={(event) => setDepartmentFilter(event.target.value)}
+                    startAdornment={<GroupsRounded sx={{ mr: 1, color: 'text.secondary' }} />}
+                  >
+                    <MenuItem value="ALL">All departments</MenuItem>
+                    {availableDepartments.map((department) => (
+                      <MenuItem key={department.value} value={department.value}>
+                        {department.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+
+              <FormControl fullWidth disabled={loading || filteredUsers.length === 0}>
+                <InputLabel>User</InputLabel>
+                <Select
+                  label="User"
+                  value={selectedUserId}
+                  onChange={(event) => setSelectedUserId(event.target.value)}
+                  MenuProps={{ PaperProps: { sx: { maxHeight: 360 } } }}
+                >
+                  {groupUsersByDepartment
+                    ? usersByDepartment.flatMap(([department, departmentUsers]) => [
+                      <ListSubheader key={`heading-${department}`} sx={{ fontWeight: 900, color: '#237dba' }}>
+                        {department}
+                      </ListSubheader>,
+                      ...departmentUsers.map((user) => (
+                        <MenuItem key={user.id} value={user.id}>
+                          {getUserLabel(user)}
+                        </MenuItem>
+                      )),
+                    ])
+                    : filteredUsers.map((user) => (
+                      <MenuItem key={user.id} value={user.id}>
+                        {getUserLabel(user)} - {getRoleLabel(user.role)}
+                      </MenuItem>
+                    ))}
+                </Select>
+              </FormControl>
+
+              <Typography variant="caption" color="text.secondary" sx={{ px: 0.5 }}>
+                {filteredUsers.length} active {filteredUsers.length === 1 ? 'user' : 'users'} found
+              </Typography>
+            </Stack>
 
             {selectedUser && (
               <Box sx={{ mt: 3, p: 2, borderRadius: 2, bgcolor: '#f6f6f7', border: '1px solid #e5e2df' }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{getUserLabel(selectedUser)}</Typography>
                 <Typography variant="body2" color="text.secondary">{selectedUser.email || selectedUser.username}</Typography>
                 <Typography variant="caption" sx={{ display: 'block', mt: 0.75, color: '#1f7f79', fontWeight: 900 }}>
-                  {selectedUser.role}{selectedUser.department_name ? ` - ${selectedUser.department_name}` : ''}
+                  {getRoleLabel(selectedUser.role)}{selectedUser.department_name ? ` - ${selectedUser.department_name}` : ''}
                 </Typography>
               </Box>
             )}
@@ -282,7 +402,9 @@ const Settings = () => {
               <SecurityRounded sx={{ color: '#237dba' }} />
               <Box>
                 <Typography variant="h6" sx={{ fontWeight: 900 }}>Module Permissions</Typography>
-                <Typography variant="body2" color="text.secondary">Toggle permissions for each module before saving.</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Select the actions each user is allowed to perform. Enabling an action also enables module access.
+                </Typography>
               </Box>
             </Box>
 
@@ -311,16 +433,40 @@ const Settings = () => {
                             {row.can_access ? <CheckCircleRounded fontSize="small" /> : <AdminPanelSettingsRounded fontSize="small" />}
                           </Avatar>
                           <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>{row.module_label}</Typography>
+                          <Chip
+                            size="small"
+                            label={row.can_access ? 'Enabled' : 'No access'}
+                            sx={{
+                              fontWeight: 800,
+                              color: row.can_access ? '#087f5b' : '#64748b',
+                              bgcolor: row.can_access ? '#ecfdf3' : '#f1f5f9',
+                            }}
+                          />
                         </Stack>
                       </TableCell>
                       {permissionFields.map((field) => (
                         <TableCell key={field.key} align="center">
-                          <Switch
+                          <Checkbox
                             checked={Boolean(row[field.key])}
                             onChange={(event) => handlePermissionChange(row.module, field.key, event.target.checked)}
-                            color={field.key === 'can_delete' ? 'error' : 'primary'}
+                            icon={<CheckBoxOutlineBlankRounded sx={{ fontSize: 27 }} />}
+                            checkedIcon={<CheckBoxRounded sx={{ fontSize: 27 }} />}
                             inputProps={{ 'aria-label': `${field.label} ${row.module_label}` }}
-                            sx={permissionSwitchSx}
+                            sx={{
+                              width: 46,
+                              height: 46,
+                              p: 0,
+                              borderRadius: '50%',
+                              color: '#7b8794',
+                              transition: 'background-color 140ms ease, color 140ms ease',
+                              '&.Mui-checked': {
+                                color: field.key === 'can_delete' ? '#dc2626' : '#237dba',
+                                bgcolor: field.key === 'can_delete' ? '#fff1f2' : '#eaf3ff',
+                              },
+                              '&:hover': {
+                                bgcolor: field.key === 'can_delete' ? '#fff1f2' : '#eef5ff',
+                              },
+                            }}
                           />
                         </TableCell>
                       ))}
