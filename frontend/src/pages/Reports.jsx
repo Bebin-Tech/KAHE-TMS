@@ -7,7 +7,17 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions, IconButton,
   Tooltip, Snackbar, Alert
 } from '@mui/material';
-import { AssessmentRounded, AssignmentOutlined, DeleteRounded, FilterAltOffRounded, RefreshRounded, SearchRounded } from '@mui/icons-material';
+import {
+  AssessmentRounded,
+  AssignmentOutlined,
+  CheckCircleOutlineRounded,
+  DeleteRounded,
+  ErrorOutlineRounded,
+  FilterAltOffRounded,
+  PendingActionsRounded,
+  RefreshRounded,
+  SearchRounded
+} from '@mui/icons-material';
 import api from '../api/axios';
 import { getCurrentSession } from '../utils/session';
 import { formatApiError } from '../utils/errors';
@@ -103,6 +113,18 @@ const Reports = () => {
   const visibleReports = useMemo(() => (
     isDean ? reports.filter((report) => ['HOD', 'FACULTY'].includes(report.role)) : reports
   ), [isDean, reports]);
+
+  const reportSummary = useMemo(() => ({
+    total: visibleReports.length,
+    completed: visibleReports.filter((report) => ['COMPLETED', 'APPROVED_HOD', 'DEAN_APPROVED'].includes(report.status)).length,
+    active: visibleReports.filter((report) => ['ASSIGNED', 'IN_PROGRESS', 'SUBMITTED', 'SUBMITTED_DEAN'].includes(report.status)).length,
+    rejected: visibleReports.filter((report) => ['REJECTED_HOD', 'REJECTED_DEAN'].includes(report.status)).length,
+  }), [visibleReports]);
+
+  const activeFilterCount = useMemo(
+    () => Object.values(filters).filter(Boolean).length,
+    [filters]
+  );
 
   const deanTaskProgress = useMemo(() => deanTasks.map((task) => {
     const activeFaculty = (task.subtasks || []).filter((subtask) => !['APPROVED_HOD', 'COMPLETED'].includes(subtask.status));
@@ -268,42 +290,73 @@ const Reports = () => {
 
   return (
     <DashboardLayout title="Reports">
-      <Box sx={{ mb: 3, display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-        <Box sx={{ width: 56, height: 56, flexShrink: 0, borderRadius: '14px', bgcolor: '#eaf3ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <AssessmentRounded sx={{ color: 'primary.main', fontSize: 32 }} />
-        </Box>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h4" sx={{ fontWeight: 900, color: '#0f172a', fontSize: { xs: '1.45rem', sm: '2.125rem' } }}>
-            Task Workflow Reports
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Track Dean, HOD, and Faculty progress from assignment through completion.
-          </Typography>
-        </Box>
-        <Button
-          variant="outlined"
-          startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <RefreshRounded />}
-          onClick={handleRefresh}
-          disabled={loading}
-          sx={{
-            width: { xs: '100%', sm: 'auto' },
-            alignSelf: { xs: 'stretch', sm: 'center' },
-            bgcolor: 'white',
-            borderColor: '#b7d5fb',
-            color: '#237dba',
-            boxShadow: '0 14px 30px -24px rgba(35,125,186,0.72)',
-            '&:hover': {
-              bgcolor: '#eaf3ff',
-              borderColor: '#2563eb'
-            }
-          }}
-        >
-          {loading ? 'Refreshing...' : 'Refresh'}
-        </Button>
-      </Box>
+      <Paper
+        elevation={0}
+        sx={{
+          mb: 2.5,
+          p: { xs: 2.25, md: 3 },
+          border: '1px solid #d8e3f0',
+          borderRadius: 2,
+          bgcolor: '#ffffff',
+        }}
+      >
+        <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'stretch', sm: 'center' }} spacing={2.25}>
+          <Box sx={{ width: 52, height: 52, flexShrink: 0, borderRadius: 2, bgcolor: '#eaf3ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <AssessmentRounded sx={{ color: '#237dba', fontSize: 30 }} />
+          </Box>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="overline" sx={{ color: '#237dba', fontWeight: 900 }}>Workflow analytics</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 900, color: '#0f172a', fontSize: { xs: '1.5rem', sm: '2rem' }, lineHeight: 1.15 }}>
+              Task Workflow Reports
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              Track every assignment, handoff, submission, and completion in one place.
+            </Typography>
+          </Box>
+          <Button
+            variant="outlined"
+            startIcon={loading ? <CircularProgress size={18} color="inherit" /> : <RefreshRounded />}
+            onClick={handleRefresh}
+            disabled={loading}
+            sx={{ width: { xs: '100%', sm: 'auto' }, minWidth: 126, bgcolor: '#ffffff', borderColor: '#b7d5fb' }}
+          >
+            {loading ? 'Refreshing' : 'Refresh'}
+          </Button>
+        </Stack>
+      </Paper>
+
+      <Grid container spacing={2} sx={{ mb: 2.5 }}>
+        {[
+          { label: 'Report Entries', value: reportSummary.total, icon: <AssessmentRounded />, color: '#2563eb', bg: '#eff6ff' },
+          { label: 'Active Workflow', value: reportSummary.active, icon: <PendingActionsRounded />, color: '#a16207', bg: '#fffbeb' },
+          { label: 'Completed', value: reportSummary.completed, icon: <CheckCircleOutlineRounded />, color: '#087f5b', bg: '#ecfdf3' },
+          { label: 'Needs Attention', value: reportSummary.rejected, icon: <ErrorOutlineRounded />, color: '#c2413b', bg: '#fff1f0' },
+        ].map((item) => (
+          <Grid item xs={6} lg={3} key={item.label}>
+            <Paper variant="outlined" sx={{ p: { xs: 1.75, sm: 2 }, borderRadius: 2, borderColor: '#d8e3f0', height: '100%' }}>
+              <Stack direction="row" spacing={1.5} alignItems="center">
+                <Box sx={{ width: 42, height: 42, borderRadius: 2, bgcolor: item.bg, color: item.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {item.icon}
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>{item.label}</Typography>
+                  <Typography variant="h5" sx={{ color: '#0f172a', fontWeight: 900, lineHeight: 1.1 }}>{item.value}</Typography>
+                </Box>
+              </Stack>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
 
       {showReportFilters && (
-        <Paper sx={{ p: { xs: 2, md: 3 }, mb: 3, border: '1px solid #d8e3f0', borderRadius: 3, bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.38)' }}>
+        <Paper sx={{ p: { xs: 2, md: 2.5 }, mb: 2.5, border: '1px solid #d8e3f0', borderRadius: 2, bgcolor: '#ffffff' }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+            <Box>
+              <Typography variant="subtitle1" sx={{ fontWeight: 900, color: '#0f172a' }}>Filter report activity</Typography>
+              <Typography variant="caption" color="text.secondary">Narrow the report by task, user, status, action, or date.</Typography>
+            </Box>
+            {activeFilterCount > 0 && <Chip size="small" label={`${activeFilterCount} active`} color="primary" />}
+          </Stack>
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={3}>
               <TextField
@@ -539,40 +592,32 @@ const Reports = () => {
         </Paper>
       )}
 
-      <TableContainer
-        component={Paper}
-        sx={{
-          border: '1px solid #d8e3f0',
-          borderRadius: 3,
-          overflow: 'auto',
-          maxHeight: { xs: 'calc(100vh - 220px)', md: 'calc(100vh - 300px)' },
-          mb: 4,
-          bgcolor: '#ffffff',
-          boxShadow: '0 20px 54px -42px rgba(15,23,42,0.45)'
-        }}
-      >
-        <Table sx={{ minWidth: 1350 }}>
-          <TableHead sx={{ bgcolor: '#f8fbff', position: 'sticky', top: 0, zIndex: 1 }}>
+      <Paper sx={{ mb: 4, border: '1px solid #d8e3f0', borderRadius: 2, overflow: 'hidden', bgcolor: '#ffffff' }}>
+        <Box sx={{ p: { xs: 2, md: 2.5 }, borderBottom: '1px solid #e7edf5', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a' }}>Workflow Activity</Typography>
+            <Typography variant="body2" color="text.secondary">A chronological view of task ownership and progress.</Typography>
+          </Box>
+          <Chip label={`${visibleReports.length} ${visibleReports.length === 1 ? 'entry' : 'entries'}`} sx={{ bgcolor: '#eaf3ff', color: '#237dba', fontWeight: 850 }} />
+        </Box>
+        <TableContainer sx={{ overflow: 'auto', maxHeight: { xs: 560, md: 620 } }}>
+        <Table sx={{ minWidth: 980 }} stickyHeader>
+          <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Task</TableCell>
-              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>User</TableCell>
-              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Role</TableCell>
-              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Action Performed</TableCell>
-              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Action Date & Time</TableCell>
-              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Assigned By</TableCell>
-              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Assigned Date</TableCell>
-              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Submission / Completion</TableCell>
-              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Rejection / Resubmission</TableCell>
-              <TableCell sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Current Status</TableCell>
+              <TableCell sx={{ bgcolor: '#f8fbff', fontWeight: 900, color: '#475569', py: 1.75, minWidth: 245 }}>Task & User</TableCell>
+              <TableCell sx={{ bgcolor: '#f8fbff', fontWeight: 900, color: '#475569', py: 1.75, minWidth: 205 }}>Activity</TableCell>
+              <TableCell sx={{ bgcolor: '#f8fbff', fontWeight: 900, color: '#475569', py: 1.75, minWidth: 185 }}>Assignment</TableCell>
+              <TableCell sx={{ bgcolor: '#f8fbff', fontWeight: 900, color: '#475569', py: 1.75, minWidth: 230 }}>Progress Timeline</TableCell>
+              <TableCell sx={{ bgcolor: '#f8fbff', fontWeight: 900, color: '#475569', py: 1.75, minWidth: 135 }}>Status</TableCell>
               {canDeleteReports && (
-                <TableCell align="right" sx={{ fontWeight: 900, color: '#475569', py: 2 }}>Actions</TableCell>
+                <TableCell align="right" sx={{ bgcolor: '#f8fbff', fontWeight: 900, color: '#475569', py: 1.75 }}>Actions</TableCell>
               )}
             </TableRow>
           </TableHead>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={canDeleteReports ? 11 : 10} align="center" sx={{ py: 8 }}>
+                <TableCell colSpan={canDeleteReports ? 6 : 5} align="center" sx={{ py: 8 }}>
                   <CircularProgress />
                 </TableCell>
               </TableRow>
@@ -580,44 +625,56 @@ const Reports = () => {
               const color = getStatusColor(report.status);
               return (
                 <TableRow key={report.id} hover sx={{ '&:hover': { bgcolor: '#f8fbff' } }}>
-                  <TableCell>
+                  <TableCell sx={{ py: 2 }}>
                     <Typography variant="body2" sx={{ fontWeight: 900, color: '#0f172a' }}>{report.task_name}</Typography>
-                    <Typography variant="caption" color="text.secondary">Dean: {report.dean_name || 'N/A'} | HOD: {report.hod_name || 'N/A'}</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>{report.user_name}</Typography>
+                    <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.75, flexWrap: 'wrap' }}>
+                      <Typography variant="caption" sx={{ fontWeight: 800, color: '#334155' }}>{report.user_name}</Typography>
+                      <Chip label={report.role || 'USER'} size="small" sx={{ height: 20, fontSize: '0.67rem', bgcolor: '#f1f5f9', color: '#475569', fontWeight: 850 }} />
+                    </Stack>
                     {report.role === 'FACULTY' && (
-                      <Typography variant="caption" color="text.secondary">{report.subtask_title}</Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>{report.subtask_title}</Typography>
                     )}
                   </TableCell>
-                  <TableCell>{report.role}</TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 2 }}>
                     <Typography variant="body2" sx={{ fontWeight: 800 }}>{report.action_performed || 'Action recorded'}</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                      {formatDateTime(report.action_at || report.assigned_at)}
+                    </Typography>
                   </TableCell>
-                  <TableCell>{formatDateTime(report.action_at || report.assigned_at)}</TableCell>
-                  <TableCell>{report.assigned_by_name || 'N/A'}</TableCell>
-                  <TableCell>{formatDateTime(report.assigned_at)}</TableCell>
-                  <TableCell>
-                    <Typography variant="caption" sx={{ display: 'block' }}>Submitted: {formatDateTime(report.submission_at)}</Typography>
-                    <Typography variant="caption" sx={{ display: 'block' }}>Completed: {formatDateTime(report.work_completed_at)}</Typography>
+                  <TableCell sx={{ py: 2 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 800 }}>{report.assigned_by_name || 'Not recorded'}</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>{formatDateTime(report.assigned_at)}</Typography>
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.35 }}>
+                      Dean: {report.dean_name || 'N/A'} | HOD: {report.hod_name || 'N/A'}
+                    </Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 2 }}>
+                    <Typography variant="caption" sx={{ display: 'block', color: report.submission_at ? '#334155' : '#94a3b8' }}>
+                      Submitted: {formatDateTime(report.submission_at)}
+                    </Typography>
+                    <Typography variant="caption" sx={{ display: 'block', mt: 0.45, color: report.work_completed_at ? '#087f5b' : '#94a3b8' }}>
+                      Completed: {formatDateTime(report.work_completed_at)}
+                    </Typography>
                     {report.rejection_at ? (
-                      <Box>
+                      <Box sx={{ mt: 0.45 }}>
                         <Typography variant="caption" sx={{ display: 'block', fontWeight: 800, color: '#b91c1c' }}>
-                          Rejected by {report.rejected_by_name}
+                          Rejected: {formatDateTime(report.rejection_at)}
                         </Typography>
-                        <Typography variant="caption" sx={{ display: 'block' }}>{formatDateTime(report.rejection_at)}</Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                          By {report.rejected_by_name || 'reviewer'}
+                        </Typography>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', maxWidth: 220 }}>
                           {report.rejection_reason || 'No reason recorded'}
                         </Typography>
-                        <Typography variant="caption" color="primary" sx={{ display: 'block' }}>
-                          Resubmitted: {formatDateTime(report.resubmission_at)}
-                        </Typography>
                       </Box>
-                    ) : 'No rejection'}
+                    ) : null}
+                    {report.resubmission_at && (
+                      <Typography variant="caption" color="primary" sx={{ display: 'block', mt: 0.45 }}>
+                        Resubmitted: {formatDateTime(report.resubmission_at)}
+                      </Typography>
+                    )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ py: 2 }}>
                     <Chip
                       label={statusLabel(report.status)}
                       size="small"
@@ -645,14 +702,21 @@ const Reports = () => {
               );
             }) : (
               <TableRow>
-                <TableCell colSpan={canDeleteReports ? 11 : 10} align="center" sx={{ py: 8 }}>
-                  <Typography variant="body1" color="text.secondary">No report entries match the selected filters.</Typography>
+                <TableCell colSpan={canDeleteReports ? 6 : 5} align="center" sx={{ py: 8 }}>
+                  <Box sx={{ width: 58, height: 58, mx: 'auto', mb: 1.5, borderRadius: '50%', bgcolor: '#eef5ff', color: '#237dba', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <AssessmentRounded sx={{ fontSize: 30 }} />
+                  </Box>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 900, color: '#0f172a' }}>No workflow activity found</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                    {activeFilterCount > 0 ? 'Clear or adjust the filters to see more results.' : 'Report entries will appear when task activity is recorded.'}
+                  </Typography>
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
-      </TableContainer>
+        </TableContainer>
+      </Paper>
 
       <Dialog
         open={Boolean(deleteTarget)}

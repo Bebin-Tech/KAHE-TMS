@@ -4,46 +4,20 @@ import useAutoRefresh from '../hooks/useAutoRefresh';
 import TextAnimate from '../components/TextAnimate';
 import StatCard from '../components/StatCard';
 import {
-  Avatar,
   Box,
-  Button,
-  Chip,
   Grid,
-  LinearProgress,
   Paper,
-  Stack,
   Typography
 } from '@mui/material';
 import {
   AccountBalanceOutlined,
-  ArrowForwardRounded,
   AssignmentOutlined,
   AssignmentTurnedInOutlined,
-  BusinessOutlined,
-  PeopleOutlined,
-  PriorityHighRounded
+  PeopleOutlined
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 
-const statusConfig = {
-  COMPLETED: { label: 'Completed', color: '#1f7f79', bg: '#e8f7f6' },
-  DEAN_APPROVED: { label: 'Verified', color: '#1f7f79', bg: '#e8f7f6' },
-  ASSIGNED: { label: 'Assigned', color: '#237dba', bg: '#eaf3ff' },
-  IN_PROGRESS: { label: 'In Progress', color: '#8a6f00', bg: '#fff8d9' },
-  SUBMITTED_HOD: { label: 'HOD Review', color: '#0f172a', bg: '#f1f5f9' },
-  SUBMITTED_DEAN: { label: 'Dean Review', color: '#237dba', bg: '#eaf3ff' },
-  REJECTED_DEAN: { label: 'Rejected', color: '#c2413b', bg: '#fff0ef' },
-  CANCELLED: { label: 'Cancelled', color: '#c2413b', bg: '#fff0ef' }
-};
-
-const formatDate = (date) => {
-  if (!date) return 'Not scheduled';
-  return new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-};
-
 const AdminDashboard = () => {
-  const navigate = useNavigate();
   const [stats, setStats] = useState({
     total_users: 0,
     departments: 0,
@@ -52,7 +26,6 @@ const AdminDashboard = () => {
   });
   const [tasks, setTasks] = useState([]);
   const [departments, setDepartments] = useState([]);
-  const [loading, setLoading] = useState(true);
   const fetchDashboard = useCallback(async ({ forceRefresh = false } = {}) => {
     const requestConfig = forceRefresh
       ? {
@@ -76,8 +49,6 @@ const AdminDashboard = () => {
       if (deptRes.status === 'fulfilled') setDepartments(deptRes.value.data);
     } catch (err) {
       console.error('Error fetching admin dashboard:', err);
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -165,68 +136,55 @@ const AdminDashboard = () => {
     }
   ];
 
-  const departmentLoad = departments
-    .map((department) => {
-      const deptTasks = tasks.filter((task) => task.department_name === department.name).length;
-      const load = tasks.length ? Math.round((deptTasks / Math.max(tasks.length, 1)) * 100) : 0;
-      return { ...department, load, taskCount: deptTasks };
-    })
-    .filter((department) => department.taskCount > 0)
-    .sort((a, b) => b.taskCount - a.taskCount)
-    .slice(0, 5);
-
-  const recentTasks = tasks.slice(0, 5);
-
   return (
-    <DashboardLayout title="Karpagam Academy of Higher Education - Workflow">
+    <DashboardLayout title="Admin Workspace">
       <Box sx={{ mb: 3 }}>
         <Grid container spacing={3} alignItems="stretch">
           <Grid item xs={12}>
             <Paper
               sx={{
-                p: { xs: 2, sm: 2.75, md: 3.25 },
-                minHeight: { xs: 165, sm: 205, md: 245 },
+                p: { xs: 2.25, sm: 3, md: 4 },
+                minHeight: { xs: 220, sm: 240, md: 280 },
                 borderRadius: 3,
-                border: '1px solid #b7d5fb',
-                color: '#122033',
-                bgcolor: '#eaf3ff',
-                background: 'linear-gradient(135deg, #eaf3ff 0%, #f8fbff 54%, #dbeeff 100%)',
+                border: '1px solid #bfdbfe',
+                color: '#0f172a',
+                bgcolor: '#eff6ff',
+                background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 54%, #dbeafe 100%)',
                 position: 'relative',
                 overflow: 'hidden',
-                boxShadow: '0 24px 62px -42px rgba(35,125,186,0.58), inset 0 1px 0 rgba(255,255,255,0.9)'
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 24px 62px -42px rgba(37,99,235,0.58), inset 0 1px 0 rgba(255,255,255,0.9)'
               }}
             >
-              <Box sx={{ position: 'relative', zIndex: 1, width: '100%', px: { xs: 1, md: 3 }, textAlign: 'center' }}>
+              <Box sx={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 980, mx: 'auto', textAlign: 'center' }}>
                 <Typography
                   variant="h3"
                   sx={{
                     mb: 1,
-                    mx: 'auto',
-                    fontSize: { xs: '1.35rem', sm: '1.85rem', md: '2.05rem', lg: '2.35rem' },
+                    fontSize: { xs: '1.55rem', sm: '2rem', md: '2.5rem' },
                     lineHeight: 1.12,
                     fontWeight: 800,
                     color: '#0f172a',
-                    textAlign: 'center',
-                    whiteSpace: { xs: 'normal', md: 'nowrap' },
                   }}
                 >
-                  <TextAnimate delay={0.1}>Karpagam Academy of Higher Education - Workflow</TextAnimate>
+                  <TextAnimate delay={0.1}>Karpagam Academy of Higher Education</TextAnimate>
                 </Typography>
                 <Typography
                   variant="h4"
                   sx={{
                     color: '#1d4ed8',
                     fontWeight: 900,
-                    fontSize: { xs: '1.45rem', sm: '1.9rem', md: '2.35rem' },
+                    fontSize: { xs: '1.75rem', sm: '2.25rem', md: '2.85rem' },
                     lineHeight: 1.12,
-                    textAlign: 'center',
                   }}
                 >
                   <TextAnimate delay={0.45} stagger={0.035}>Welcome Back, Admin</TextAnimate>
                 </Typography>
               </Box>
-              <Box sx={{ display: { xs: 'none', sm: 'block' }, position: 'absolute', right: -58, bottom: -76, width: 250, height: 250, border: '38px solid rgba(59,143,243,0.22)', borderRadius: '50%' }} />
-              <Box sx={{ display: { xs: 'none', md: 'block' }, position: 'absolute', right: 84, top: 32, width: 96, height: 96, border: '18px solid rgba(52,177,170,0.22)', borderRadius: '50%' }} />
+              <Box sx={{ display: { xs: 'none', sm: 'block' }, position: 'absolute', right: -70, bottom: -90, width: 300, height: 300, border: '44px solid rgba(37,99,235,0.18)', borderRadius: '50%' }} />
+              <Box sx={{ display: { xs: 'none', md: 'block' }, position: 'absolute', right: 92, top: 36, width: 116, height: 116, border: '22px solid rgba(15,118,110,0.18)', borderRadius: '50%' }} />
             </Paper>
           </Grid>
         </Grid>
@@ -240,122 +198,6 @@ const AdminDashboard = () => {
         ))}
       </Grid>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} lg={7}>
-          <Paper sx={{ borderRadius: 3, border: '1px solid #d8e3f0', overflow: 'hidden', bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.45)' }}>
-            <Box sx={{ p: { xs: 2.25, md: 3 }, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 2, borderBottom: '1px solid #e7edf5', flexDirection: { xs: 'column', sm: 'row' } }}>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>Recent Task Flow</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35 }}>Latest assignments moving through the institution.</Typography>
-              </Box>
-              <Button
-                size="small"
-                variant="outlined"
-                endIcon={<ArrowForwardRounded />}
-                onClick={() => navigate('/tasks')}
-                sx={{ bgcolor: '#ffffff', borderColor: '#b7d5fb', fontWeight: 850, borderRadius: 1.5, alignSelf: { xs: 'flex-start', sm: 'center' } }}
-              >
-                All tasks
-              </Button>
-            </Box>
-            <Stack spacing={0}>
-              {recentTasks.length > 0 ? recentTasks.map((task) => {
-                const config = statusConfig[task.status] || statusConfig.ASSIGNED;
-                return (
-                  <Box
-                    key={task.id}
-                    sx={{
-                      mx: { xs: 1.5, md: 2 },
-                      my: 1,
-                      p: { xs: 1.75, md: 2 },
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 2,
-                      borderRadius: 2,
-                      border: '1px solid #edf2f7',
-                      bgcolor: '#ffffff',
-                      transition: 'background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease',
-                      '&:hover': {
-                        bgcolor: '#f8fbff',
-                        borderColor: '#d8e7fb',
-                        boxShadow: '0 16px 36px -30px rgba(15,23,42,0.4)'
-                      }
-                    }}
-                  >
-                    <Avatar sx={{ bgcolor: config.bg, color: config.color, width: { xs: 40, sm: 46 }, height: { xs: 40, sm: 46 } }}>
-                      {task.is_special ? <PriorityHighRounded /> : <AssignmentOutlined />}
-                    </Avatar>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography variant="subtitle2" noWrap sx={{ fontWeight: 900, color: '#0f172a', fontSize: '0.95rem' }}>{task.title}</Typography>
-                      <Typography variant="body2" color="text.secondary" noWrap sx={{ mt: 0.35 }}>{task.department_name || task.assigned_to_hod_name || 'General workflow'}</Typography>
-                    </Box>
-                    <Box sx={{ textAlign: 'right', display: { xs: 'none', sm: 'flex' }, flexDirection: 'column', alignItems: 'flex-end', gap: 0.75, minWidth: 116 }}>
-                      <Chip label={config.label} size="small" sx={{ bgcolor: config.bg, color: config.color, fontWeight: 900, borderRadius: 1.25 }} />
-                      <Typography variant="caption" display="block" color="text.secondary" sx={{ fontWeight: 700 }}>{formatDate(task.deadline)}</Typography>
-                    </Box>
-                  </Box>
-                );
-              }) : (
-                <Box sx={{ py: 6, px: 2, textAlign: 'center' }}>
-                  <AssignmentOutlined sx={{ color: '#94a3b8', fontSize: 42, mb: 1 }} />
-                  <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#0f172a' }}>
-                    {loading ? 'Loading task activity...' : 'No task activity available'}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Real-time task activity will appear here after records are available.
-                  </Typography>
-                </Box>
-              )}
-            </Stack>
-          </Paper>
-        </Grid>
-
-        <Grid item xs={12} lg={5}>
-          <Paper sx={{ p: { xs: 2.25, md: 3 }, borderRadius: 3, border: '1px solid #d8e3f0', height: '100%', bgcolor: '#ffffff', boxShadow: '0 20px 54px -42px rgba(15,23,42,0.45)' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2.5, gap: 2 }}>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 900, color: '#0f172a', fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>Department Workload</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35 }}>Relative distribution across active units.</Typography>
-              </Box>
-              <Avatar sx={{ bgcolor: '#f1f5f9', color: '#64748b', width: 42, height: 42 }}>
-                <BusinessOutlined />
-              </Avatar>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 1.25, flexWrap: 'wrap', mb: 3 }}>
-              <Chip label={`${departmentLoad.length} active units`} size="small" sx={{ bgcolor: '#eaf3ff', color: '#237dba', fontWeight: 850, borderRadius: 1.25 }} />
-              <Chip label={`${taskTotals.total} total tasks`} size="small" sx={{ bgcolor: '#f1f5f9', color: '#334155', fontWeight: 850, borderRadius: 1.25 }} />
-            </Box>
-            {departmentLoad.length > 0 ? (
-              <Stack spacing={2}>
-                {departmentLoad.map((department) => (
-                  <Box key={department.id || department.name} sx={{ p: 2, border: '1px solid #edf2f7', borderRadius: 2, bgcolor: '#ffffff' }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.1, gap: 2 }}>
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography variant="subtitle2" noWrap sx={{ fontWeight: 900, color: '#0f172a' }}>{department.name}</Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>{department.block_name || 'Campus block not assigned'}</Typography>
-                      </Box>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#0f172a', whiteSpace: 'nowrap' }}>{department.taskCount} tasks</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <LinearProgress variant="determinate" value={department.load} sx={{ flex: 1, height: 9, borderRadius: 5, bgcolor: '#e7edf5' }} />
-                      <Typography variant="caption" sx={{ width: 38, textAlign: 'right', color: 'text.secondary', fontWeight: 850 }}>{department.load}%</Typography>
-                    </Box>
-                  </Box>
-                ))}
-              </Stack>
-            ) : (
-              <Box sx={{ py: 6, textAlign: 'center', borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                <BusinessOutlined sx={{ color: 'text.secondary', fontSize: 42, mb: 1 }} />
-                <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>No workload data available</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Department workload will appear when active tasks are assigned.
-                </Typography>
-              </Box>
-            )}
-          </Paper>
-        </Grid>
-
-      </Grid>
     </DashboardLayout>
   );
 };
