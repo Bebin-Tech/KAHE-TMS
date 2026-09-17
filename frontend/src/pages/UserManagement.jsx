@@ -4,8 +4,8 @@ import {
   Typography, Box, Button, Grid,
   Chip, IconButton, Dialog, DialogTitle, DialogContent,
   DialogActions, TextField, MenuItem, Switch, FormControlLabel,
-  Card, Avatar, Divider, Tooltip, Pagination, PaginationItem,
-  Snackbar, Alert
+  Card, Avatar, Divider, Tooltip, Paper, InputAdornment,
+  Snackbar, Alert, Stack
 } from '@mui/material';
 import {
   EditRounded,
@@ -15,7 +15,10 @@ import {
   EmailOutlined,
   BusinessOutlined,
   BadgeOutlined,
-  SearchRounded
+  SearchRounded,
+  GroupsRounded,
+  CheckCircleOutlineRounded,
+  BlockOutlined
 } from '@mui/icons-material';
 import api from '../api/axios';
 import { formatApiError } from '../utils/errors';
@@ -100,6 +103,12 @@ const UserManagement = () => {
       faculty: filteredUsers.filter((user) => user.role === 'FACULTY'),
     }
     : null;
+
+  const visibleUserStats = {
+    total: filteredUsers.length,
+    active: filteredUsers.filter((user) => user.is_active).length,
+    inactive: filteredUsers.filter((user) => !user.is_active).length,
+  };
 
   const handleOpen = (user = null) => {
     if (user) {
@@ -200,55 +209,50 @@ const UserManagement = () => {
 
   const renderUserCard = (user) => {
     const roleStyle = getRoleColor(user.role);
-    const isFacultyDepartmentCard = currentPage?.type === 'department' && user.role === 'FACULTY';
     return (
-      <Grid item xs={12} sm={6} md={isFacultyDepartmentCard ? 4 : currentPage?.role ? 4 : 6} key={user.id}>
+      <Grid item xs={12} sm={6} lg={4} key={user.id}>
         <Card sx={{
-          p: isFacultyDepartmentCard ? 2 : 3,
+          p: 2.25,
           minHeight: '100%',
-          transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-          '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 22px 48px -32px rgba(15, 32, 58, 0.65)' }
+          border: '1px solid #dbe5ef',
+          borderRadius: 2,
+          boxShadow: 'none',
+          transition: 'border-color 0.18s ease, box-shadow 0.18s ease',
+          '&:hover': { borderColor: '#9fc5f8', boxShadow: '0 16px 36px -30px rgba(15, 32, 58, 0.55)' }
         }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-            <Avatar
-              sx={{
-                width: isFacultyDepartmentCard ? 40 : 48,
-                height: isFacultyDepartmentCard ? 40 : 48,
-                bgcolor: roleStyle.color,
-                fontWeight: 700,
-                fontSize: isFacultyDepartmentCard ? '0.9rem' : '1rem'
-              }}
-            >
-              {user.first_name?.[0]}{user.last_name?.[0]}
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 2 }}>
+            <Avatar sx={{ width: 44, height: 44, bgcolor: roleStyle.bg, color: roleStyle.color, fontWeight: 900, fontSize: '0.9rem' }}>
+              {user.first_name?.[0] || user.username?.[0]}{user.last_name?.[0]}
             </Avatar>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography variant="subtitle1" noWrap sx={{ fontWeight: 900, color: '#0f172a' }}>
+                {getUserName(user)}
+              </Typography>
+              <Typography variant="caption" noWrap sx={{ color: '#64748b', display: 'flex', alignItems: 'center', gap: 0.6 }}>
+                <BadgeOutlined sx={{ fontSize: '0.95rem' }} /> @{user.username}
+              </Typography>
+            </Box>
             <Chip
               label={user.role}
               size="small"
-              sx={{ bgcolor: roleStyle.bg, color: roleStyle.color, fontWeight: 700, borderRadius: '6px' }}
+              sx={{ bgcolor: roleStyle.bg, color: roleStyle.color, fontWeight: 850, borderRadius: 1.25 }}
             />
           </Box>
 
-          <Typography variant="h6" sx={{ fontWeight: 700, color: '#212b36', mb: 0.5, overflowWrap: 'anywhere' }}>
-            {getUserName(user)}
-          </Typography>
-          <Typography variant="caption" sx={{ color: '#637381', display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <BadgeOutlined sx={{ fontSize: '1rem' }} /> @{user.username}
-          </Typography>
+          <Divider sx={{ mb: 1.75 }} />
 
-          <Divider sx={{ my: isFacultyDepartmentCard ? 1.5 : 2, borderStyle: 'dashed' }} />
-
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: isFacultyDepartmentCard ? 1 : 1.5, mb: isFacultyDepartmentCard ? 2 : 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <EmailOutlined sx={{ color: '#919eab', fontSize: '1.2rem' }} />
-              <Typography variant="body2" sx={{ color: '#212b36', minWidth: 0, overflowWrap: 'anywhere' }}>{user.email}</Typography>
+          <Stack spacing={1.1} sx={{ mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+              <EmailOutlined sx={{ color: '#7c8da3', fontSize: '1.1rem' }} />
+              <Typography variant="body2" noWrap sx={{ color: '#334155', minWidth: 0 }}>{user.email || 'Email not provided'}</Typography>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <BusinessOutlined sx={{ color: '#919eab', fontSize: '1.2rem' }} />
-              <Typography variant="body2" sx={{ color: '#212b36' }}>{user.department_name || 'No Department'}</Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+              <BusinessOutlined sx={{ color: '#7c8da3', fontSize: '1.1rem' }} />
+              <Typography variant="body2" noWrap sx={{ color: '#334155' }}>{user.department_name || 'Institution-wide'}</Typography>
             </Box>
-          </Box>
+          </Stack>
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 1.5, borderTop: '1px solid #edf2f7' }}>
             <FormControlLabel
               control={
                 <Switch
@@ -259,21 +263,21 @@ const UserManagement = () => {
                 />
               }
               label={user.is_active ? "Active" : "Inactive"}
-              sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.875rem', fontWeight: 600, color: user.is_active ? '#047857' : '#b91c1c' } }}
+              sx={{ m: 0, '& .MuiFormControlLabel-label': { fontSize: '0.8rem', fontWeight: 800, color: user.is_active ? '#047857' : '#b91c1c' } }}
             />
             <Box sx={{ display: 'flex', gap: 0.5 }}>
               <Tooltip title="Edit User">
-                <IconButton onClick={() => handleOpen(user)} size="small" sx={{ color: '#237dba' }}>
+                <IconButton onClick={() => handleOpen(user)} size="small" sx={{ color: '#237dba', border: '1px solid #dbeafe' }}>
                   <EditRounded fontSize="small" />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Reset Password">
-                <IconButton onClick={() => openResetPasswordDialog(user.id)} size="small" sx={{ color: '#f59e0b' }}>
+                <IconButton onClick={() => openResetPasswordDialog(user.id)} size="small" sx={{ color: '#b7791f', border: '1px solid #fde7ad' }}>
                   <LockResetRounded fontSize="small" />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Delete">
-                <IconButton onClick={() => setDeleteTarget(user)} size="small" sx={{ color: '#f44336' }}>
+                <IconButton onClick={() => setDeleteTarget(user)} size="small" sx={{ color: '#dc2626', border: '1px solid #fecdd3' }}>
                   <DeleteRounded fontSize="small" />
                 </IconButton>
               </Tooltip>
@@ -286,94 +290,82 @@ const UserManagement = () => {
 
   return (
     <DashboardLayout title="User Management">
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'stretch', lg: 'flex-end' }, gap: 3, flexDirection: { xs: 'column', lg: 'row' } }}>
-        <Box sx={{ display: 'flex', alignItems: { xs: 'stretch', md: 'center' }, gap: 3, flexDirection: { xs: 'column', md: 'row' }, flex: 1 }}>
-          <Box sx={{ textAlign: 'left' }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 1, color: '#212b36' }}>All users</Typography>
-            <Typography variant="body2" color="text.secondary">
-              Viewing <b>{currentPage?.label || 'Department'}</b>{currentPage?.role ? ' accounts.' : ' department with HOD and Faculty members.'}
+      <Paper elevation={0} sx={{ mb: 2.5, p: { xs: 2.25, md: 3 }, borderRadius: 2, border: '1px solid #dbe5ef', bgcolor: '#ffffff' }}>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems={{ xs: 'stretch', md: 'center' }}>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="overline" sx={{ color: '#237dba', fontWeight: 900 }}>Admin directory</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 900, color: '#0f172a', fontSize: { xs: '1.55rem', sm: '2rem' }, lineHeight: 1.15 }}>
+              User Management
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.6 }}>
+              Create accounts and manage access status for institutional users.
             </Typography>
           </Box>
-
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
-            bgcolor: '#fff',
-            borderRadius: '12px',
-            px: 2,
-            py: 1,
-            width: { xs: '100%', md: '340px' },
-            border: '1.5px solid #d1d5db',
-            boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-            '&:focus-within': {
-              bgcolor: 'white',
-              border: '1.5px solid #2563eb',
-              boxShadow: '0 0 0 4px rgba(0, 102, 178, 0.1)'
-            },
-            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
-          }}>
-            <SearchRounded sx={{ color: '#637381', mr: 1, fontSize: '1.2rem' }} />
-            <input
-              type="text"
-              placeholder="Search by name or email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                border: 'none',
-                background: 'transparent',
-                outline: 'none',
-                width: '100%',
-                fontSize: '0.875rem',
-                color: '#212b36',
-                fontWeight: 500
-              }}
-            />
-          </Box>
-        </Box>
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row-reverse' }, alignItems: { xs: 'stretch', sm: 'center' }, justifyContent: 'space-between', gap: 2 }}>
           <Button
-            variant="outlined"
+            variant="contained"
             startIcon={<PersonAddRounded />}
             onClick={() => handleOpen()}
-            sx={{ width: { xs: '100%', sm: 'auto' }, whiteSpace: 'nowrap' }}
+            sx={{ width: { xs: '100%', md: 'auto' }, minWidth: 170, whiteSpace: 'nowrap' }}
           >
             Add New User
           </Button>
+        </Stack>
+      </Paper>
 
-          <Pagination
-            count={pageOptions.length}
-            page={page}
-            onChange={handlePageChange}
-            siblingCount={0}
-            renderItem={(item) => (
-              <PaginationItem
-                {...item}
-                sx={{
-                  bgcolor: item.selected ? 'primary.main' : 'white',
-                  color: item.selected ? 'white' : 'text.primary',
-                  borderRadius: '8px',
-                  width: '40px',
-                  height: '40px',
-                  margin: { xs: '0 1px', sm: '0 4px' },
-                  border: '1px solid #e5e2df',
-                  '&:hover': {
-                    bgcolor: item.selected ? 'primary.dark' : '#eaf3ff'
-                  },
-                  '&.Mui-selected': {
-                    bgcolor: 'primary.main',
-                    fontWeight: 800,
-                    '&:hover': {
-                      bgcolor: 'primary.dark'
-                    }
-                  },
-                  '& .MuiPaginationItem-icon': {
-                    color: 'inherit'
-                  }
-                }}
-              />
-            )}
-          />
-        </Box>
+      <Paper elevation={0} sx={{ mb: 3, p: 2, borderRadius: 2, border: '1px solid #dbe5ef', bgcolor: '#ffffff' }}>
+        <Grid container spacing={1.75} alignItems="center">
+          <Grid item xs={12} md={5}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Search by name, username, email, or department"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start"><SearchRounded sx={{ color: '#64748b' }} /></InputAdornment>
+                ),
+              }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label="Department or role"
+              value={currentPage ? page : ''}
+              disabled={pageOptions.length === 0}
+              onChange={(event) => handlePageChange(event, Number(event.target.value))}
+            >
+              {pageOptions.map((option, index) => (
+                <MenuItem key={`${option.type}-${option.department?.id || option.role}`} value={index + 1}>
+                  {option.type === 'department' ? `${option.label} Department` : `${option.label} Accounts`}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Stack direction="row" spacing={1} justifyContent={{ xs: 'flex-start', md: 'flex-end' }}>
+              <Chip icon={<GroupsRounded />} label={`${visibleUserStats.total} shown`} sx={{ fontWeight: 800, bgcolor: '#eef5ff', color: '#237dba' }} />
+              <Chip icon={<CheckCircleOutlineRounded />} label={`${visibleUserStats.active} active`} sx={{ fontWeight: 800, bgcolor: '#ecfdf3', color: '#087f5b' }} />
+              {visibleUserStats.inactive > 0 && (
+                <Tooltip title={`${visibleUserStats.inactive} inactive accounts`}>
+                  <Chip icon={<BlockOutlined />} label={visibleUserStats.inactive} sx={{ fontWeight: 800, bgcolor: '#fff1f0', color: '#c2413b' }} />
+                </Tooltip>
+              )}
+            </Stack>
+          </Grid>
+        </Grid>
+      </Paper>
+
+      <Box sx={{ mb: 2.5 }}>
+        <Typography variant="h5" sx={{ fontWeight: 900, color: '#0f172a' }}>{currentPage?.label || 'Users'}</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.35 }}>
+          {currentPage?.role
+            ? `${currentPage.label} accounts across the institution.`
+            : `${departmentPage?.blockName || 'Block not assigned'} | ${departmentPage?.hods.length || 0} HOD | ${departmentPage?.faculty.length || 0} Faculty`}
+        </Typography>
       </Box>
 
       {currentPage?.role ? (
@@ -389,27 +381,8 @@ const UserManagement = () => {
           {departmentPage ? (
             <Box
               key={departmentPage.id}
-              sx={{
-                border: '1px solid #e2e8f0',
-                borderRadius: 2,
-                bgcolor: '#ffffff',
-                p: { xs: 2, md: 3 },
-                boxShadow: '0 18px 44px -36px rgba(15, 32, 58, 0.55)'
-              }}
+              sx={{ pb: 2 }}
             >
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: 1.5, flexDirection: { xs: 'column', sm: 'row' }, mb: 2.5 }}>
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 900, color: '#212b36' }}>{departmentPage.name}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {departmentPage.blockName || 'Block not assigned'} | {departmentPage.hods.length} HOD | {departmentPage.faculty.length} Faculty
-                  </Typography>
-                </Box>
-                <Chip
-                  label={`${departmentPage.hods.length + departmentPage.faculty.length} members`}
-                  sx={{ bgcolor: '#eaf3ff', color: '#237dba', fontWeight: 800, borderRadius: '8px' }}
-                />
-              </Box>
-
               <Box sx={{ mb: 3 }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 900, color: '#8a6f00', mb: 1.5 }}>HOD</Typography>
                 <Grid container spacing={2.5}>
