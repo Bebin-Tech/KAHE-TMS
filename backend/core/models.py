@@ -103,6 +103,14 @@ class AcademicCalendarEvent(models.Model):
 
     class Meta:
         ordering = ['start_date', 'title']
+        indexes = [
+            models.Index(fields=['created_by', 'start_date', 'title', 'id'],
+                         condition=models.Q(is_active=True), name='cal_active_owner_start_idx'),
+            models.Index(fields=['start_date'], condition=models.Q(
+                is_active=True, task_released_at__isnull=True,
+                generated_task__isnull=False, assigned_to__isnull=False,
+            ), name='cal_unreleased_start_idx'),
+        ]
 
     def __str__(self):
         return f"{self.academic_year} - {self.title}"
@@ -115,6 +123,7 @@ class AcademicCalendarImport(models.Model):
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='academic_calendar_imports', null=True, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_academic_calendar_imports')
     layout = models.JSONField(default=dict)
+    activity_count = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

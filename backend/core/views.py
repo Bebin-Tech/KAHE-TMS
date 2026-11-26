@@ -1,12 +1,19 @@
 from rest_framework import viewsets, permissions, status, mixins
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.renderers import JSONRenderer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.core.files.base import ContentFile
+from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Count, Exists, OuterRef, Prefetch, Q
+from django.db.models import Count, Exists, OuterRef, Prefetch, Q, Sum
+from django.shortcuts import get_object_or_404
+from django.utils.decorators import method_decorator
+from django.utils.http import parse_etags
 from django.utils import timezone
-from datetime import datetime, time
+from django.views.decorators.gzip import gzip_page
+from datetime import datetime, time, timedelta
+from hashlib import sha256
 import calendar
 import uuid
 from .models import (
@@ -138,7 +145,9 @@ def release_due_calendar_tasks_for_user(user):
     ).filter(
         is_active=True,
         task_released_at__isnull=True,
-        start_date__date__lte=timezone.localdate(),
+        start_date__lt=timezone.make_aware(datetime.combine(
+            timezone.localdate() + timedelta(days=1), time.min
+        )),
         generated_task__isnull=False,
         assigned_to__isnull=False,
     )
@@ -151,9 +160,11 @@ def release_due_calendar_tasks_for_user(user):
         return 0
 
     released_count = 0
-    for event in queryset:
-        if release_calendar_event_task(event):
-            released_count += 1
+    for event_id in queryset.order_by().values_list('pk', flat=True).iterator():
+        with transaction.atomic():
+            event = queryset.select_for_update(of=('self',)).filter(pk=event_id).first()
+            if event and release_calendar_event_task(event):
+                released_count += 1
     return released_count
 
 
@@ -246,16 +257,12 @@ def get_workbook_color(color):
     return f"#{rgb}"
 
 
-def parse_calendar_excel_layout(upload):
+def parse_calendar_excel_layout(worksheet, academic_year):
     try:
-        from openpyxl import load_workbook
         from openpyxl.utils import get_column_letter
     except ImportError as exc:
         raise ValueError('Excel import requires openpyxl. Install backend requirements before importing.') from exc
 
-    workbook = load_workbook(upload, read_only=False, data_only=True)
-    worksheet = workbook.active
-    academic_year = parse_academic_year_from_sheet(worksheet, '')
     year_start = int(academic_year.split('-')[0]) if academic_year and '-' in academic_year else timezone.localdate().year
     max_row = worksheet.max_row
     max_column = worksheet.max_column
@@ -332,14 +339,7 @@ def parse_calendar_excel_layout(upload):
     }
 
 
-def parse_calendar_excel_rows(upload, academic_year):
-    try:
-        from openpyxl import load_workbook
-    except ImportError as exc:
-        raise ValueError('Excel import requires openpyxl. Install backend requirements before importing.') from exc
-
-    workbook = load_workbook(upload, read_only=True, data_only=True)
-    worksheet = workbook.active
+def parse_calendar_excel_rows(worksheet, academic_year):
     academic_year = parse_academic_year_from_sheet(worksheet, academic_year)
     year_start = int(academic_year.split('-')[0]) if academic_year and '-' in academic_year else timezone.localdate().year
     current_month = None
@@ -1359,6 +1359,60 @@ class AcademicCalendarEventViewSet(viewsets.ModelViewSet):
         release_due_calendar_tasks_for_user(request.user)
         return super().list(request, *args, **kwargs)
 
+    @action(detail=False, methods=['get'])
+    def workspace(self, request):
+        release_due_calendar_tasks_for_user(request.user)
+        events = self.get_queryset().select_related(None).order_by()
+        imports = self.get_import_queryset().select_related(None)
+        actionable_filter = ~Q(source='EXCEL_IMPORT') | Q(assigned_to__isnull=False) | Q(generated_task__isnull=False)
+        actionable = events.filter(actionable_filter)
+        stats = events.aggregate(
+            total=Count('pk'),
+            legacy_imported=Count('pk', filter=Q(source='EXCEL_IMPORT')),
+            upcoming=Count('pk', filter=actionable_filter & Q(start_date__gte=timezone.now())),
+            assigned=Count('pk', filter=Q(assigned_to__isnull=False)),
+            released=Count('pk', filter=actionable_filter & Q(task_released_at__isnull=False)),
+        )
+        legacy_imported = stats.pop('legacy_imported')
+        import_years = dict(imports.order_by().values('academic_year').annotate(
+            total=Sum('activity_count')
+        ).values_list('academic_year', 'total'))
+        stats['imported'] = sum(import_years.values()) or legacy_imported
+        latest = imports.order_by('-created_at', '-pk').values('id', 'file_name', 'academic_year', 'batch_id').first()
+        pagination = Paginator(
+            actionable.select_related('department', 'assigned_to', 'generated_task', 'created_by')
+            .order_by('start_date', 'title', 'pk'), 12
+        )
+        page = pagination.get_page(request.query_params.get('page', 1))
+        payload = {
+            'stats': stats,
+            'latest_import': latest,
+            'years': sorted(
+                set(events.values_list('academic_year', flat=True).distinct())
+                | set(import_years)
+            ),
+            'assigned_starts': list(actionable.filter(assigned_to__isnull=False)
+                                    .order_by('start_date').values_list('start_date', flat=True).distinct()),
+            'events': self.get_serializer(page.object_list, many=True).data,
+            'count': pagination.count,
+            'pages': pagination.num_pages,
+            'page': page.number,
+        }
+        etag = f'W/"{sha256(JSONRenderer().render(payload)).hexdigest()}"'
+        unmodified = etag in parse_etags(request.headers.get('If-None-Match', ''))
+        response = Response(status=status.HTTP_304_NOT_MODIFIED) if unmodified else Response(payload)
+        response['ETag'] = etag
+        response['Cache-Control'] = 'private, no-cache'
+        return response
+
+    @action(detail=False, methods=['get'], url_path=r'import-layout/(?P<import_id>[0-9]+)')
+    @method_decorator(gzip_page)
+    def import_layout(self, request, import_id=None):
+        record = get_object_or_404(self.get_import_queryset().select_related(None).only('layout'), pk=import_id)
+        response = Response(record.layout)
+        response['Cache-Control'] = 'private, no-store'
+        return response
+
     def create(self, request, *args, **kwargs):
         if request.user.role not in ['ADMIN', 'DEAN']:
             return Response({'error': 'Only Dean or Admin users can create academic calendar activities.'}, status=status.HTTP_403_FORBIDDEN)
@@ -1502,10 +1556,20 @@ class AcademicCalendarEventViewSet(viewsets.ModelViewSet):
                 return Response({'error': 'Select an active HOD from the selected department before importing.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            layout = parse_calendar_excel_layout(upload)
-            upload.seek(0)
-            rows = parse_calendar_excel_rows(upload, academic_year)
-        except ValueError as exc:
+            from openpyxl import load_workbook
+            from openpyxl.utils.exceptions import InvalidFileException
+        except ImportError:
+            return Response({'error': 'Excel import requires openpyxl. Install backend requirements before importing.'}, status=status.HTTP_400_BAD_REQUEST)
+        from zipfile import BadZipFile
+
+        try:
+            workbook = load_workbook(upload, data_only=True)
+            try:
+                rows = parse_calendar_excel_rows(workbook.active, academic_year)
+                layout = parse_calendar_excel_layout(workbook.active, rows[0]['academic_year']) if rows else None
+            finally:
+                workbook.close()
+        except (ValueError, InvalidFileException, BadZipFile) as exc:
             return Response({'error': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         if not rows:
@@ -1521,17 +1585,20 @@ class AcademicCalendarEventViewSet(viewsets.ModelViewSet):
                 assigned_to=assigned_to,
                 created_by=request.user,
                 layout=layout,
+                activity_count=len(rows),
                 is_active=True,
             )
 
-        return Response({
+        result = {
             'created_count': 0,
             'skipped_count': 0,
             'calendar_row_count': len(rows),
             'import_batch_id': str(import_batch_id),
-            'imported_calendar': AcademicCalendarImportSerializer(calendar_import).data,
             'events': [],
-        }, status=status.HTTP_201_CREATED)
+        }
+        if request.query_params.get('metadata_only') != '1':
+            result['imported_calendar'] = AcademicCalendarImportSerializer(calendar_import).data
+        return Response(result, status=status.HTTP_201_CREATED)
 
     def destroy(self, request, *args, **kwargs):
         if request.user.role not in ['ADMIN', 'DEAN']:
