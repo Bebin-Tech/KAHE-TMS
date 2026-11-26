@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import DashboardLayout from '../components/DashboardLayout';
 import {
   Alert,
@@ -14,6 +14,7 @@ import {
   Grid,
   IconButton,
   MenuItem,
+  Pagination,
   Paper,
   Snackbar,
   Stack,
@@ -34,6 +35,7 @@ import {
   TodayRounded,
 } from '@mui/icons-material';
 import api from '../api/axios';
+import useAutoRefresh from '../hooks/useAutoRefresh';
 import { getCurrentSession } from '../utils/session';
 import { formatApiError } from '../utils/errors';
 
@@ -109,18 +111,17 @@ const buildMergeLookup = (ranges = []) => ranges.reduce((lookup, range) => {
   const end = parseCellRef(endRef);
   if (!start || !end) return lookup;
 
-  const nextLookup = { ...lookup };
-  nextLookup[`${start.row}:${start.column}`] = {
+  lookup[`${start.row}:${start.column}`] = {
     colSpan: end.column - start.column + 1,
     rowSpan: end.row - start.row + 1,
   };
   for (let row = start.row; row <= end.row; row += 1) {
     for (let column = start.column; column <= end.column; column += 1) {
       if (row === start.row && column === start.column) continue;
-      nextLookup[`${row}:${column}`] = { hidden: true };
+      lookup[`${row}:${column}`] = { hidden: true };
     }
   }
-  return nextLookup;
+  return lookup;
 }, {});
 
 const excelColumnWidthToPx = (width) => {
@@ -224,10 +225,36 @@ const getUserLabel = (user) => {
   return name || user.username;
 };
 
-const calendarPageCache = {
-  events: null,
-  imports: null,
-  departments: null,
+const EMPTY_WORKSPACE = { events: [], stats: { total: 0, imported: 0, upcoming: 0, assigned: 0 }, years: [], assigned_starts: [], count: 0, pages: 1, page: 1 };
+const EMPTY_COLUMNS = [];
+const WORKBOOK_PAGE_SIZE = 80;
+const DIRECTORY_CACHE_MS = 60000;
+let calendarPageCache;
+
+const getCalendarCache = (owner) => {
+  if (calendarPageCache?.owner !== owner) {
+    calendarPageCache = { owner, workspace: null, page: 1, layout: null, importId: null, departments: null, hods: new Map() };
+  }
+  return calendarPageCache;
+};
+
+const paginateWorkbook = (rows, ranges) => {
+  const merges = (ranges || []).map((range) => {
+    const [start, end = start] = range.split(':');
+    return [parseCellRef(start)?.row, parseCellRef(end)?.row];
+  }).sort(([first], [second]) => first - second);
+  const pages = [];
+  let mergeIndex = 0;
+  for (let start = 0; start < rows.length;) {
+    let end = Math.min(start + WORKBOOK_PAGE_SIZE, rows.length);
+    while (mergeIndex < merges.length && merges[mergeIndex][0] <= rows[end - 1].index) {
+      const [, mergeEnd] = merges[mergeIndex++];
+      while (end < rows.length && rows[end].index <= mergeEnd) end += 1;
+    }
+    pages.push(rows.slice(start, end));
+    start = end;
+  }
+  return pages;
 };
 
 const ImportedCalendarGrid = React.memo(({
@@ -335,12 +362,19 @@ const ImportedCalendarGrid = React.memo(({
 
 ImportedCalendarGrid.displayName = 'ImportedCalendarGrid';
 
-const AcademicCalendar = () => {
-  const currentUser = getCurrentSession()?.session?.user || {};
+const AcademicCalendar = ({ currentUser }) => {
   const canManage = ['ADMIN', 'DEAN'].includes(currentUser.role);
-  const [events, setEvents] = useState(() => calendarPageCache.events || []);
-  const [calendarImports, setCalendarImports] = useState(() => calendarPageCache.imports || []);
-  const [departments, setDepartments] = useState(() => calendarPageCache.departments || []);
+  const cache = useMemo(() => getCalendarCache(`${currentUser.role}:${currentUser.id}`), [currentUser.id, currentUser.role]);
+  const [workspace, setWorkspace] = useState(() => cache.workspace || EMPTY_WORKSPACE);
+  const [workflowPage, setWorkflowPage] = useState(() => cache.page);
+  const [workbook, setWorkbook] = useState(() => cache.layout ? { id: cache.importId, layout: cache.layout } : null);
+  const [workbookPage, setWorkbookPage] = useState(1);
+  const [layoutError, setLayoutError] = useState('');
+  const [layoutRetry, setLayoutRetry] = useState(0);
+  const [departments, setDepartments] = useState(() => cache.departments?.data || []);
+  const workflowRequest = useRef({ sequence: 0 });
+  const hodRequest = useRef(0);
+  const workbookScroll = useRef(null);
   const [hods, setHods] = useState([]);
   const [formData, setFormData] = useState(emptyForm);
   const [importData, setImportData] = useState({ academic_year: getAcademicYear() });
@@ -351,122 +385,150 @@ const AcademicCalendar = () => {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteAllOpen, setDeleteAllOpen] = useState(false);
   const [deleteImportedOpen, setDeleteImportedOpen] = useState(false);
-  const [loading, setLoading] = useState(() => calendarPageCache.events === null);
+  const [loading, setLoading] = useState(() => cache.workspace === null);
   const [fetchingHods, setFetchingHods] = useState(false);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState({ open: false, severity: 'success', text: '' });
 
-  const academicYears = useMemo(() => {
-    const base = new Set([getAcademicYear()]);
-    events.forEach((event) => {
-      if (event.academic_year) base.add(event.academic_year);
-    });
-    calendarImports.forEach((calendarImport) => {
-      if (calendarImport.academic_year) base.add(calendarImport.academic_year);
-    });
-    return Array.from(base).sort();
-  }, [calendarImports, events]);
-
-  const calendarStats = useMemo(() => {
-    const now = new Date();
-    const actionableEvents = events.filter((event) => event.source !== 'EXCEL_IMPORT' || event.assigned_to || event.generated_task);
-    const upcoming = actionableEvents.filter((event) => event.start_date && new Date(event.start_date) >= now).length;
-    const assigned = actionableEvents.filter((event) => Boolean(event.assigned_to)).length;
-    const released = actionableEvents.filter((event) => event.release_status === 'RELEASED' || event.task_released_at).length;
-    const imported = events.filter((event) => event.source === 'EXCEL_IMPORT').length;
-    const importedRows = calendarImports.reduce((total, item) => (
-      total + deriveCalendarRows(item.layout, item.academic_year).filter((row) => row.date_key && row.particulars).length
-    ), 0);
-    return { upcoming, assigned, released, imported: importedRows || imported };
-  }, [calendarImports, events]);
-
-  const workflowEvents = useMemo(() => (
-    events.filter((event) => event.source !== 'EXCEL_IMPORT' || event.assigned_to || event.generated_task)
-  ), [events]);
+  const academicYears = useMemo(() => Array.from(new Set([getAcademicYear(), ...workspace.years])).sort(), [workspace.years]);
+  const { events: workflowEvents, stats: calendarStats, latest_import: selectedCalendarImport } = workspace;
 
   const assignedTaskDateKeys = useMemo(() => new Set(
-    workflowEvents
-      .filter((event) => event.assigned_to && event.start_date)
-      .map((event) => getDateKeyFromValue(event.start_date))
-      .filter(Boolean)
-  ), [workflowEvents]);
+    workspace.assigned_starts.map(getDateKeyFromValue).filter(Boolean)
+  ), [workspace.assigned_starts]);
 
-  const selectedCalendarImport = calendarImports[0] || null;
-  const selectedCalendarRows = useMemo(() => (
-    deriveCalendarRows(selectedCalendarImport?.layout, selectedCalendarImport?.academic_year)
-  ), [selectedCalendarImport]);
+  const importId = selectedCalendarImport?.id;
+  const importYear = selectedCalendarImport?.academic_year;
+  const layout = workbook?.id === importId ? workbook?.layout : null;
+  const workbookPages = useMemo(() => (
+    paginateWorkbook(deriveCalendarRows(layout, importYear), layout?.merged_ranges)
+  ), [layout, importYear]);
   const importMergeLookup = useMemo(() => (
-    buildMergeLookup(selectedCalendarImport?.layout?.merged_ranges || [])
-  ), [selectedCalendarImport]);
+    buildMergeLookup(layout?.merged_ranges || [])
+  ), [layout]);
 
-  const showMessage = (text, severity = 'success') => {
+  const showMessage = useCallback((text, severity = 'success') => {
     setMessage({ open: true, severity, text });
-  };
-
-  const fetchEvents = useCallback(async () => {
-    if (calendarPageCache.events === null) setLoading(true);
-    try {
-      const response = await api.get('academic-calendar/');
-      const nextEvents = normalizeList(response.data);
-      calendarPageCache.events = nextEvents;
-      setEvents(nextEvents);
-    } catch (err) {
-      showMessage(formatApiError(err, 'Unable to load academic calendar.'), 'error');
-    } finally {
-      setLoading(false);
-    }
   }, []);
 
-  const fetchCalendarImports = useCallback(async () => {
-    try {
-      const response = await api.get('academic-calendar/imports/');
-      const nextImports = normalizeList(response.data);
-      calendarPageCache.imports = nextImports;
-      setCalendarImports(nextImports);
-    } catch (err) {
-      showMessage(formatApiError(err, 'Unable to load imported academic calendar.'), 'error');
+  const fetchWorkspace = useCallback(({ force = false, quiet = false } = {}) => {
+    const previous = workflowRequest.current;
+    if (!force && previous.page === workflowPage && previous.promise) return previous.promise;
+    const sequence = previous.sequence + 1;
+    const etag = !force && cache.workspace?.page === workflowPage ? cache.etag : null;
+    const promise = api.get('academic-calendar/workspace/', {
+      params: { page: workflowPage },
+      headers: etag ? { 'If-None-Match': etag } : undefined,
+      validateStatus: (status) => status === 200 || status === 304,
+    })
+      .then(({ data, headers, status }) => {
+        if (workflowRequest.current.sequence !== sequence) return;
+        if (status === 304) return;
+        const existing = cache.workspace;
+        cache.etag = headers.etag;
+        if (existing && JSON.stringify(existing) === JSON.stringify(data)) return;
+        if (existing && JSON.stringify(existing.assigned_starts) === JSON.stringify(data.assigned_starts)) {
+          data.assigned_starts = existing.assigned_starts;
+        }
+        cache.workspace = data;
+        cache.page = data.page;
+        setWorkspace(data);
+      })
+      .catch((err) => {
+        if (workflowRequest.current.sequence === sequence && !quiet) {
+          showMessage(formatApiError(err, 'Unable to load academic calendar.'), 'error');
+        }
+      })
+      .finally(() => {
+        if (workflowRequest.current.sequence === sequence) {
+          workflowRequest.current.promise = null;
+          setLoading(false);
+        }
+      });
+    workflowRequest.current = { sequence, page: workflowPage, promise };
+    return promise;
+  }, [cache, showMessage, workflowPage]);
+
+  useEffect(() => {
+    fetchWorkspace();
+  }, [fetchWorkspace]);
+  useAutoRefresh(() => fetchWorkspace({ quiet: true }), 15000);
+
+  useEffect(() => {
+    if (!importId) {
+      cache.importId = null;
+      cache.layout = null;
+      setWorkbook(null);
+      return undefined;
     }
-  }, []);
+    if (cache.importId === importId && cache.layout) return undefined;
+    const controller = new AbortController();
+    setWorkbookPage(1);
+    setLayoutError('');
+    api.get(`academic-calendar/import-layout/${importId}/`, { signal: controller.signal })
+      .then(({ data }) => {
+        if (controller.signal.aborted) return;
+        cache.importId = importId;
+        cache.layout = data;
+        setWorkbook({ id: importId, layout: data });
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) setLayoutError(formatApiError(error, 'Unable to load imported academic calendar.'));
+      });
+    return () => controller.abort();
+  }, [cache, importId, layoutRetry]);
 
   const fetchDepartments = useCallback(async () => {
+    if (cache.departments && Date.now() - cache.departments.fetchedAt < DIRECTORY_CACHE_MS) return;
     try {
       const response = await api.get('departments/');
       const nextDepartments = normalizeList(response.data);
-      calendarPageCache.departments = nextDepartments;
+      cache.departments = { data: nextDepartments, fetchedAt: Date.now() };
       setDepartments(nextDepartments);
     } catch (err) {
       showMessage(formatApiError(err, 'Unable to load departments.'), 'error');
     }
-  }, []);
+  }, [cache, showMessage]);
 
   const fetchHods = useCallback(async (departmentId, selectedId = '') => {
+    const requestId = ++hodRequest.current;
     if (!departmentId) {
       setHods([]);
+      setFetchingHods(false);
       return;
     }
 
     setFetchingHods(true);
     try {
-      const response = await api.get(`users/hods/?department=${departmentId}`);
-      const departmentHods = normalizeList(response.data);
+      const cached = cache.hods.get(departmentId);
+      let departmentHods = cached?.data;
+      if (!cached || Date.now() - cached.fetchedAt >= DIRECTORY_CACHE_MS) {
+        const response = await api.get('users/hods/', { params: { department: departmentId } });
+        departmentHods = normalizeList(response.data);
+        cache.hods.set(departmentId, { data: departmentHods, fetchedAt: Date.now() });
+      }
+      if (requestId !== hodRequest.current) return;
       setHods(departmentHods);
       if (selectedId && !departmentHods.some((user) => String(user.id) === String(selectedId))) {
         setFormData((current) => ({ ...current, assigned_to: '' }));
       }
     } catch (err) {
+      if (requestId !== hodRequest.current) return;
       setHods([]);
       showMessage(formatApiError(err, 'Unable to load HODs for this department.'), 'error');
     } finally {
-      setFetchingHods(false);
+      if (requestId === hodRequest.current) setFetchingHods(false);
     }
-  }, []);
+  }, [cache, showMessage]);
 
   useEffect(() => {
-    fetchEvents();
-    fetchCalendarImports();
-    fetchDepartments();
-  }, [fetchCalendarImports, fetchDepartments, fetchEvents]);
+    if (dialogOpen) fetchDepartments();
+    else {
+      hodRequest.current += 1;
+      setFetchingHods(false);
+    }
+  }, [dialogOpen, fetchDepartments]);
 
   const handleOpenCreate = () => {
     setEditingEvent(null);
@@ -529,22 +591,15 @@ const AcademicCalendar = () => {
     };
 
     try {
-      const response = editingEvent
-        ? await api.patch(`academic-calendar/${editingEvent.id}/`, payload)
-        : await api.post('academic-calendar/', payload);
-      const savedEvent = response.data;
-      setEvents((current) => {
-        const nextEvents = [
-          savedEvent,
-          ...current.filter((row) => row.id !== savedEvent.id),
-        ];
-        calendarPageCache.events = nextEvents;
-        return nextEvents;
-      });
+      if (editingEvent) {
+        await api.patch(`academic-calendar/${editingEvent.id}/`, payload);
+      } else {
+        await api.post('academic-calendar/', payload);
+      }
       setDialogOpen(false);
       setEditingEvent(null);
       showMessage(editingEvent ? 'Calendar activity updated and task schedule synced.' : 'Calendar activity saved. The task will be sent on its scheduled date.');
-      fetchEvents();
+      fetchWorkspace({ force: true });
     } catch (err) {
       showMessage(formatApiError(err, 'Unable to save calendar activity.'), 'error');
     } finally {
@@ -557,13 +612,9 @@ const AcademicCalendar = () => {
 
     try {
       await api.delete(`academic-calendar/${deleteTarget.id}/`);
-      setEvents((current) => {
-        const nextEvents = current.filter((event) => event.id !== deleteTarget.id);
-        calendarPageCache.events = nextEvents;
-        return nextEvents;
-      });
       setDeleteTarget(null);
       showMessage('Calendar activity and generated task removed.');
+      fetchWorkspace({ force: true });
     } catch (err) {
       showMessage(formatApiError(err, 'Unable to delete calendar activity.'), 'error');
     }
@@ -574,11 +625,8 @@ const AcademicCalendar = () => {
       const response = await api.delete('academic-calendar/delete-all/');
       const deletedCount = response.data?.deleted_count || 0;
       setDeleteAllOpen(false);
-      calendarPageCache.events = [];
-      setEvents([]);
       showMessage(`${deletedCount} calendar entr${deletedCount === 1 ? 'y' : 'ies'} deleted successfully.`);
-      fetchEvents();
-      fetchCalendarImports();
+      fetchWorkspace({ force: true });
     } catch (err) {
       showMessage(formatApiError(err, 'Unable to delete all calendar entries.'), 'error');
     }
@@ -589,16 +637,8 @@ const AcademicCalendar = () => {
       const response = await api.delete('academic-calendar/delete-imported/');
       const deletedCount = response.data?.deleted_count || 0;
       setDeleteImportedOpen(false);
-      setEvents((current) => {
-        const nextEvents = current.filter((event) => event.source !== 'EXCEL_IMPORT');
-        calendarPageCache.events = nextEvents;
-        return nextEvents;
-      });
-      calendarPageCache.imports = [];
-      setCalendarImports([]);
       showMessage(`${deletedCount} imported calendar entr${deletedCount === 1 ? 'y' : 'ies'} deleted successfully.`);
-      fetchEvents();
-      fetchCalendarImports();
+      fetchWorkspace({ force: true });
     } catch (err) {
       showMessage(formatApiError(err, 'Unable to delete imported academic calendar.'), 'error');
     }
@@ -618,13 +658,13 @@ const AcademicCalendar = () => {
 
     try {
       const response = await api.post('academic-calendar/import-excel/', requestData, {
+        params: { metadata_only: 1 },
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const rowCount = response.data?.calendar_row_count || 0;
       setImportDialogOpen(false);
       showMessage(`Imported academic calendar with ${rowCount} date-wise entr${rowCount === 1 ? 'y' : 'ies'}. Select a date to create and assign a task.`);
-      fetchEvents();
-      fetchCalendarImports();
+      fetchWorkspace({ force: true });
     } catch (err) {
       showMessage(formatApiError(err, 'Unable to import academic calendar.'), 'error');
     } finally {
@@ -671,7 +711,7 @@ const AcademicCalendar = () => {
           </Stack>
           {canManage && (
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} sx={{ alignSelf: { xs: 'stretch', md: 'center' } }}>
-              {events.length > 0 && (
+              {calendarStats.total > 0 && (
                 <Button variant="outlined" color="error" startIcon={<DeleteSweepRounded />} onClick={() => setDeleteAllOpen(true)} sx={{ minWidth: 150, bgcolor: '#ffffff', fontWeight: 850 }}>
                   Delete All
                 </Button>
@@ -689,7 +729,7 @@ const AcademicCalendar = () => {
 
       <Grid container spacing={1.5} sx={{ mb: 2.5 }}>
         {[
-          { label: 'Calendar Entries', value: calendarStats.imported + workflowEvents.length, icon: <CalendarMonthRounded />, color: '#2563eb', bg: '#eff6ff' },
+          { label: 'Calendar Entries', value: calendarStats.imported + workspace.count, icon: <CalendarMonthRounded />, color: '#2563eb', bg: '#eff6ff' },
           { label: 'Upcoming', value: calendarStats.upcoming, icon: <TodayRounded />, color: '#0f766e', bg: '#f0fdfa' },
           { label: 'Assigned', value: calendarStats.assigned, icon: <GroupsRounded />, color: '#7c3aed', bg: '#f5f3ff' },
           { label: 'Imported Entries', value: calendarStats.imported, icon: <FileUploadRounded />, color: '#b45309', bg: '#fffbeb' },
@@ -740,7 +780,7 @@ const AcademicCalendar = () => {
                 Imported Academic Calendar
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {selectedCalendarImport.file_name} - {selectedCalendarImport.layout?.sheet_name || 'Calendar sheet'} - {selectedCalendarImport.academic_year}
+                {selectedCalendarImport.file_name} - {layout?.sheet_name || 'Calendar sheet'} - {selectedCalendarImport.academic_year}
               </Typography>
               {canManage && (
                 <Typography variant="caption" sx={{ display: 'block', mt: 0.35, color: '#1d4ed8', fontWeight: 850 }}>
@@ -760,15 +800,32 @@ const AcademicCalendar = () => {
               </Button>
             )}
           </Stack>
-          <Box sx={{ overflow: 'auto', maxHeight: 620, bgcolor: '#ffffff' }}>
-            <ImportedCalendarGrid
-              rows={selectedCalendarRows}
-              columns={selectedCalendarImport.layout?.columns || []}
+          {workbookPages.length > 1 && (
+            <Box sx={{ px: 2, py: 1, borderBottom: '1px solid #e2e8f0' }}>
+              <Pagination aria-label="Calendar sheet pages" size="small" count={workbookPages.length} page={workbookPage}
+                onChange={(_, page) => {
+                  setWorkbookPage(page);
+                  workbookScroll.current?.scrollTo({ top: 0 });
+                }}
+              />
+            </Box>
+          )}
+          <Box ref={workbookScroll} sx={{ overflow: 'auto', maxHeight: 620, bgcolor: '#ffffff' }}>
+            {layoutError ? (
+              <Alert severity="error" action={<Button onClick={() => {
+                setLayoutError('');
+                setLayoutRetry((current) => current + 1);
+              }}>Retry</Button>}>{layoutError}</Alert>
+            ) : !layout ? (
+              <Box sx={{ py: 4, textAlign: 'center' }}><CircularProgress size={24} aria-label="Loading calendar sheet" /></Box>
+            ) : <ImportedCalendarGrid
+              rows={workbookPages[workbookPage - 1] || EMPTY_COLUMNS}
+              columns={layout.columns || EMPTY_COLUMNS}
               mergeLookup={importMergeLookup}
               assignedTaskDateKeys={assignedTaskDateKeys}
               canManage={canManage}
               onSelectRow={handleOpenCreateFromImportedRow}
-            />
+            />}
           </Box>
         </Paper>
       )}
@@ -802,7 +859,7 @@ const AcademicCalendar = () => {
             </Box>
             <Chip
               size="small"
-              label={`${workflowEvents.length} ${workflowEvents.length === 1 ? 'entry' : 'entries'}`}
+              label={`${workspace.count} ${workspace.count === 1 ? 'entry' : 'entries'}`}
               sx={{ bgcolor: '#e0f2fe', color: '#0369a1', fontWeight: 900 }}
             />
           </Stack>
@@ -900,6 +957,11 @@ const AcademicCalendar = () => {
               </Grid>
             ))}
           </Grid>
+          {workspace.pages > 1 && (
+            <Pagination aria-label="Scheduled workflow pages" count={workspace.pages} page={workspace.page}
+              onChange={(_, page) => setWorkflowPage(page)} sx={{ mt: 2 }}
+            />
+          )}
         </>
       )}
 
@@ -1067,7 +1129,7 @@ const AcademicCalendar = () => {
         </DialogTitle>
         <DialogContent sx={{ px: 3, py: 2.5 }}>
           <Typography variant="body2" color="text.secondary">
-            Are you sure you want to delete all {events.length} calendar entr{events.length === 1 ? 'y' : 'ies'}? The linked tasks will also be removed from active task lists.
+            Are you sure you want to delete all {calendarStats.total} calendar entr{calendarStats.total === 1 ? 'y' : 'ies'}? The linked tasks will also be removed from active task lists.
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2, bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0', gap: 1 }}>
@@ -1125,4 +1187,9 @@ const AcademicCalendar = () => {
   );
 };
 
-export default AcademicCalendar;
+const AcademicCalendarPage = () => {
+  const user = getCurrentSession()?.session?.user || {};
+  return <AcademicCalendar key={`${user.role}:${user.id}`} currentUser={user} />;
+};
+
+export default AcademicCalendarPage;
