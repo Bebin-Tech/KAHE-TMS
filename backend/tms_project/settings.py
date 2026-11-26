@@ -23,6 +23,7 @@ def env_bool(name, default=False):
 
 # Security Settings from Environment
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key')
+DATABASE_URL = os.environ.get('DATABASE_URL')
 DEBUG = env_bool('DEBUG')
 ALLOWED_HOSTS = [
     host.strip()
@@ -33,8 +34,10 @@ if os.environ.get('VERCEL') == '1':
     for name in ('VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL'):
         if os.environ.get(name):
             ALLOWED_HOSTS.append(os.environ[name])
-    if not os.environ.get('DATABASE_URL') or not os.environ.get('SECRET_KEY'):
-        raise RuntimeError('Vercel requires DATABASE_URL and SECRET_KEY.')
+    DATABASE_URL = os.environ.get('KAHE_DATABASE_URL')
+    SECRET_KEY = os.environ.get('KAHE_DJANGO_SECRET_KEY', '')
+    if not DATABASE_URL or len(SECRET_KEY) < 50:
+        raise RuntimeError('Vercel requires KAHE_DATABASE_URL and KAHE_DJANGO_SECRET_KEY.')
     DEBUG = False
 GROK_API_KEY = os.environ.get('GROK_API_KEY') or os.environ.get('GROQ_API_KEY', '')
 
@@ -110,11 +113,12 @@ if SQLITE_PATH and os.environ.get('VERCEL') != '1' and DB_ENGINE not in {'postgr
             'NAME': sqlite_path,
         }
     }
-elif dj_database_url and os.environ.get('DATABASE_URL'):
+elif dj_database_url and DATABASE_URL:
     ssl_required = env_bool('DATABASE_SSL', True)
     DATABASES = {
-        'default': dj_database_url.config(
-            conn_max_age=600,
+        'default': dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=0 if os.environ.get('VERCEL') == '1' else 600,
             ssl_require=ssl_required
         )
     }
