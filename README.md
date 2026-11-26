@@ -11,19 +11,20 @@ The system is designed for academic administration where tasks move through mult
 - HOD manages department-level work, assigns subtasks to faculty, reviews faculty submissions, and forwards completed work to the Dean.
 - Faculty views assigned tasks, updates progress, and submits work for HOD review.
 
-The project uses a Django REST API backend and a React frontend. Authentication is handled with JWT tokens, and the frontend stores sessions independently by role so Admin, Dean, HOD, and Faculty logins do not overwrite each other.
+FastAPI serves the React application's backend and handles JWT login and token refresh. Django continues to provide the database models, migrations, admin, and existing workflow API routes through the FastAPI compatibility mount.
 
 ## Tech Stack
 
 ### Backend
 
 - Python
-- Django 5
+- FastAPI and Uvicorn
+- Django 5 for persistence, migrations, and existing workflow routes
 - Django REST Framework
 - Simple JWT authentication
 - SQLite for local development
 - PostgreSQL support for deployment
-- WhiteNoise and Gunicorn for production serving
+- WhiteNoise for built frontend assets
 
 ### Frontend
 
@@ -146,7 +147,7 @@ python -m venv venv
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py createsuperuser
-python manage.py runserver
+python -m uvicorn tms_project.fastapi_app:app --host 127.0.0.1 --port 8000
 ```
 
 If PowerShell blocks virtual environment activation, run:
@@ -159,7 +160,7 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 You can also run Django commands directly with:
 
 ```powershell
-.\venv\Scripts\python.exe manage.py runserver
+.\venv\Scripts\python.exe -m uvicorn tms_project.fastapi_app:app --host 127.0.0.1 --port 8000
 ```
 
 The backend runs locally at:
@@ -262,7 +263,7 @@ Start the backend:
 
 ```powershell
 cd backend
-.\venv\Scripts\python.exe manage.py runserver
+.\venv\Scripts\python.exe -m uvicorn tms_project.fastapi_app:app --host 127.0.0.1 --port 8000
 ```
 
 Start the frontend:
@@ -386,7 +387,7 @@ This repository includes `render.yaml` for Render deployment.
 Render services:
 
 - `kahe-tms-db`: PostgreSQL database.
-- `kahe-tms-backend`: Django backend served by Gunicorn.
+- `kahe-tms-backend`: FastAPI backend served by Uvicorn.
 - `kahe-tms-frontend`: Vite static frontend.
 
 Backend build command:
@@ -401,7 +402,7 @@ Backend start command:
 
 ```bash
 cd backend
-gunicorn tms_project.wsgi:application
+python -m uvicorn tms_project.fastapi_app:app --host 0.0.0.0 --port "$PORT"
 ```
 
 Frontend build command:

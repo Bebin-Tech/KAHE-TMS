@@ -27,4 +27,4 @@ EXPOSE 10000
 
 CMD python manage.py migrate \
     && python manage.py collectstatic --noinput \
-    && gunicorn tms_project.wsgi:application --bind 0.0.0.0:${PORT:-10000}
+    && python -m uvicorn tms_project.fastapi_app:app --host 0.0.0.0 --port "${PORT:-10000}"
