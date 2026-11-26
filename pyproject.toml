@@ -1,2 +1,26 @@
+[project]
+name = "kahe-tms"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "asgiref==3.7.2",
+    "Django==5.0",
+    "django-cors-headers==4.3.1",
+    "djangorestframework==3.14.0",
+    "djangorestframework-simplejwt==5.3.1",
+    "PyMySQL==1.1.0",
+    "python-dotenv==1.0.0",
+    "sqlparse==0.4.4",
+    "typing_extensions>=4.14.1,<5",
+    "tzdata==2023.3",
+    "whitenoise==6.6.0",
+    "dj-database-url==2.1.0",
+    "psycopg2-binary>=2.9.11,<3",
+    "openpyxl==3.1.5",
+    "fastapi>=0.121,<1",
+    "uvicorn>=0.38,<1",
+    "python-multipart>=0.0.20,<1",
+]
+
 [tool.vercel]
 entrypoint = "app:app"
