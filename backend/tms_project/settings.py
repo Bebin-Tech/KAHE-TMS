@@ -29,6 +29,13 @@ ALLOWED_HOSTS = [
     for host in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
     if host.strip()
 ]
+if os.environ.get('VERCEL') == '1':
+    for name in ('VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL'):
+        if os.environ.get(name):
+            ALLOWED_HOSTS.append(os.environ[name])
+    if not os.environ.get('DATABASE_URL') or not os.environ.get('SECRET_KEY'):
+        raise RuntimeError('Vercel requires DATABASE_URL and SECRET_KEY.')
+    DEBUG = False
 GROK_API_KEY = os.environ.get('GROK_API_KEY') or os.environ.get('GROQ_API_KEY', '')
 
 INSTALLED_APPS = [
@@ -94,7 +101,7 @@ WSGI_APPLICATION = 'tms_project.wsgi.application'
 DB_ENGINE = os.environ.get('DB_ENGINE', '').lower()
 SQLITE_PATH = os.environ.get('SQLITE_PATH')
 
-if SQLITE_PATH and DB_ENGINE not in {'postgres', 'postgresql', 'mysql'}:
+if SQLITE_PATH and os.environ.get('VERCEL') != '1' and DB_ENGINE not in {'postgres', 'postgresql', 'mysql'}:
     sqlite_path = Path(SQLITE_PATH)
     sqlite_path.parent.mkdir(parents=True, exist_ok=True)
     DATABASES = {
