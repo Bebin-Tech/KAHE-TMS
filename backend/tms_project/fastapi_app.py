@@ -1,7 +1,8 @@
 from django.db import close_old_connections
 from django.http.request import split_domain_port, validate_host
 from fastapi import Depends, FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 
 from .asgi import application as django_app
@@ -81,6 +82,18 @@ async def login(payload: dict = Depends(read_token_payload)):
 @app.post('/api/token/refresh/')
 async def refresh_token(payload: dict = Depends(read_token_payload)):
     return await run_in_threadpool(token_response, TokenRefreshSerializer, payload)
+
+
+if settings.FRONTEND_ASSETS.is_dir():
+    app.mount('/assets', StaticFiles(directory=settings.FRONTEND_ASSETS), name='frontend-assets')
+
+
+@app.get('/logo.png', include_in_schema=False)
+def frontend_logo():
+    logo = settings.FRONTEND_DIST / 'logo.png'
+    if not logo.is_file():
+        raise HTTPException(status_code=404)
+    return FileResponse(logo)
 
 
 # Keep the existing API, Django admin, uploads, and SPA paths available.
