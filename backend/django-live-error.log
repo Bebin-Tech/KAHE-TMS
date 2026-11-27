@@ -1,0 +1,4 @@
+Unauthorized: /api/tasks/
+[16/Oct/2026 22:33:32] "GET /api/tasks/ HTTP/1.1" 401 58
+Unauthorized: /api/token/
+[16/Oct/2026 22:34:04] "POST /api/token/ HTTP/1.1" 401 63
